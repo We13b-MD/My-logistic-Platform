@@ -1,0 +1,17 @@
+### Base Variables
+@baseUrl = http://localhost:3000/api/v1
+@contentType = application/json
+
+# ==========================================
+# TEST 1: Onboard a New Tenant (Logistics Company)
+# ==========================================
+# @name onboardTenant
+POST {{baseUrl}}/tenants/onboard
+Content-Type: {{contentType}}
+
+{
+  "companyName": "Swift Delivery Nigeria",
+  "subdomain": "swift",
+  "adminEmail": "admin@swift.com",
+  "adminPassword": "AdminPassword123!"
+}

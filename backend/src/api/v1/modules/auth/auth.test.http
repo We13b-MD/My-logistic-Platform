@@ -1,0 +1,60 @@
+### Base Variables
+@baseUrl = http://localhost:3000/api/v1
+@contentType = application/json
+
+# ==========================================
+# TEST 1: Register a New User
+# ==========================================
+# @name register
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "logistics_nigeria@test.com",
+  "password": "SecurePassword123!",
+  "role": "CUSTOMER"
+}
+
+###
+
+# ==========================================
+# TEST 2: Login the User
+# ==========================================
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "logistics_nigeria@test.com",
+  "password": "SecurePassword123!"
+}
+
+###
+
+# ==========================================
+# TEST 3: Access Profile WITHOUT Token (Should Fail - 401)
+# ==========================================
+GET {{baseUrl}}/auth/profile
+Content-Type: {{contentType}}
+
+###
+
+# ==========================================
+# TEST 4: Access Profile WITH Token (Should Succeed - 200)
+# ==========================================
+# Copy the token value from the register or login response and paste it below
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIyMmQ1ZjI0MS1jOGUxLTQwYTctYTY1NS0zYjI4MWVkOGIyZDUiLCJyb2xlIjoiQ1VTVE9NRVIiLCJpYXQiOjE3ODE3ODczNjUsImV4cCI6MTc4MjM5MjE2NX0.XbLM-Pd8TWAz3Wu8xr5NCQYy9aV_c-hZQTX5KF7A-OA
+
+GET {{baseUrl}}/auth/profile
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+###
+
+# ==========================================
+# TEST 5: Access Admin-only Route with CUSTOMER Token (Should Fail - 403)
+# ==========================================
+GET {{baseUrl}}/auth/admin-only
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
