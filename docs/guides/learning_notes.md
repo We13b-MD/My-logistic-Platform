@@ -412,3 +412,138 @@ graph TD
 
 5. **Test Specification ([tenant.test.http](file:///c:/Users/idund/Documents/MyLogisticsplatform/backend/src/api/v1/modules/tenant/tenant.test.http))**:
    Updated requests to verify that sending requests to `/tenants/onboard` creates a new tenant under their correct industry classification (e.g. `"industry": "FOOD"`).
+
+---
+
+## 13. Production Database Security Best Practices (PostgreSQL)
+
+When moving a PostgreSQL database (configured via Prisma) into a production SaaS environment, securing the data tier is paramount. Below are the key security principles, implementation tactics, and architectural setups.
+
+### A. Network Isolation & Firewall Boundaries
+The database must never be exposed to the public internet. It should reside inside a private network subnet.
+
+```mermaid
+graph LR
+    Internet[Public Internet] --> API[Express Backend <br/> Public Subnet]
+    API -->|Port 5432 <br/> Private VPC Routing| DB[(PostgreSQL <br/> Private Subnet)]
+    Internet -.->|Blocked| DB
+```
+
+* **Best Practice:** 
+  1. Place the database server in a **Private Subnet** within a Virtual Private Cloud (VPC).
+  2. Implement firewall rules (e.g., Security Groups) that restrict inbound traffic on port `5432` to the exact IP address or Security Group of your Node.js application server.
+
+### B. Principle of Least Privilege (PoLP)
+Avoid running the production backend using the default `postgres` superuser role. If the Node.js application is compromised, the attacker would have full destructive control over the database server.
+
+* **Roles Separation:**
+  1. **Migration User (`migration_user`):** Has DDL privileges (`CREATE TABLE`, `ALTER TABLE`) to perform schema changes during CI/CD deployment.
+  2. **Application User (`app_user`):** Only has DML privileges (`SELECT`, `INSERT`, `UPDATE`, `DELETE`) on the application tables. It cannot drop tables or modify schema structures.
+
+### C. Row-Level Security (RLS) for SaaS Multi-Tenancy
+Because this is a multi-tenant platform, one tenant's database query must never leak into another tenant's session. RLS acts as a database-level fail-safe.
+
+* **Implementation:**
+  Even if the backend application fails to apply a `where: { tenantId }` filter due to a developer oversight, a PostgreSQL RLS policy intercepts the query and automatically scopes results based on the session's active tenant identifier:
+  ```sql
+  CREATE POLICY tenant_isolation_policy ON "Delivery"
+  USING (tenant_id = current_setting('app.current_tenant_id'));
+  ```
+
+### D. Enforced SSL/TLS in Transit
+Ensure all connections encrypt database credentials and queries to prevent sniffing attacks on the network wire.
+
+* **Connection Parameters:** Use strict verification parameters in the production `.env` configuration:
+  ```env
+  DATABASE_URL="postgresql://user:password@db-host:5432/dbname?sslmode=verify-full&sslrootcert=ca.pem"
+  ```
+  * `sslmode=verify-full` verifies the identity of the database host to prevent Man-in-the-Middle (MitM) attacks.
+
+### E. Connection Pooling (PgBouncer)
+PostgreSQL handles requests using a process-based connection model. Each client connection consumes memory and CPU. 
+
+* **Best Practice:** Place **PgBouncer** (or Prisma Accelerate) between the app server and database. The pooler holds a persistent stack of connections, multiplexing hundreds of incoming client queries onto a few database processes, preventing connection exhaustion and DDoS events.
+
+### F. Security Lifecycle Matrix
+
+| Security Vector | Development Mode | Production Mode (Launch Ready) |
+| :--- | :--- | :--- |
+| **Network Visibility** | Publicly accessible (localhost) | Private VPC, public port 5432 blocked |
+| **DB Role Privileges** | Database Superuser (`postgres`) | Restricted CRUD-only `app_user` |
+| **Data Encryption** | Disabled / Optional SSL | Forced SSL (`sslmode=verify-full`) |
+| **Secrets Management** | `.env` file on local disk | Cloud Environment Secret Manager / Vault |
+| **Backup Encryption** | Unencrypted backups | Encrypted snapshots (AES-256 via KMS) |
+
+---
+
+## 14. Driver Profile & Verification System (1:1 Relationship Design)
+
+We implemented the Driver Management module using a 1-to-1 relationship schema, adding state-based status toggles and administrative workflows secured by role boundaries and tenant isolation.
+
+### A. One-to-One Relationships in Prisma
+In the database schema, a `User` record can optionally have one linked `DriverProfile` record. This separates auth credentials from physical driver data.
+
+```
++--------------------+              +------------------------+
+|        User        |  (1:0..1)    |     DriverProfile      |
+|  - id              |------------->|  - id                  |
+|  - email           |              |  - userId (Unique FK)  |
+|  - role = "DRIVER" |              |  - vehicleType         |
+|  - tenantId        |              |  - isVerified          |
++--------------------+              +------------------------+
+```
+
+Prisma enforces this 1-to-1 relationship via the `@unique` constraint on the foreign key field `userId` within the `DriverProfile` model:
+```prisma
+model DriverProfile {
+  id            String     @id @default(uuid())
+  userId        String     @unique
+  user          User       @relation(fields: [userId], references: [id])
+  vehicleType   String     // BIKE, VAN, TRUCK, CAR
+  licenseNumber String
+  isVerified    Boolean    @default(false)
+  isOnline      Boolean    @default(false)
+}
+```
+
+### B. Tenant Isolation in Business Logic
+Because users can register and login as drivers, and admins manage lists and verifications, our controller and services must enforce tenant separation constraints:
+
+1. **Creating a Profile:** When a user registers a driver profile, the service ensures the target user exists, has `role === "DRIVER"`, belongs to the same tenant (`req.user.tenantId`), and does not already have an active profile.
+2. **Accessing/Updating Profile:** In `getProfile` and `updateProfile`, queries use an `include: { user: true }` statement to check that the driver's associated tenant ID matches the caller's session token `tenantId`.
+3. **Admin Actions (List & Verification):** 
+   - An admin fetching the list of drivers will only retrieve profiles whose parent user matches the admin's `tenantId`.
+   - When an admin verifies a driver, the backend loads the driver profile, checks that `profile.user.tenantId === admin.tenantId`, and updates `isVerified` only if they match. Attempting to verify a driver from a different company returns a validation error.
+
+### C. Sequential Route Access Rules
+
+```mermaid
+sequenceDiagram
+    actor Driver as Driver Client
+    actor Admin as Admin Client
+    participant API as Express Router
+    participant Service as Driver Service
+    participant DB as Postgres DB
+
+    Driver->>API: POST /drivers/profile (Auth Token)
+    API->>API: Validate input (Zod)
+    API->>API: Check Role (DRIVER)
+    API->>Service: createProfile(userId, tenantId, data)
+    Service->>DB: Check duplicate & Create Profile
+    DB-->>Service: Profile Created
+    Service-->>API: Profile Object
+    API-->>Driver: 201 Created
+
+    Admin->>API: PATCH /drivers/:id/verify
+    API->>API: Check Role (ADMIN)
+    API->>Service: verifyDriver(driverId, tenantId, true)
+    Service->>DB: Fetch profile + Include User
+    DB-->>Service: Profile & User data
+    Note over Service: Verify: user.tenantId === admin.tenantId
+    Service->>DB: Update isVerified = true
+    DB-->>Service: Updated Profile
+    Service-->>API: Success
+    API-->>Admin: 200 OK
+```
+
+

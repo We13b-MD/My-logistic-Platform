@@ -10,9 +10,9 @@ POST {{baseUrl}}/tenants/onboard
 Content-Type: {{contentType}}
 
 {
-  "companyName": "Swift Delivery Nigeria",
-  "subdomain": "swift",
-  "industry": "FOOD",
-  "adminEmail": "admin@swift.com",
+  "companyName": "Eldios Enterprices",
+  "subdomain": "eldios-team",
+  "industry": "Sport",
+  "adminEmail": "Eldios50@gmail.com",
   "adminPassword": "AdminPassword123!"
 }

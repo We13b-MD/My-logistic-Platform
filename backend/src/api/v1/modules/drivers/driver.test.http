@@ -1,0 +1,229 @@
+### Base Variables
+@baseUrl = http://localhost:3000/api/v1
+@contentType = application/json
+
+# ==========================================
+# SETUP 1: Onboard Tenant 1 (Swift Logistics)
+# ==========================================
+# @name onboardTenant1
+POST {{baseUrl}}/tenants/onboard
+Content-Type: {{contentType}}
+
+{
+  "companyName": "Swift Logistics",
+  "subdomain": "swift",
+  "industry": "TRANSPORT",
+  "adminEmail": "admin@swift.com",
+  "adminPassword": "AdminPassword123!"
+}
+
+###
+
+# ==========================================
+# SETUP 2: Login Admin 1
+# ==========================================
+# @name loginAdmin1
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "admin@swift.com",
+  "password": "AdminPassword123!"
+}
+
+###
+
+# ==========================================
+# SETUP 3: Register Driver 1 (under Tenant 1)
+# ==========================================
+# Note: Use the tenantId returned from SETUP 1 response in place of the ID below
+@tenantId1 = 5bb3ea71-6eb8-4b71-b0e6-993f4ee66bcf
+
+# @name registerDriver1
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "driver1@swift.com",
+  "password": "DriverPassword123!",
+  "role": "DRIVER",
+  "tenantId": "{{tenantId1}}"
+}
+
+###
+
+# ==========================================
+# SETUP 4: Login Driver 1
+# ==========================================
+# @name loginDriver1
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "driver1@swift.com",
+  "password": "DriverPassword123!"
+}
+
+###
+
+# ==========================================
+# TEST 1: Create Driver 1 Profile (Should Succeed)
+# ==========================================
+# Copy the token from loginDriver1 and paste it below
+@driverToken1 = YOUR_DRIVER1_TOKEN_HERE
+
+POST {{baseUrl}}/drivers/profile
+Authorization: Bearer {{driverToken1}}
+Content-Type: {{contentType}}
+
+{
+  "vehicleType": "VAN",
+  "licenseNumber": "ABC-12345-XYZ"
+}
+
+###
+
+# ==========================================
+# TEST 2: Create Driver 1 Profile Again (Should Fail - Profile Already Exists)
+# ==========================================
+POST {{baseUrl}}/drivers/profile
+Authorization: Bearer {{driverToken1}}
+Content-Type: {{contentType}}
+
+{
+  "vehicleType": "BIKE",
+  "licenseNumber": "ABC-12345-XYZ"
+}
+
+###
+
+# ==========================================
+# TEST 3: Retrieve Own Profile (Should Succeed)
+# ==========================================
+GET {{baseUrl}}/drivers/me
+Authorization: Bearer {{driverToken1}}
+Content-Type: {{contentType}}
+
+###
+
+# ==========================================
+# TEST 4: Update Own Profile (Should Succeed)
+# ==========================================
+PUT {{baseUrl}}/drivers/profile
+Authorization: Bearer {{driverToken1}}
+Content-Type: {{contentType}}
+
+{
+  "vehicleType": "TRUCK",
+  "licenseNumber": "TRK-98765-NEW"
+}
+
+###
+
+# ==========================================
+# TEST 5: Toggle Online Status (Should Succeed)
+# ==========================================
+PATCH {{baseUrl}}/drivers/online
+Authorization: Bearer {{driverToken1}}
+Content-Type: {{contentType}}
+
+{
+  "isOnline": true
+}
+
+###
+
+# ==========================================
+# TEST 6: Driver attempts self-verification (Should Fail - 403 Forbidden)
+# ==========================================
+PATCH {{baseUrl}}/drivers/online
+Authorization: Bearer {{driverToken1}}
+Content-Type: {{contentType}}
+
+{
+  "isVerified": true
+}
+
+###
+
+# ==========================================
+# TEST 7: Admin 1 Lists Drivers (Should Succeed)
+# ==========================================
+# Copy the token from loginAdmin1 and paste it below
+@adminToken1 = YOUR_ADMIN1_TOKEN_HERE
+
+GET {{baseUrl}}/drivers?isOnline=true
+Authorization: Bearer {{adminToken1}}
+Content-Type: {{contentType}}
+
+###
+
+# ==========================================
+# TEST 8: Admin 1 Verifies Driver 1 (Should Succeed)
+# ==========================================
+# Copy the DriverProfile ID (NOT the user ID) from the profile response or Admin 1 List response
+@driverProfileId1 = YOUR_DRIVER_PROFILE_ID_HERE
+
+PATCH {{baseUrl}}/drivers/{{driverProfileId1}}/verify
+Authorization: Bearer {{adminToken1}}
+Content-Type: {{contentType}}
+
+{
+  "isVerified": true
+}
+
+###
+
+# ==========================================
+# SETUP 5: Onboard Tenant 2 (Apex Freight)
+# ==========================================
+# @name onboardTenant2
+POST {{baseUrl}}/tenants/onboard
+Content-Type: {{contentType}}
+
+{
+  "companyName": "Apex Freight",
+  "subdomain": "apex",
+  "industry": "TRANSPORT",
+  "adminEmail": "admin@apex.com",
+  "adminPassword": "AdminPassword123!"
+}
+
+###
+
+# ==========================================
+# SETUP 6: Login Admin 2
+# ==========================================
+# @name loginAdmin2
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "admin@apex.com",
+  "password": "AdminPassword123!"
+}
+
+###
+
+# ==========================================
+# TEST 9: Admin 2 Lists Drivers (Should NOT see Driver 1 - Tenant Isolation)
+# ==========================================
+# Copy the token from loginAdmin2 and paste it below
+@adminToken2 = YOUR_ADMIN2_TOKEN_HERE
+
+GET {{baseUrl}}/drivers
+Authorization: Bearer {{adminToken2}}
+Content-Type: {{contentType}}
+
+###
+
+# ==========================================
+# TEST 10: Admin 2 tries to verify Driver 1 (Should Fail/Error - Tenant Isolation)
+# ==========================================
+PATCH {{baseUrl}}/drivers/{{driverProfileId1}}/verify
+Authorization: Bearer {{adminToken2}}
+Content-Type: {{contentType}}
+
+{
+  "isVerified": true
+}
