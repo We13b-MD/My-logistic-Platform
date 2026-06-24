@@ -336,10 +336,79 @@ Instead of handling redirects on the server, we delegating the sign-in prompt to
    ```
 4. **Database Check & Login:** The backend checks if the email is associated with a user under the current tenant. If yes, it logs them in; if no, it registers them automatically. Finally, it signs and returns our custom stateless JWT session token.
 
+---
 
+## 12. Industry-Specific Multi-Tenancy Design
 
+We expanded the platform to support tenant classification based on 8 core industries: **Food, Health, Transport, Fashion, Sport, Entertainment, Banking, and Others**.
 
+### Step-by-Step Code Execution Flow
 
+The workflow of registering a new tenant with an associated industry is structured to enforce strong type boundaries and database atomicity:
 
+```mermaid
+graph TD
+    Client[Client Request POST /api/v1/tenants/onboard] --> Validator[Zod Schema Validator <br/> tenant.validator.ts]
+    Validator -->|Invalid Industry / Fields| Err400[HTTP 400 Bad Request]
+    Validator -->|Success| Controller[Tenant Controller <br/> tenant.controller.ts]
+    Controller --> Service[Tenant Service <br/> tenant.service.ts]
+    Service --> Hash[Hash Admin Password <br/> bcrypt]
+    Hash --> Tx[Prisma $transaction]
+    Tx --> DB_Tenant[Create Tenant record with Industry]
+    Tx --> DB_User[Create Admin User linked to Tenant]
+    Tx --> DB_Success[Return Tenant & Admin]
+    DB_Success --> Token[Generate JWT Auth Token]
+    Token --> Res201[HTTP 201 Created Response]
+```
 
+### Deep Dive of Implementation Details
 
+1. **Database Schema ([schema.prisma](file:///c:/Users/idund/Documents/MyLogisticsplatform/backend/prisma/schema.prisma))**:
+   An `Industry` enum is defined mapping to our 8 core industries. The `Tenant` model holds a required `industry` field of type `Industry` with a default of `OTHERS` to ensure compatibility.
+   ```prisma
+   enum Industry {
+     FOOD
+     HEALTH
+     TRANSPORT
+     FASHION
+     SPORT
+     ENTERTAINMENT
+     BANKING
+     OTHERS
+   }
+   ```
+
+2. **TypeScript DTOs ([tenant.types.ts](file:///c:/Users/idund/Documents/MyLogisticsplatform/backend/src/api/v1/modules/tenant/tenant.types.ts))**:
+   Extends `OnboardTenantDTO` to make the `industry` parameter type-safe at compile-time:
+   ```typescript
+   export interface OnboardTenantDTO {
+     companyName: string;
+     subdomain: string;
+     industry: "FOOD" | "HEALTH" | "TRANSPORT" | "FASHION" | "SPORT" | "ENTERTAINMENT" | "BANKING" | "OTHERS";
+     adminEmail: string;
+     adminPassword: string;
+   }
+   ```
+
+3. **Zod Validator Middleware ([tenant.validator.ts](file:///c:/Users/idund/Documents/MyLogisticsplatform/backend/src/api/v1/modules/tenant/tenant.validator.ts))**:
+   Uses `z.enum` to strictly enforce the industry selection at the entry boundary. If a client sends an unsupported industry value, the request is rejected with `400 Bad Request` before calling any downstream database functions.
+   ```typescript
+   industry: z.enum(["FOOD", "HEALTH", "TRANSPORT", "FASHION", "SPORT", "ENTERTAINMENT", "BANKING", "OTHERS"], {
+     errorMap: () => ({ message: "Industry must be one of: FOOD, HEALTH, TRANSPORT, FASHION, SPORT, ENTERTAINMENT, BANKING, OTHERS" }),
+   })
+   ```
+
+4. **Service Transaction ([tenant.service.ts](file:///c:/Users/idund/Documents/MyLogisticsplatform/backend/src/api/v1/modules/tenant/tenant.service.ts))**:
+   The service extracts the validated `industry` from the request body and passes it to the `tx.tenant.create` statement within the Prisma `$transaction` block. This guarantees that either both the industry-specific Tenant and its Admin user are created successfully, or the entire operation is rolled back, preventing orphaned users or ghost tenants.
+   ```typescript
+   const tenant = await tx.tenant.create({
+     data: {
+       companyName,
+       subdomain,
+       industry,
+     },
+   });
+   ```
+
+5. **Test Specification ([tenant.test.http](file:///c:/Users/idund/Documents/MyLogisticsplatform/backend/src/api/v1/modules/tenant/tenant.test.http))**:
+   Updated requests to verify that sending requests to `/tenants/onboard` creates a new tenant under their correct industry classification (e.g. `"industry": "FOOD"`).

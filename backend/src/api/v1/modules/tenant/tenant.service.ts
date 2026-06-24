@@ -9,7 +9,7 @@ export class TenantService {
    * Runs in a transaction so that if either step fails, everything is rolled back.
    */
   async onboard(data: OnboardTenantDTO) {
-    const { companyName, subdomain, adminEmail, adminPassword } = data;
+    const { companyName, subdomain, industry, adminEmail, adminPassword } = data;
 
     // 1. Check if subdomain is already taken
     const existingTenant = await prisma.tenant.findUnique({
@@ -37,6 +37,7 @@ export class TenantService {
         data: {
           companyName,
           subdomain,
+          industry,
         },
       });
 

@@ -16,10 +16,22 @@ model Tenant {
   subdomain   String     @unique
   logoUrl     String?
   isActive    Boolean    @default(true)
+  industry    Industry   @default(OTHERS)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
   users       User[]
   deliveries  Delivery[]
+}
+
+enum Industry {
+  FOOD
+  HEALTH
+  TRANSPORT
+  FASHION
+  SPORT
+  ENTERTAINMENT
+  BANKING
+  OTHERS
 }
 
 model User {

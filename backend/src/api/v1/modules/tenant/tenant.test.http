@@ -12,6 +12,7 @@ Content-Type: {{contentType}}
 {
   "companyName": "Swift Delivery Nigeria",
   "subdomain": "swift",
+  "industry": "FOOD",
   "adminEmail": "admin@swift.com",
   "adminPassword": "AdminPassword123!"
 }

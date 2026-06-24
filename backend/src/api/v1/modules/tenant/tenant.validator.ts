@@ -7,6 +7,12 @@ export const onboardTenantSchema = z.object({
     .string()
     .min(2, "Subdomain must be at least 2 characters long")
     .regex(/^[a-z0-9-]+$/, "Subdomain must contain only lowercase letters, numbers, and hyphens"),
+  industry: z.preprocess(
+    (val) => (typeof val === "string" ? val.toUpperCase() : val),
+    z.enum(["FOOD", "HEALTH", "TRANSPORT", "FASHION", "SPORT", "ENTERTAINMENT", "BANKING", "OTHERS"], {
+      errorMap: () => ({ message: "Industry must be one of: FOOD, HEALTH, TRANSPORT, FASHION, SPORT, ENTERTAINMENT, BANKING, OTHERS" }),
+    })
+  ),
   adminEmail: z.string().email("Invalid email format"),
   adminPassword: z
     .string()

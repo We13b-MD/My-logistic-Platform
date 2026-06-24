@@ -12,7 +12,8 @@ Content-Type: {{contentType}}
 {
   "email": "logistics_nigeria@test.com",
   "password": "SecurePassword123!",
-  "role": "CUSTOMER"
+  "role": "CUSTOMER",
+  "tenantId": "85bfe9df-9950-4fc2-b1b8-79a76d87c16a"
 }
 
 ###
