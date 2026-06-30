@@ -546,4 +546,54 @@ sequenceDiagram
     API-->>Admin: 200 OK
 ```
 
+---
+
+## 15. Deliveries Module & Geospatial Matching Engine
+
+As we build the logistics platform's matching and routing system, we encounter unique challenges around API verification, coordinate geometry, state progression, and separation of concerns.
+
+### A. Delivery Lifecycle State Machine
+A delivery has several states (e.g., `PENDING`, `ASSIGNED`, `PICKED_UP`, `IN_TRANSIT`, `DELIVERED`, `CANCELLED`). Permitting free state transitions creates critical bugs (e.g., a driver marking a package as `DELIVERED` before picking it up).
+
+We enforce a **State Machine pattern** where each transition is verified:
+
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING : Customer Creates Request
+    PENDING --> ASSIGNED : Admin/System Assigns Driver
+    PENDING --> CANCELLED : Customer Cancels Request
+    ASSIGNED --> PICKED_UP : Driver Arrives & Verifies OTP
+    ASSIGNED --> PENDING : Driver Rejects / Timeout (Re-queue)
+    PICKED_UP --> IN_TRANSIT : Driver Starts Moving
+    IN_TRANSIT --> DELIVERED : Recipient OTP Verified
+    IN_TRANSIT --> CANCELLED : Lost / Damaged / Dispute
+```
+
+### B. The Strategy Pattern for Driver Assignment
+Hardcoding how drivers are assigned to a delivery directly inside the delivery service violates the **Open/Closed Principle (OCP)**. If we later want to switch from "Nearest Driver" to "Driver Auctioning" or "Batch Pooling", we would have to rewrite the service.
+
+To solve this, we define a Strategy interface:
+```typescript
+export interface IDriverAssignmentStrategy {
+  findAndAssignDriver(deliveryId: string, tenantId: string, pickupLat: number, pickupLng: number): Promise<string | null>;
+}
+```
+We inject this strategy into `DeliveryService`. The class using it doesn't care *how* a driver is selected; it only cares that an ID is returned.
+
+### C. Geolocation Matching (Haversine Formula) & Big O Complexity
+To find the closest online driver, we calculate the great-circle distance between the pickup location ($lat_1, lng_1$) and the driver's current coordinates ($lat_2, lng_2$).
+
+#### The Haversine Formula:
+$$d = 2r \arcsin\left(\sqrt{\sin^2\left(\frac{\Delta lat}{2}\right) + \cos(lat_1) \cos(lat_2) \sin^2\left(\frac{\Delta lng}{2}\right)}\right)$$
+*(where $r$ is the earth radius, typically $6371\text{ km}$).*
+
+#### Time Complexity Optimization:
+1. **Bad Practice - $O(N)$ CPU Search:** Loading all online drivers from the database into Node.js memory, calculating the Haversine distance for each using Javascript, and sorting them. As the driver pool grows to 10,000+, this blocks the Node.js event loop and runs in $O(N)$ time and space.
+2. **Production Standard - Database-Level Indexing ($O(\log N)$ or $O(K \log N)$):** 
+   - We construct a query that calculates the Haversine distance *directly inside the database engine* using SQL math libraries.
+   - We filter using a **bounding box** first (a square of $\pm 10\text{km}$ around the pickup point) to prune the dataset before calculating trigonometric distance. Bounding box lookups utilize database indexes on latitude and longitude, dropping candidate counts from $N$ to a tiny subset $K$, running in logarithmic time.
+
+---
+
+
 

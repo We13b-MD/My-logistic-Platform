@@ -55,6 +55,8 @@ model DriverProfile {
   licenseNumber String
   isVerified    Boolean    @default(false)
   isOnline      Boolean    @default(false)
+  lastLatitude  Float?     // last known latitude of the driver (updated dynamically)
+  lastLongitude Float?     // last known longitude of the driver (updated dynamically)
   deliveries    Delivery[]
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
@@ -99,3 +101,6 @@ enum DeliveryStatus {
   DELIVERED
   CANCELLED
 }
+
+
+
