@@ -27,6 +27,8 @@ export const toggleOnlineSchema = z.object({
     required_error: "isOnline status is required",
     invalid_type_error: "isOnline must be a boolean",
   }),
+  latitude: z.number().min(-90).max(90, "Invalid latitude").optional(),
+  longitude: z.number().min(-180).max(180, "Invalid longitude").optional(),
 });
 
 export const verifyDriverSchema = z.object({

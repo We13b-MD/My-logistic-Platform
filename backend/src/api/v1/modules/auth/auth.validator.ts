@@ -12,7 +12,9 @@ export const registerSchema = z.object({
       passwordRegex,
       "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"
     ),
-  role: z.enum(["CUSTOMER", "DRIVER", "ADMIN"]).optional(),
+  //role: z.enum(["CUSTOMER", "DRIVER", "ADMIN"]).optional(),
+  role: z.enum(["CUSTOMER", "DRIVER", "TENANT_SUB_ADMIN", "TENANT_SUPER_ADMIN", "PLATFORM_SUB_ADMIN", "PLATFORM_SUPER_ADMIN"]).optional(),
+
   tenantId: z.string().uuid("Invalid tenant ID format"),
 });
 

@@ -16,6 +16,8 @@ export interface CreateDeliveryDTO{
 export interface UpdateDeliveryStatusDTO{
     status:DeliveryStatus;
     deliveryOtp?:string;
+    actualDropoffLatitude?:number;
+    actualDropoffLongitude?:number;
 }
 
 //required only when transitioning to delivered 

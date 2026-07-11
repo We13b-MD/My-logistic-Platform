@@ -74,9 +74,9 @@ export class DriverController {
     try {
       const userId = req.user!.id;
       const tenantId = req.user!.tenantId;
-      const { isOnline } = req.body;
+      const { isOnline,latitude,longitude } = req.body;
 
-      const profile = await driverService.toggleOnlineStatus(userId, tenantId, isOnline);
+      const profile = await driverService.toggleOnlineStatus(userId, tenantId, isOnline,latitude,longitude);
       res.status(200).json({
         status: "success",
         data: profile,

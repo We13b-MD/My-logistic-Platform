@@ -46,11 +46,12 @@ driverRouter.patch(
   (req, res) => driverController.toggleOnline(req, res)
 );
 
-// 5. List drivers (ADMIN only)
+// 5. List drivers (super admin and sub admin )
 driverRouter.get(
   "/",
   authenticate,
-  authorize(["ADMIN"]),
+  //authorize(["ADMIN"]),
+    authorize(["TENANT_SUPER_ADMIN", "TENANT_SUB_ADMIN"]),
   (req, res) => driverController.listDrivers(req, res)
 );
 
@@ -58,7 +59,7 @@ driverRouter.get(
 driverRouter.patch(
   "/:id/verify",
   authenticate,
-  authorize(["ADMIN"]),
+  authorize(["TENANT_SUPER_ADMIN"]),
   validateVerifyDriver,
   (req, res) => driverController.verifyDriver(req, res)
 );

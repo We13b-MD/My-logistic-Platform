@@ -593,7 +593,171 @@ $$d = 2r \arcsin\left(\sqrt{\sin^2\left(\frac{\Delta lat}{2}\right) + \cos(lat_1
    - We construct a query that calculates the Haversine distance *directly inside the database engine* using SQL math libraries.
    - We filter using a **bounding box** first (a square of $\pm 10\text{km}$ around the pickup point) to prune the dataset before calculating trigonometric distance. Bounding box lookups utilize database indexes on latitude and longitude, dropping candidate counts from $N$ to a tiny subset $K$, running in logarithmic time.
 
+### D. Cryptographically Secure Randomness (CSPRNG vs PRNG)
+For features like generating a One-Time Password (OTP) for delivery verification, using the standard `Math.random()` function is a major security vulnerability.
+
+#### The Practical Business Workflow of Delivery OTPs:
+1. **Creation:** A customer requests a package delivery. The backend creates the delivery and generates a secure 6-digit OTP using `crypto.randomInt()`, storing it in the database.
+2. **Customer Visibility:** The OTP is sent to the customer or displayed in their app dashboard, but is **hidden** from the driver.
+3. **Driver Arrival:** The driver arrives at the dropoff destination, contacts the recipient, and asks for the OTP.
+4. **Verification & Handoff:** The driver inputs the recipient's OTP into the app. The backend compares it using a constant-time check. If successful, the delivery is marked `DELIVERED`.
+5. **Business Value:** Prevents delivery driver fraud (drivers marking packages as delivered and keeping them), ensures package tracking accuracy, and provides absolute proof of delivery (PoD) without requiring expensive physical paperwork.
+
+#### PRNG (Pseudo-Random Number Generator) — e.g. `Math.random()`
+* **Mechanism:** Uses a mathematical formula (like xorshift128+) starting from a seed value.
+* **Vulnerability:** It is deterministic. If an attacker intercepts a series of consecutive OTPs, they can determine the algorithm's state and calculate all future OTPs. 
+* **Never Use For:** OTPs, API keys, password resets, session tokens.
+
+#### CSPRNG (Cryptographically Secure Pseudo-Random Number Generator) — e.g. Node's `crypto.randomInt()`
+* **Mechanism:** Obtains entropy (true randomness) directly from the host operating system kernel (which listens to hardware noise states).
+* **Security:** It is mathematically impossible to predict future values even if past outputs are known.
+* **Always Use For:** Any security-sensitive values.
+
 ---
 
+### E. The `updateStatus` Method — State Machine Engine
 
+The `updateStatus` method is the **engine of the entire delivery lifecycle**. Every time a delivery moves from one stage to the next, this single function is called. It enforces the State Machine pattern, ensuring illegal transitions (e.g. marking a delivery `DELIVERED` before `PICKED_UP`) are rejected.
+
+#### Why One Function Instead of Many?
+Instead of having separate functions (`pickUpDelivery`, `startTransit`, `completeDelivery`), a single `updateStatus` method with **guard clauses** enforces all rules in one place. This is the **Single Responsibility Principle** applied at the service layer — one method owns and controls the entire lifecycle.
+
+#### Real-World Business Journey:
+
+| Step | Actor | Status Transition | Extra Data Required? |
+|------|-------|-------------------|----------------------|
+| 1 | System/Admin | `PENDING` → `ASSIGNED` | No — system assigns driver automatically |
+| 2 | Driver | `ASSIGNED` → `PICKED_UP` | No — driver confirms package collected |
+| 3 | Driver | `PICKED_UP` → `IN_TRANSIT` | No — driver confirms journey started |
+| 4 | Driver | `IN_TRANSIT` → `DELIVERED` | ✅ Yes — OTP from recipient + driver GPS coordinates |
+| 5 | Customer/Admin | Any → `CANCELLED` | No |
+
+#### Why Are Some Parameters Optional?
+The method signature has three optional parameters (`?`):
+* `providedOtp?: string` — only required when transitioning to `DELIVERED`. Asking a driver to submit an OTP when picking up a package makes no sense.
+* `actualDropoffLatitude?: number` — only captured at the moment of handoff (delivery completion).
+* `actualDropoffLongitude?: number` — only captured at the moment of handoff.
+
+Making them optional means one function handles **all five transitions** cleanly. Inside the function, guard clauses check whether they are present only when the transition requires them.
+
+---
+
+### F. Tenant Isolation — The Most Important Security Rule in a Multi-Tenant SaaS
+
+Every operation in this platform checks a single line after fetching a resource:
+
+```typescript
+if (delivery.tenantId !== tenantId) throw new Error('Access Denied: Tenant Isolation Breach');
+```
+
+#### What Each Part Means:
+| Part | Meaning |
+|------|---------|
+| `delivery.tenantId` | The company ID that **owns this delivery** (stored in the database) |
+| `tenantId` | The company ID from the **current HTTP request** (who is asking) |
+| `!==` | "is NOT equal to" |
+
+#### Real-World Example:
+Imagine two logistics companies on the platform:
+* **Company A** — DHL Nigeria (tenantId: `"tenant-abc-123"`)
+* **Company B** — Jumia Logistics (tenantId: `"tenant-xyz-999"`)
+
+DHL creates delivery `"delivery-555"`. It is stored with `tenantId: "tenant-abc-123"`.
+
+A Jumia driver gets that delivery ID and sends a request to update its status:
+```
+delivery.tenantId = "tenant-abc-123"   ← belongs to DHL
+tenantId          = "tenant-xyz-999"   ← Jumia is making the request
+
+"tenant-abc-123" !== "tenant-xyz-999"  → TRUE → throw "Access Denied"
+```
+Without this check, Jumia could update, cancel, or view DHL's deliveries — a catastrophic data breach. This check blocks it at every single operation.
+
+#### Why We Check Existence BEFORE Tenant:
+We always check `if (!delivery)` first, then `if (delivery.tenantId !== tenantId)`. If we reversed the order and the delivery doesn't exist, accessing `null.tenantId` would crash the server with a `TypeError`. Checking existence first guarantees the object is safe to read.
+
+#### Interview Answer:
+> *"Tenant isolation ensures that in a multi-tenant SaaS system, each client's data is completely invisible to other clients. We enforce this at the service layer by comparing the resource's stored `tenantId` against the authenticated request's `tenantId` on every single operation — never trusting the client to self-report their identity."*
+
+---
+
+### G. The Controller Layer (e.g. `delivery.controller.ts`) — The API Interface
+
+The Controller layer acts as the **front door to a feature module** in this platform. It isolates the HTTP network layer (Express) from the core database/business logic (the Service layer).
+
+#### The 4 Core Roles of a Controller:
+1. **Receive and Parse HTTP Requests:** Reads inputs from headers, request body (`req.body`), or route variables (`req.params`).
+2. **Secure User Session Context:** Extract the authenticated user's ID and `tenantId` directly from the request object (attached securely by the JWT authentication middleware).
+3. **Delegate to the Service Layer:** Orchestrate operations by calling the corresponding asynchronous service method with the verified payload.
+4. **Format API Responses:** Translate service outcomes into standardised HTTP responses:
+   - **`201 Created`**: Resource was successfully created and persisted.
+   - **`200 OK`**: Resource details were successfully updated or retrieved.
+   - **`400 Bad Request`**: Validation rules or state machine guidelines were breached.
+   - **`403 Forbidden` / `404 Not Found`**: Access violations or missing records.
+
+#### Interview Answer:
+> *"The Controller layer is responsible for translating incoming HTTP request boundaries into service layer boundaries, decoupling network details like Express `req` and `res` objects from database logic, and ensuring standardized RESTful API responses are returned to the client."*
+
+---
+
+## 16. Hierarchical Role-Based Access Control (HRBAC)
+
+To support scaling from a single depot to multiple depots with independent local managers, we upgraded our database role design from a flat structure to a hierarchy.
+
+### The New Roles System
+* **`PLATFORM_SUPER_ADMIN`**: Platform Owner (controls billing, global tenants, database configurations).
+* **`PLATFORM_SUB_ADMIN`**: Platform staff/support accounts.
+* **`TENANT_SUPER_ADMIN`**: The single primary owner of a logistics company (e.g. DHL). Has master override privileges.
+* **`TENANT_SUB_ADMIN`**: Local depot managers and dispatchers. Authorized to run daily schedules and matchings for their specific hub, but cannot delete records or perform compliance checks.
+* **`DRIVER`**: Couriers.
+* **`CUSTOMER`**: Senders/recipients ordering deliveries.
+
+### Why this is Secure (Blast Radius Minimization)
+If a local manager's (`TENANT_SUB_ADMIN`) account is compromised:
+1. The damage is restricted to that single depot/hub.
+2. The **Tenant Super Admin** retains the override capability, allowing them to audit the logs, detect fraud, and instantly revoke the compromised sub-admin's access or reset delivery states.
+
+---
+
+## 17. Telemetry & State Synchronization (Go Online with Location)
+
+In a high-performance logistics system, a driver cannot be considered "active" or "online" unless the dispatch engine knows *where* they are online. 
+
+### Implementation details:
+We updated the `PATCH /drivers/online` endpoint:
+* **The Request Payload**: Instead of just sending `isOnline: true`, the driver's device is now required to send their current GPS coordinates:
+  ```json
+  {
+    "isOnline": true,
+    "latitude": 6.5244,
+    "longitude": 3.3792
+  }
+  ```
+* **Validation Check**: The inputs pass through Zod schema validation to verify coordinate ranges (`-90` to `90` for latitude, `-180` to `180` for longitude) before updating the database.
+* **Why it works**: By coupling coordinates with the online status state-transition, we prevent "ghost drivers" (drivers marked online but having null locations, which would crash or break the distance calculations in our Haversine SQL query).
+
+---
+
+## 18. End-to-End Delivery Lifecycle Validation
+
+We successfully verified the entire logistics pipeline via REST client test scripts:
+
+```mermaid
+sequenceDiagram
+    actor Customer as Customer Client
+    actor System as Dispatch Engine
+    actor Driver as Driver Client
+    actor Admin as Admin Client
+
+    Customer->>System: POST /deliveries (Lagos coordinates)
+    Note over System: Runs Nearest Driver Strategy <br/> (Haversine Formula SQL Check)
+    System-->>Customer: 201 Created (Status: ASSIGNED, Driver Linked)
+    Driver->>System: PATCH /deliveries/:id/status (Status: PICKED_UP)
+    System-->>Driver: 200 OK (Status: PICKED_UP)
+    Driver->>System: PATCH /deliveries/:id/status (Status: IN_TRANSIT)
+    System-->>Driver: 200 OK (Status: IN_TRANSIT)
+    Driver->>System: PATCH /deliveries/:id/status (Status: DELIVERED, OTP: 701088)
+    Note over System: Verifies secure OTP & GPS coords
+    System-->>Driver: 200 OK (Status: DELIVERED, actualDropoff saved)
+```
 

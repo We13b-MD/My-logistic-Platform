@@ -114,7 +114,8 @@ export class DriverService {
   /**
    * Toggle the online/offline status for a driver, ensuring tenant isolation.
    */
-  async toggleOnlineStatus(userId: string, tenantId: string, isOnline: boolean) {
+  async toggleOnlineStatus(userId: string, tenantId: string, isOnline: boolean,  latitude?: number, 
+    longitude?: number) {
     const profile = await prisma.driverProfile.findUnique({
       where: { userId },
       include: { user: true },
@@ -130,7 +131,9 @@ export class DriverService {
 
     const updatedProfile = await prisma.driverProfile.update({
       where: { userId },
-      data: { isOnline },
+      data: { isOnline , lastLatitude: latitude,
+        lastLongitude: longitude},
+      
     });
 
     return updatedProfile;

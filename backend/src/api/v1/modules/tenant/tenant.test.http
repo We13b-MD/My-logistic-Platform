@@ -16,3 +16,213 @@ Content-Type: {{contentType}}
   "adminEmail": "Eldios50@gmail.com",
   "adminPassword": "AdminPassword123!"
 }
+
+###
+# @name loginAdmin
+
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "Eldios50@gmail.com",
+  "password": "AdminPassword123!"
+}
+
+
+###
+# @name testAdminRoute
+# Copy the token from your login response and paste it below
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3MjZiYTk1Zi0zOWQxLTQ1NTktOTQ3ZC01YmFmMDk4OGYxOTEiLCJyb2xlIjoiVEVOQU5UX1NVUEVSX0FETUlOIiwidGVuYW50SWQiOiJlYTgyYTY4Ni1kMzE1LTQyN2UtYWM2NS0xY2I2Mjc0YmU5MGMiLCJpYXQiOjE3ODM3NjA3MTUsImV4cCI6MTc4NDM2NTUxNX0.xsNliv-0Hb_DGgEh4qD53JL4Mo78XBuSVi5D6-Rjhko
+
+GET {{baseUrl}}/auth/admin-only
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+###
+# @name registerCustomer
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "customer@eldios.com",
+  "password": "CustomerPassword123!",
+  "role": "CUSTOMER",
+  "tenantId": "ea82a686-d315-427e-ac65-1cb6274be90c"
+}
+
+###
+# @name loginCustomer
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "customer@eldios.com",
+  "password": "CustomerPassword123!"
+}
+
+###
+# @name registerDriver
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "driver@eldios.com",
+  "password": "DriverPassword123!",
+  "role": "DRIVER",
+  "tenantId": "ea82a686-d315-427e-ac65-1cb6274be90c"
+}
+
+
+
+
+###
+# @name loginDriver
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}} 
+
+{
+  "email": "driver@eldios.com",
+  "password": "DriverPassword123!"
+}
+
+
+
+###
+# @name createDriverProfile
+# Copy the token from your loginDriver response and paste it below
+@driverToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjY2Q2ZjM0YS03ZTM2LTQ4MDUtYjE5My1lOTkzYTM2ZGNjZGEiLCJyb2xlIjoiRFJJVkVSIiwidGVuYW50SWQiOiJlYTgyYTY4Ni1kMzE1LTQyN2UtYWM2NS0xY2I2Mjc0YmU5MGMiLCJpYXQiOjE3ODM3NzA1NDQsImV4cCI6MTc4NDM3NTM0NH0.aEIquB0Wr1NXKLPQSR26tLmbF8zrSmMTVHI3qb5wOYE
+
+POST {{baseUrl}}/drivers/profile
+Authorization: Bearer {{driverToken}}
+Content-Type: {{contentType}}
+
+{
+  "vehicleType": "VAN",
+  "licenseNumber": "ABC-12345-XYZ"
+}
+
+###
+# @name verifyDriver
+# Copy your Super Admin token and paste it below
+@adminTokenForVerify = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3MjZiYTk1Zi0zOWQxLTQ1NTktOTQ3ZC01YmFmMDk4OGYxOTEiLCJyb2xlIjoiVEVOQU5UX1NVUEVSX0FETUlOIiwidGVuYW50SWQiOiJlYTgyYTY4Ni1kMzE1LTQyN2UtYWM2NS0xY2I2Mjc0YmU5MGMiLCJpYXQiOjE3ODM3NjA3MTUsImV4cCI6MTc4NDM2NTUxNX0.xsNliv-0Hb_DGgEh4qD53JL4Mo78XBuSVi5D6-Rjhko
+
+# Copy the driver profile ID from createDriverProfile response and paste it below
+@driverProfileId = 73686e2c-00a1-4bff-916c-9006d1ca8d9b
+
+PATCH {{baseUrl}}/drivers/{{driverProfileId}}/verify
+Authorization: Bearer {{adminTokenForVerify}}
+Content-Type: {{contentType}}
+
+{
+  "isVerified": true
+}
+
+###
+# @name toggleOnline
+PATCH {{baseUrl}}/drivers/online
+Authorization: Bearer {{driverToken}}
+Content-Type: {{contentType}}
+
+{
+  "isOnline": true
+}
+
+
+
+
+###
+# @name toggleOnline
+PATCH {{baseUrl}}/drivers/online
+Authorization: Bearer {{driverToken}}
+Content-Type: {{contentType}}
+
+{
+  "isOnline": true,
+  "latitude": 6.5244,
+  "longitude": 3.3792
+}
+
+###
+# @name createDelivery
+# Copy the token from your loginCustomer response and paste it below
+@customerToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJlNThhZjMwOS0xMzI0LTQxYmEtOWM3ZC02OTU5YzU1ZTNiZGEiLCJyb2xlIjoiQ1VTVE9NRVIiLCJ0ZW5hbnRJZCI6ImVhODJhNjg2LWQzMTUtNDI3ZS1hYzY1LTFjYjYyNzRiZTkwYyIsImlhdCI6MTc4Mzc3MzU3MywiZXhwIjoxNzg0Mzc4MzczfQ.Ecby4Jnwsi2XcOAJXIdgNpDx2faCCtwM6-TRb3uwgms
+
+POST {{baseUrl}}/deliveries
+Authorization: Bearer {{customerToken}}
+Content-Type: {{contentType}}
+
+{
+  "pickupAddress": "no 8 okilane mende maryland",
+  "pickupLatitude": 6.5244,
+  "pickupLongitude": 3.3792,
+  "senderPhone": "+2348132946210",
+  "dropoffAddress": "102 st finbarrs road akoka",
+  "dropoffLatitude": 6.4281,
+  "dropoffLongitude": 3.4219,
+  "recipientName": "bola joe",
+  "recipientPhone": "+2348027198072"
+}
+
+
+###
+# @name getDelivery
+# Copy the ID from the createDelivery response and paste below
+@deliveryId = 0a770908-7c6d-4f85-80c4-8ccc6bbfcdde
+
+GET {{baseUrl}}/deliveries/{{deliveryId}}
+Authorization: Bearer {{customerToken}}
+Content-Type: {{contentType}}
+
+
+###
+# @name getDriverProfile
+GET {{baseUrl}}/drivers/me
+Authorization: Bearer {{driverToken}}
+Content-Type: {{contentType}}
+
+
+
+
+###
+# @name updateStatusToPickedUp
+# Update to PICKED_UP (Simulating driver picking up package)
+PATCH {{baseUrl}}/deliveries/{{deliveryId}}/status
+Authorization: Bearer {{driverToken}}
+Content-Type: {{contentType}}
+
+{
+  "status": "PICKED_UP"
+}
+
+###
+# @name updateStatusToInTransit
+# Update to IN_TRANSIT (Simulating driver starting the journey)
+PATCH {{baseUrl}}/deliveries/{{deliveryId}}/status
+Authorization: Bearer {{driverToken}}
+Content-Type: {{contentType}}
+
+{
+  "status": "IN_TRANSIT"
+}
+
+###
+# @name completeDelivery
+# Update to DELIVERED (Recipient OTP verification)
+# The deliveryOtp in the response is "701088"
+PATCH {{baseUrl}}/deliveries/{{deliveryId}}/status
+Authorization: Bearer {{driverToken}}
+Content-Type: {{contentType}}
+
+{
+  "status": "DELIVERED",
+  "deliveryOtp": "701088",
+  "actualDropoffLatitude": 6.4281,
+  "actualDropoffLongitude": 3.4219
+}
+
+
+
+
+
+
+

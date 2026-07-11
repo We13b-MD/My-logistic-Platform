@@ -83,6 +83,8 @@ model Delivery {
   deliveryOtp             String
   proofOfDeliveryPhotoUrl String?
   signaturePhotoUrl       String?
+  actualDropoffLatitude   Float?         // actual latitude where OTP was verified
+  actualDropoffLongitude  Float?         // actual longitude where OTP was verified
   createdAt               DateTime       @default(now())
   updatedAt               DateTime       @updatedAt
 }
@@ -90,7 +92,10 @@ model Delivery {
 enum Role {
   CUSTOMER
   DRIVER
-  ADMIN
+  TENANT_SUB_ADMIN
+  TENANT_SUPER_ADMIN
+  PLATFORM_SUB_ADMIN
+  PLATFORM_SUPER_ADMIN
 }
 
 enum DeliveryStatus {

@@ -46,7 +46,9 @@ export class TenantService {
         data: {
           email: adminEmail,
           password: hashedpassword,
-          role: "ADMIN",
+          //role: "ADMIN",
+          role: "TENANT_SUPER_ADMIN",
+
           tenantId: tenant.id,
         },
         select: {
