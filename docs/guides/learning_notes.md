@@ -761,3 +761,31 @@ sequenceDiagram
     System-->>Driver: 200 OK (Status: DELIVERED, actualDropoff saved)
 ```
 
+---
+
+## 19. Scalability, BullMQ, and Background Processing (1000+ Concurrent Users)
+
+To safely launch our MVP to support 1,000+ concurrent active users without database lockups or memory leaks, we design the backend around asynchronous queuing.
+
+### The Bottleneck Strategy: Memory Promises vs. Redis Queues
+
+#### A. In-Memory "Fire-and-Forget" (The Risk ❌)
+```typescript
+this.matchingStrategy.findAndAssignDriver(...)
+```
+* **Vulnerability**: If 1,000 users request deliveries simultaneously, the server runs 1,000 concurrent database calculations. This slams Postgres CPU to 100%. If the Node process restarts during matching, the in-memory promise is lost forever, leaving the delivery stuck in `PENDING`.
+
+#### B. Redis-Backed Queues (BullMQ 🚀)
+```typescript
+await deliveryQueue.add('MATCH_DRIVER', { deliveryId, tenantId, ... })
+```
+* **Resilience**: The job is serialized and persisted to Redis. Even if the Node API server restarts, the job is safe. A background Worker consumes jobs one by one or in batches (e.g. concurrency limit of 10), ensuring Postgres CPU is never slammed.
+
+### 3-Tier Production Safety Blueprint
+
+| Bottleneck Vector | The Threat | Our Production Defense |
+|---|---|---|
+| **Database Connections** | 1,000 concurrent users exhaust Postgres slot limits, crashing the engine. | **Prisma Connection Pooling**: Capping database pool size (e.g. 30 connections) and queueing SQL execution internally. |
+| **High CPU Tasks** | Bcrypt password comparisons during login freeze Node's single thread. | **Stateless JWT Sessions**: Validating users cryptographically in-memory without hits to database or CPU-heavy hashes. |
+| **Heavy Computation** | Running geospatial Haversine calculations concurrently. | **Geospatial Bounding Box** + **BullMQ Rate Limiting**: Pruning datasets using bounding boxes, and rate-limiting job worker execution. |
+

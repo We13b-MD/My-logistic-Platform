@@ -2,6 +2,7 @@ import { prisma } from "../../../../config/prisma"
 import { CreateDeliveryDTO, IDriverAssignmentStrategy } from './delivery.types';
 import { DeliveryStatus } from '@prisma/client';
 import crypto from 'crypto';
+import { deliveryQueue } from './delivery.queue';
 
 export class NearestDriverStrategy implements IDriverAssignmentStrategy {
     async findAndAssignDriver(
@@ -69,10 +70,13 @@ export class DeliveryService {
             }
         });
 
-        // Non-blocking: fire-and-forget background driver matching
-        this.matchingStrategy
-            .findAndAssignDriver(delivery.id, tenantId, data.pickupLatitude, data.pickupLongitude)
-            .catch((err) => console.error(`Driver matching failed for delivery ${delivery.id}:`, err));
+        // Queue the driver-matching job in Redis (resilient, persistent, and auto-retryable)
+        await deliveryQueue.add('MATCH_DRIVER', {
+            deliveryId: delivery.id,
+            tenantId,
+            pickupLatitude: data.pickupLatitude,
+            pickupLongitude: data.pickupLongitude,
+        });
 
         return delivery;
     }
@@ -138,6 +142,81 @@ export class DeliveryService {
                 actualDropoffLongitude,
             },
         });
+    }
+
+    async list(
+        tenantId: string,
+        filters: {
+            status?: DeliveryStatus;
+            driverUserId?: string;
+            senderId?: string;
+            limit?: number;
+            page?: number;
+        }
+    ) {
+        const limit = filters.limit || 10;
+        const page = filters.page || 1;
+        const skip = (page - 1) * limit;
+
+        const whereClause: any = {
+            tenantId,
+        };
+
+        if (filters.status) {
+            whereClause.status = filters.status;
+        }
+
+        if (filters.driverUserId) {
+            const driverProfile = await prisma.driverProfile.findUnique({
+                where: { userId: filters.driverUserId }
+            });
+
+            if (!driverProfile) {
+                throw new Error('Driver profile not found');
+            }
+
+            whereClause.driverId = driverProfile.id;
+        }
+
+        if (filters.senderId) {
+            whereClause.senderId = filters.senderId;
+        }
+
+        const [deliveries, total] = await Promise.all([
+            prisma.delivery.findMany({
+                where: whereClause,
+                orderBy: { createdAt: 'desc' },
+                skip,
+                take: limit,
+                include: {
+                    sender: {
+                        select: { email: true }
+                    },
+                    driver: {
+                        include: {
+                            user: {
+                                select: {
+                                    email: true
+                                }
+                            }
+                        }
+                    },
+                }
+            }),
+            prisma.delivery.count({
+                where: whereClause
+            })
+        ]);
+
+        return {
+            deliveries,
+            meta: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
+            }
+        };
     }
 }
 

@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-
 import { DeliveryService } from './delivery.service';
 
 const deliveryService = new DeliveryService();
@@ -44,7 +43,8 @@ export class DeliveryController {
     async updateStatus(req: Request, res: Response) {
         try {
             const tenantId = (req as any).user.tenantId;
-            const deliveryId = req.params.id;
+             const deliveryId = req.params.id as string;
+
             const {
                 status, deliveryOtp, actualDropoffLatitude, actualDropoffLongitude
             } = req.body
@@ -67,6 +67,45 @@ export class DeliveryController {
             })
         }
     }
+
+
+        async list(req: Request, res: Response) {
+        try {
+            const tenantId = (req as any).user.tenantId;
+            const role = (req as any).user.role;
+            const userId = (req as any).user.id;
+
+            const { status, limit, page } = req.query;
+
+            const filters: any = {
+                status: status as any,
+                limit: limit ? parseInt(limit as string) : undefined,
+                page: page ? parseInt(page as string) : undefined,
+            };
+
+            // Enforce role-based boundaries:
+            if (role === 'DRIVER') {
+                filters.driverUserId = userId; // Let the service resolve this to driverId
+            } else if (role === 'CUSTOMER') {
+                filters.senderId = userId;
+            }
+
+            const result = await deliveryService.list(tenantId, filters);
+
+            return res.status(200).json({
+                status: 'success',
+                data: result.deliveries,
+                meta: result.meta
+            });
+        } catch (err: any) {
+            return res.status(400).json({
+                status: 'error',
+                message: err.message
+            });
+        }
+    }
+
+   
 }
 
 

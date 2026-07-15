@@ -16,25 +16,28 @@ deliveryRouter.post(
     (req, res) => deliveryController.create(req, res)
 );
 
-// Get delivery by id (Accessible by customer, driver, and admin of the same tenant 
 
-
+// Get delivery by id (Accessible by customer, driver, and admin of the same tenant)
 deliveryRouter.get(
     '/:id',
     authenticate,
     (req, res) => deliveryController.getById(req, res)
-
-
 );
 
-//update delivery status  (state machine transition validate at service level)
+// List deliveries (Accessible by customer, driver, and admin of the same tenant)
+deliveryRouter.get(
+    '/',
+    authenticate,
+    (req, res) => deliveryController.list(req, res)
+);
 
+// Update delivery status (State machine transitions validated at service level)
 deliveryRouter.patch(
     '/:id/status',
     authenticate,
     validateUpdateStatus,
     (req, res) => deliveryController.updateStatus(req, res)
-)
+);
 
 export { deliveryRouter }
 

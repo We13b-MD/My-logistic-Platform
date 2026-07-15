@@ -21,6 +21,7 @@ model Tenant {
   updatedAt   DateTime   @updatedAt
   users       User[]
   deliveries  Delivery[]
+  vehicles    Vehicle[]
 }
 
 enum Industry {
@@ -58,6 +59,7 @@ model DriverProfile {
   lastLatitude  Float?     // last known latitude of the driver (updated dynamically)
   lastLongitude Float?     // last known longitude of the driver (updated dynamically)
   deliveries    Delivery[]
+  vehicle       Vehicle?
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 }
@@ -85,6 +87,7 @@ model Delivery {
   signaturePhotoUrl       String?
   actualDropoffLatitude   Float?         // actual latitude where OTP was verified
   actualDropoffLongitude  Float?         // actual longitude where OTP was verified
+  expectedDeliveryTime    DateTime?      // promised delivery deadline
   createdAt               DateTime       @default(now())
   updatedAt               DateTime       @updatedAt
 }
@@ -105,6 +108,34 @@ enum DeliveryStatus {
   IN_TRANSIT
   DELIVERED
   CANCELLED
+}
+
+model Vehicle {
+  id                 String        @id @default(uuid())
+  tenantId           String
+  tenant             Tenant        @relation(fields: [tenantId], references: [id])
+  plateNumber        String        @unique
+  vehicleType        VehicleType
+  status             VehicleStatus @default(IDLE)
+  lastMaintenance    DateTime?
+  nextMaintenanceDue DateTime?
+  driverId           String?       @unique
+  driver             DriverProfile? @relation(fields: [driverId], references: [id])
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+}
+
+enum VehicleStatus {
+  IDLE
+  IN_USE
+  MAINTENANCE
+}
+
+enum VehicleType {
+  BIKE
+  VAN
+  TRUCK
+  CAR
 }
 
 
