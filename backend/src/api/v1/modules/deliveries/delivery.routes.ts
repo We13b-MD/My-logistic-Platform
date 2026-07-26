@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { DeliveryController } from './delivery.controller';
 import { authenticate, authorize } from '../../middlewares/auth.middleware'
 import { validateCreateDelivery, validateUpdateStatus } from './delivery.validation';
+import { generalApiLimiter } from '../../middlewares/rateLimiter.middleware';
 
 const deliveryRouter = Router();
 const deliveryController = new DeliveryController();
@@ -12,6 +13,7 @@ deliveryRouter.post(
     '/',
     authenticate,
     authorize(['CUSTOMER', 'TENANT_SUPER_ADMIN', 'TENANT_SUB_ADMIN']),
+    generalApiLimiter,
     validateCreateDelivery,
     (req, res) => deliveryController.create(req, res)
 );
@@ -21,6 +23,7 @@ deliveryRouter.post(
 deliveryRouter.get(
     '/:id',
     authenticate,
+    generalApiLimiter,
     (req, res) => deliveryController.getById(req, res)
 );
 
@@ -28,6 +31,7 @@ deliveryRouter.get(
 deliveryRouter.get(
     '/',
     authenticate,
+    generalApiLimiter,
     (req, res) => deliveryController.list(req, res)
 );
 
@@ -35,6 +39,7 @@ deliveryRouter.get(
 deliveryRouter.patch(
     '/:id/status',
     authenticate,
+    generalApiLimiter,
     validateUpdateStatus,
     (req, res) => deliveryController.updateStatus(req, res)
 );

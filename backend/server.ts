@@ -1,6 +1,10 @@
 import express from 'express';
 import dotenv from 'dotenv';
+import http from 'http';
+import { Server } from 'socket.io';
 import v1Router from "./src/api/v1/router";
+import { errorHandler } from './src/api/v1/middlewares/error.middleware';
+import { initTrackingSocket } from './src/api/v1/modules/tracking/tracking.socket';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -10,11 +14,25 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-//Api versioning 
+// Api versioning 
 app.use('/api/v1', v1Router);
+app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+// Wrap Express app in an HTTP server for Socket.io support
+const server = http.createServer(app);
+
+// Initialize Socket.io
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Allow all origins for development/testing
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
+  }
 });
 
+// Bootstrap tracking WebSocket logic
+initTrackingSocket(io);
 
+// Listen using the 'server' instance (not 'app')
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});

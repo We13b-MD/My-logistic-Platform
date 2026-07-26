@@ -789,3 +789,146 @@ await deliveryQueue.add('MATCH_DRIVER', { deliveryId, tenantId, ... })
 | **High CPU Tasks** | Bcrypt password comparisons during login freeze Node's single thread. | **Stateless JWT Sessions**: Validating users cryptographically in-memory without hits to database or CPU-heavy hashes. |
 | **Heavy Computation** | Running geospatial Haversine calculations concurrently. | **Geospatial Bounding Box** + **BullMQ Rate Limiting**: Pruning datasets using bounding boxes, and rate-limiting job worker execution. |
 
+---
+
+## 20. Competitive Strategy & Market Differentiators (Vs. Ride Flow)
+
+To outcompete established Nigerian B2B logistics SaaS platforms like Ride Flow, our system focuses on active decision engine intelligence and operational resilience.
+
+### Strategic Comparison Matrix
+
+| Differentiator Area | Legacy SaaS (e.g., Ride Flow) | Our B2B Logistics Platform |
+|---|---|---|
+| **Operations Analysis** | **Passive Data Recorder**: Shows metrics after the fact (e.g., "15 delayed deliveries today"). Manager must investigate why. | **Active Decision Engine**: Correlates variables to highlight root cause (e.g., *"Vehicle X has missed maintenance twice and is linked to 42% of Lekki route delays"*). |
+| **User Experience (UX)** | **One-Size-Fits-All**: Identical dashboard for pharmaceuticals, beverage distributors, and cold-chain fleets. | **Industry-Tailored (Domain Isolation)**: Reads tenant `Industry` classification (e.g. `HEALTH` vs `FOOD`) to adapt KPI configurations. |
+| **System Reliability** | **In-Memory Matching**: Driver searches executed directly in HTTP requests. Risky under high concurrent spikes. | **Persistent Queuing (BullMQ)**: Driver matches pushed to Redis queues with exponential retry loops and concurrency limits. |
+| **Security Context** | **Flat Access Control**: Basic admin/driver roles. A hacked dispatcher account exposes the entire nationwide enterprise database. | **Hierarchical Context (HRBAC)**: Restricted sub-admin scopes. Compromised depot accounts are isolated to their specific local hub boundaries. |
+
+---
+
+## 21. Multi-Tenant Role Workflows & Dashboard Hierarchy
+
+In our B2B SaaS logistics model, we sandbox data and customize dashboards depending on three primary tiers of administrative access.
+
+```mermaid
+graph TD
+    PSA["Platform Super Admin<br/>(SaaS Owner)"] -->|Manages Accounts/Billing| TSG["Tenant Super Admin<br/>(Corporate Owner)"]
+    TSG -->|Hires Staff/Registers| TSU["Tenant Sub-Admin<br/>(Local Dispatcher)"]
+    TSU -->|Manages Deliveries| DRV["Drivers / Vehicles"]
+```
+
+### A. Team Onboarding Lifecycle (e.g., Jumia Logistics)
+1. **Onboarding**: A new company registers. The backend creates a `Tenant` record (`tenantId: "jumia-xyz"`) and a primary user account assigned the role `TENANT_SUPER_ADMIN`.
+2. **Staff Registration**: The Super Admin logs in, navigates to "Manage Team", and invites a dispatcher (e.g., Emeka).
+3. **Automatic Sandbox**: The API endpoint registers the dispatcher's account, automatically forcing their user record's `tenantId` to match `"jumia-xyz"`. The dispatcher is permanently sandboxed to that tenant.
+
+### B. Dashboard Access Hierarchy
+
+| Dashboard Tier | Target User | Primary Capabilities & Focus |
+|---|---|---|
+| **Platform Dashboard** | `PLATFORM_SUPER_ADMIN` (You, the SaaS Owner) | Global billing/invoices, database & server monitoring, suspension of delinquent tenants, system configurations. |
+| **Corporate Owner Dashboard** | `TENANT_SUPER_ADMIN` (Company Owner/Head of Operations) | Financial metrics (costs vs profit), hiring/firing dispatchers and drivers, subscription payments, tenant-wide config adjustments. |
+| **Dispatcher Dashboard** | `TENANT_SUB_ADMIN` (Daily Coordinator/Emeka) | Real-time map tracking, handling delivery queues, manual matching overrides, checking vehicle maintenance states. |
+
+### C. The Lagos Factors: Nigerian Logistics Reality
+To ensure we don't penalize drivers for delays beyond their control (heavy traffic, checkpoint delays, fuel scarcity), our decision engine utilizes three features:
+1. **Incident Logging**: A mobile app button allowing drivers to flag delays (e.g. `POLICE_CHECKPOINT`, `TRAFFIC`). This attaches a flag to the delivery record and pauses personal SLA penalties.
+2. **Route-Based Baselines**: Dynamic SLAs calculated on past data per route (e.g., average Lekki to Ikeja on a Friday is 2 hours, so 1.5 hours is not flagged as late).
+3. **Route Anomaly Detection**: If multiple drivers on the same route are simultaneously late, the system flags the *route* as congested rather than individual drivers.
+
+---
+
+## 22. Production-Grade Rate Limiting & API Security Blueprint
+
+Rate limiting is a core defense mechanism to prevent Denial of Service (DoS) attacks, brute-force security breaches, and backend resource exhaustion. In our multi-tenant logistics decision engine, we apply tailored limits depending on the resource footprint and security profile of each endpoint.
+
+### A. The 7 Rate-Limiting Tiers (Configurations & Justifications)
+
+| Endpoint Type | Recommended Rate Limit | Key Identifier | Engineering Justification |
+|---|---|---|---|
+| **1. Login** | 5 requests per minute | **IP Address** | Prevents automated scripts from brute-forcing user passwords. The 1-minute window resetting allows real users who made typos to retry quickly without long lockouts. |
+| **2. Register** | 5 requests per hour | **IP Address** | Prevents malicious bots from spamming your database with thousands of fake user and tenant accounts, saving database storage and computational resources. |
+| **3. Password Reset** | 3 requests per hour | **IP Address** | Prevents attackers from spamming a user's email inbox with reset links (email bombing) and protects the mail server quota. |
+| **4. General API** | 100 requests per minute | **User ID** (with IP fallback) | Protects regular CRUD routes (creating deliveries, updating profiles) from automated loops. 100 req/min is more than enough for a fast human, but blocks scrapers. |
+| **5. Dashboard/Reads** | 300 requests per minute | **User ID** (with IP fallback) | Protects the database from heavy aggregate queries (which run 12 queries simultaneously in `Promise.all`). Higher limit accommodates auto-refresh dashboard polling. |
+| **6. Vehicle Location** | 120 requests per minute | **Driver User ID** | Accommodates live GPS tracking updates (averaging 1-2 pings per second from the driver app) while preventing buggy loops from flooding the socket/DB layer. |
+| **7. Webhooks** | 1,000 requests per minute | **IP Address** | Webhooks from trusted systems (like Paystack payment notifications) are triggered in bulk by external servers. Must be high to prevent dropping payments, but secured via cryptographic signature verification. |
+
+### B. Core Technical Design Decisions
+
+#### 1. User-ID Based Limiting vs. IP Limiting
+Using a custom key generator (`keyGenerator: userKeyGenerator`) to track authenticated users by their unique database ID (`req.user.id`) rather than just their IP address solves two critical logistics problems:
+* **The Shared Office NAT Problem**: In large warehouses or office hubs, 20 dispatchers work under the same roof sharing a single public IP address. If we limited by IP, one heavy user could exhaust the limit and block all other 19 dispatchers in the office. Limiting by User ID sandboxes each user's rate limits individually.
+* **The Roaming Driver IP Swapping**: Drivers switch connection points continuously (Wi-Fi to LTE, cell tower handovers), causing their IP addresses to change while they are on route. Tracking by `userId` ensures their location tracking remains throttled correctly regardless of IP changes.
+
+#### 2. What is "windowMs"?
+The variable `windowMs` stands for **"Time Window in Milliseconds"**. It represents the rolling duration in which request quotas are calculated (e.g., `60 * 1000` is a 1-minute window). It runs entirely on the backend server, protecting all client devices (whether accessing from Chrome, Safari, Mozilla, iOS, or Android) equally.
+
+#### 3. Client Header Metadata
+By setting `standardHeaders: true`, the server automatically appends rate limit status headers to the client's API response:
+* `RateLimit-Limit`: Maximum requests allowed in the window (e.g. 100).
+* `RateLimit-Remaining`: Requests left before the client gets blocked.
+* `RateLimit-Reset`: Time remaining in seconds until the quota resets.
+
+This allows our mobile and web apps to monitor their quota and slow down background requests dynamically before triggering a block.
+
+---
+
+## 23. Real-Time Driver Tracking & Location Persistence Architecture
+
+To build a high-performance, real-time logistics platform, tracking driver movements is a core requirement. We split this feature into two synchronized layers: **Database Persistence** and **Real-Time WebSockets**.
+
+```mermaid
+graph LR
+    Driver[Mobile App / Driver] -->|1. Socket.io Event<br/>'driver_location_update'| Server[Express Server / Socket.io]
+    Server -->|2. Prisma update| DB[(PostgreSQL Database)]
+    Server -->|3. Broadcast 'driver_location_changed'| Admin[Admin Dashboard Room]
+    Server -->|4. Broadcast 'delivery_location_changed'| Customer[Customer Room / Active Order]
+```
+
+### A. Data Persistence (PostgreSQL DB Layer)
+When a driver broadcasts their current location, the data must be securely saved for audit trails, routing history, and late delivery SLA reviews.
+* **Storage Location:** Inside the `DriverProfile` model in our PostgreSQL database.
+* **Database Columns:**
+  * `lastLatitude`: Stores the driver's current latitude (e.g., `6.5244`).
+  * `lastLongitude`: Stores the driver's current longitude (e.g., `3.3792`).
+  * `isOnline`: Automatically marked as `true` when a driver actively streams location updates.
+  * `updatedAt`: Automatic timestamp marking exactly when the coordinate update occurred.
+
+### B. Logical Architecture (Repository & Service Patterns)
+To adhere to clean engineering patterns, we decouple database access from business validation rules:
+1. **Repository Layer (`tracking.repository.ts`)**: Directly runs Prisma queries to update the database or fetch locations. It handles raw SQL/queries and contains no logic checks.
+2. **Service Layer (`tracking.service.ts`)**: Evaluates business constraints, including:
+   * **Tenant Isolation:** Ensuring a corporate admin from Tenant A cannot request tracking details for a delivery belonging to Tenant B (throwing a `"Delivery not found or unauthorized"` error).
+   * **State Constraints:** Verifying that a driver is active and has been assigned to the requested delivery prior to attempting to fetch coordinates.
+
+### C. Live Streaming Layer (WebSockets via Socket.io)
+Polling a REST API every 2 seconds for location updates is highly inefficient ($O(n)$ requests) and will exhaust server resources. Instead, we use a bidirectional **Socket.io** connection:
+* **JWT Handshake Authentication:** Sockets are authenticated via JWT during connection. The user's ID, role, and `tenantId` are attached to the socket context (`socket.user`).
+* **Room-Based Sandboxing:** Sockets are automatically routed into specific channels:
+  * **Tenant Room (`tenant:${tenantId}`)**: Only admins of the same company join this room. When any driver in their company moves, their location updates are streamed directly to this room for the dispatch dashboard.
+  * **Delivery Room (`delivery:${deliveryId}`)**: Customers tracking their active shipments join this specific room. The server only broadcasts location updates to this room if the driver is assigned (`ASSIGNED` or `PICKED_UP`) to that exact order.
+
+### D. REST Routing & Middleware Pipeline Guard
+While WebSockets provide real-time coordination, we require secure HTTP REST endpoints as a backup/polling fallback mechanism. These are secured by a multi-stage middleware gate sequence:
+
+```
+  Incoming HTTP Request
+           │
+           ▼
+  1. [authenticate]      <─── Verifies token & extracts User/Tenant context
+           │
+           ▼
+  2. [authorize([...])]  <─── Validates role access permissions
+           │
+           ▼
+  3. [generalApiLimiter] <─── Rate limits traffic to prevent spam
+           │
+           ▼
+  4. [Controller Handler]<─── Loads data & responds to client
+```
+
+* **Wildcard Parameters (`/:deliveryId`)**: Captures the dynamic delivery identifier from the path parameter, making it available as `req.params.deliveryId`.
+* **Granular Role Isolation**:
+  * `GET /delivery/:deliveryId`: Open to `["CUSTOMER", "DRIVER", "TENANT_SUPER_ADMIN", "TENANT_SUB_ADMIN"]`. All participating parties are permitted to track the active shipment.
+  * `GET /drivers`: Strictly restricted to `["TENANT_SUPER_ADMIN", "TENANT_SUB_ADMIN"]`. Ensures drivers and customers cannot access the complete GPS coordinates of all other fleet drivers.

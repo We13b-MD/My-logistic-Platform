@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import {prisma} from '../../../config/prisma'
+
 
 // Extend Express Request interface to include the authenticated user
 declare global {
@@ -81,5 +83,60 @@ export const authorize = (allowedRoles: string[]) => {
     }
 
     next();
+  };
+};
+
+
+export const authorizeAction = (actionName: string) => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      if (!req.user) {
+        res.status(401).json({
+          status: 'error',
+          message: 'User authentication required',
+        });
+        return;
+      }
+      
+      const userRole = req.user.role;
+      const tenantId = req.user.tenantId;
+
+      // Fetch the tenant's permissions block from the database
+      const tenant = await prisma.tenant.findUnique({
+        where: { id: tenantId },
+        select: { rolePermissions: true }
+      });
+
+      if (!tenant) {
+        res.status(403).json({
+          status: 'error',
+          message: 'Access denied tenant not found'
+        });
+        return;
+      }
+
+      // Default policies if no custom policies are set
+      const defaultPolicies: Record<string, string[]> = {
+        CREATE_DELIVERY: ["CUSTOMER", "TENANT_SUPER_ADMIN", "TENANT_SUB_ADMIN"],
+        VIEW_DASHBOARD: ["TENANT_SUPER_ADMIN"],
+        UPDATE_VEHICLE: ["TENANT_SUPER_ADMIN"],
+      };
+
+      const tenantPermissions = (tenant.rolePermissions as Record<string, string[]> || defaultPolicies);
+      const allowedRoles = tenantPermissions[actionName];
+
+      // Verify if the user's role is allowed
+      if (!allowedRoles || !allowedRoles.includes(userRole)) {
+        res.status(403).json({
+          status: "error",
+          message: "Forbidden: You do not have permission to perform this action"
+        });
+        return;
+      }
+
+      next();
+    } catch (err: any) {
+      res.status(500).json({ status: "error", message: err.message });
+    }
   };
 };
