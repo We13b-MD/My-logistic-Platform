@@ -31,11 +31,20 @@ const trackingRouter = Router()
      (req,res) =>{
         controller.getActiveDriverLocations(req,res)
      }
+    );
 
-
+    // Unauthenticated public tracking endpoint (by OTP or Delivery ID)
+    trackingRouter.get(
+        "/public/:code",
+        generalApiLimiter,
+        (req, res) => {
+            controller.getPublicTrackingInfo(req, res);
+        }
     );
 
     export {trackingRouter}
+
+
 
 
 

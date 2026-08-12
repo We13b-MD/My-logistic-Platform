@@ -932,3 +932,185 @@ While WebSockets provide real-time coordination, we require secure HTTP REST end
 * **Granular Role Isolation**:
   * `GET /delivery/:deliveryId`: Open to `["CUSTOMER", "DRIVER", "TENANT_SUPER_ADMIN", "TENANT_SUB_ADMIN"]`. All participating parties are permitted to track the active shipment.
   * `GET /drivers`: Strictly restricted to `["TENANT_SUPER_ADMIN", "TENANT_SUB_ADMIN"]`. Ensures drivers and customers cannot access the complete GPS coordinates of all other fleet drivers.
+
+---
+
+## 24. Frontend Architecture: Company Onboarding & Core React Concepts
+
+This section documents the technical architecture, state design patterns, and network hooks implemented in the company onboarding module ([TenantOnboardPage.tsx](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/features/auth/pages/TenantOnboardPage.tsx)).
+
+### A. State Management & Data Cleanups (`useState`)
+React's `useState` manages client-side interactivity and validation states:
+1. **Consolidated Object State (`formData`)**: Input text fields (`company_name`, `subdomain`, `admin_email`, `password`, `confirm_password`) are structured in a single parent object. A unified change handler updates the state on keystroke via object spread operations:
+   ```typescript
+   setFormData((prev) => ({ ...prev, [id]: value }));
+   ```
+2. **Subdomain Sanitation (Clean Data Inputs)**: The subdomain field intercepts keystrokes and dynamically replaces unsafe characters:
+   ```typescript
+   const formatted = value.toLowerCase().replace(/[^a-z0-9-]/g, "");
+   ```
+   This ensures the value sent to the API matches the database schema's URL validation constraints before triggering submission.
+3. **Validation and Dynamic Feedback**: State maps like `fieldErrors` link input IDs directly to error messages. If a field fails validation, it gets highlighted and linked to screen readers, while `isLoading` prevents duplicate HTTP requests by disabling buttons and showing an active loader spinner.
+
+### B. Effects & DOM Lifecycle Syncing (`useEffect`)
+Side effects are external interactions handled outside React's render loop:
+1. **SEO Optimization**: Syncs the document title (`document.title`) once upon rendering:
+   ```typescript
+   useEffect(() => {
+     document.title = "Logistel | Company Onboarding";
+   }, []);
+   ```
+2. **Background Animations & Memory Cleaning**: Listens to mouse position coordinates to drive background parallax shifts:
+   ```typescript
+   useEffect(() => {
+     const handleMouseMove = (e: MouseEvent) => {
+       const blobs = document.querySelectorAll<HTMLElement>(".ambient-blob");
+       const x = e.clientX / window.innerWidth;
+       const y = e.clientY / window.innerHeight;
+       if (blobs[0]) blobs[0].style.transform = `translate(${x * 30}px, ${y * 30}px)`;
+       if (blobs[1]) blobs[1].style.transform = `translate(${-(x * 30)}px, ${-(y * 30)}px)`;
+     };
+     document.addEventListener("mousemove", handleMouseMove);
+     
+     // Cleanup function
+     return () => document.removeEventListener("mousemove", handleMouseMove);
+   }, []);
+   ```
+   * *Memory Precaution*: If we do not return a cleanup function, the mouse listener remains attached to the browser's global scope even after navigating away, creating a memory leak.
+
+### C. DOM Focus & Accessibility Helpers (`useRef`)
+Using `useRef` provides a reference to DOM nodes without causing components to re-render.
+* **Alert Focus**: When form submission fails, a reference pointing to the top error box (`errorAlertRef`) calls `.focus()` programmatically:
+  ```typescript
+  setTimeout(() => errorAlertRef.current?.focus(), 50);
+  ```
+  This immediately alerts assistive technologies to read the top error message aloud.
+
+### D. Global State & Automatic Auth Context Logging (`useAuth`)
+Instead of forcing users to sign in manually directly after onboarding, we leverage React Context via `useAuth`:
+* **State Propagation**: Upon a `201 Created` API response, credentials (`admin`) and session tokens (`token`) are passed directly into the context provider's `login` function.
+* **Auto Redirect**: React Context writes the session cookies and updates state, which immediately signals `AppRouter` to redirect the user to `/tenant-owner/dashboard` because their user role matches `TENANT_SUPER_ADMIN`.
+
+### E. WCAG 2.1 Accessibility Checklist (Level AA Standards)
+The component implements structural tags to guarantee keyboard and assistive accessibility:
+* **Criterion 1.3.1 (Info and Relationships)**: Connects each input to its `<label>` via matching `id` and `htmlFor` properties.
+* **Criterion 3.3.1 (Error Identification)**: Elements with errors receive `aria-invalid="true"` and are linked to inline error text tags via `aria-describedby`, ensuring screen readers announce the exact failure details.
+* **Criterion 4.1.2 (Name, Role, Value)**: The submit button uses `aria-busy={isLoading}` to communicate API transmission statuses.
+
+---
+
+## 25. B2B Logistics Dashboards: Leaflet Mapping, GPS Telemetry & Network Interceptors
+
+We designed and built two critical portals: the **Tenant Owner Dispatch Dashboard** and the **Driver Dashboard**. This section documents the key UI/UX designs, coordinate mapping, and security bypass configurations.
+
+### A. React Leaflet Map Configuration
+`react-leaflet` provides standard vector rendering of maps in React. To make the interface fit our dark premium theme and avoid standard bugs, we implemented three designs:
+1. **Dark Map Canvas Tiles**: We configured `TileLayer` using the CartoDB Dark Matter theme:
+   ```
+   https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png
+   ```
+2. **Dynamic Coordinate Pins**: Defined distinct color icons using standard Leaflet anchor options to identify starting locations (Blue), cargo destinations (Green), and active online driver vehicles (Red).
+3. **The Leaflet Asset Resolution Fix**: React bundlers (like Vite) bundle asset paths during production compilations. Leaflet's default pin search engine assumes standard static directories, causing markers to break. We resolve this by manually importing standard icons and overriding the prototype paths:
+   ```typescript
+   import markerIcon from "leaflet/dist/images/marker-icon.png";
+   import markerShadow from "leaflet/dist/images/marker-shadow.png";
+
+   delete (L.Icon.Default.prototype as any)._getIconUrl;
+   L.Icon.Default.mergeOptions({
+     iconUrl: markerIcon,
+     shadowUrl: markerShadow,
+   });
+   ```
+
+### B. Geolocation & Online Duty Status
+To prevent "ghost drivers" (couriers online with null coordinates) from causing calculation errors in our Haversine SQL searches, we coupled coordinates telemetry with the online queue toggle:
+- When a driver clicks **Go Online**, the dashboard requests permission from the browser's geolocation context (`navigator.geolocation.getCurrentPosition(...)`).
+- The coordinates are immediately captured and forwarded to the backend `PATCH /drivers/online` endpoint.
+
+### C. State Machine Handoffs & OTP Verifications
+To secure the cargo chain-of-custody, drivers advance deliveries through verified steps:
+1. **Confirm Pickup**: Driver clicks collect (`ASSIGNED` $\rightarrow$ `PICKED_UP`).
+2. **Confirm Departure**: Driver begins transit (`PICKED_UP` $\rightarrow$ `IN_TRANSIT`).
+3. **Confirm Handoff**: The driver must request a 6-digit confirmation pin from the recipient. Submitting this triggers a constant-time check (`IN_TRANSIT` $\rightarrow$ `DELIVERED`), saving the final coordinates.
+
+### D. Axios response interceptors & 401 Bypass
+Our global Axios network interceptor intercepts `401 Unauthorized` responses to clear cookies and redirect expired sessions to `/login`. However, during login submissions, a wrong email/password *also* returns `401 Unauthorized`. 
+- **The Bug**: The interceptor caught the 401 during submission, triggering a full page reload and wiping our React state (making error states "flash" and disappear).
+- **The Fix**: We added a check to verify that the target request URL is NOT the authentication route:
+  ```typescript
+  if (error.response?.status === 401 && !error.config?.url?.includes('/auth/login')) {
+    storage.clear();
+    window.location.href = '/login';
+  }
+  ```
+  This allows the login form to receive and display credentials errors locally without reloading the browser.
+
+---
+
+## 26. Fleet Management & Super Admin Anti-Fraud Architecture
+
+To combat asset theft, phantom breakdowns, and driver collusion, we designed the Fleet Management Module (`backend/src/api/v1/modules/vehicles`) around **Strict Super Admin RBAC Control**.
+
+### A. Operational Security & Anti-Fraud Gates
+* **Driver & Customer Mutation Lock (`403 Forbidden`)**: Drivers and customers have zero permission to register vehicles, set maintenance dates, or toggle vehicle statuses (`IDLE`, `IN_USE`, `MAINTENANCE`).
+* **Super Admin Command**: Only users with the `TENANT_SUPER_ADMIN` role can execute vehicle asset CRUD operations, set servicing due dates, or assign drivers to specific vehicles.
+
+### B. Automated Maintenance Overdue Calculation
+Instead of storing static overdue flags in the database, the backend dynamically calculates `isMaintenanceOverdue` on every API response:
+```typescript
+const now = new Date();
+const isMaintenanceOverdue = Boolean(
+  vehicle.nextMaintenanceDue && new Date(vehicle.nextMaintenanceDue) < now
+);
+```
+When `isMaintenanceOverdue` evaluates to `true`, the Admin Dashboard automatically highlights the vehicle with an **OVERDUE** warning badge.
+
+---
+
+## 27. Proof of Delivery (POD) & Cloudinary CDN Architecture
+
+To secure cargo chain-of-custody and eliminate backend server memory exhaustion from photo uploads, we implemented **Proof of Delivery (POD)** backed by **Cloudinary CDN Cloud Storage**.
+
+```mermaid
+graph TD
+    Driver[Driver App / Handoff] -->|1. Draw Recipient Signature| Canvas[HTML5 Signature Canvas]
+    Driver -->|2. Snap Cargo Photo| Photo[Delivery Photo Upload]
+    Driver -->|3. Submit Base64 Payload| Server[Backend /upload-pod Endpoint]
+    Server -->|4. Cloudinary SDK Stream| Cloudinary[Cloudinary Global CDN]
+    Cloudinary -->|5. Return Secure HTTPS URLs| Server
+    Server -->|6. Save URLs & Verify OTP| DB[(PostgreSQL Database)]
+    Admin[Tenant Admin Dashboard] -->|7. View POD Certificate| Modal[POD Inspection Modal]
+```
+
+### A. Cloud Storage & Graceful Local Fallback
+* **Cloudinary CDN Streaming**: When `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` are configured in `.env`, uploaded base64 data strings are streamed to Cloudinary's secure cloud storage using auto-compression (`quality: "auto:good"`, `fetch_format: "auto"`).
+* **Development Fallback**: If Cloudinary environment variables are missing during offline local development, the utility (`upload.util.ts`) gracefully decodes the base64 payload and writes PNG files to `/uploads/pod/photos` and `/uploads/pod/signatures`, serving them via Express static middleware (`app.use('/uploads', express.static(...))`).
+
+### B. HTML5 Digital Signature Canvas
+The recipient digital signature pad ([SignatureCanvas.tsx](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/components/SignatureCanvas.tsx)) captures vector stroke movements across mouse (`onMouseDown`, `onMouseMove`, `onMouseUp`) and mobile touch screens (`onTouchStart`, `onTouchMove`, `onTouchEnd`). Exported PNG data URLs (`canvas.toDataURL("image/png")`) are processed by the POD endpoint before completing order handoffs (`DELIVERED`).
+
+---
+
+## 28. Public Customer Package Tracking Architecture
+
+To allow end-recipients and customers to monitor shipment progress in real-time without creating an account or logging in, we implemented an unauthenticated **Public Customer Package Tracking Portal** (`/track` and `/track/:code`).
+
+```mermaid
+graph TD
+    Recipient[End Customer / Recipient] -->|1. Enter 6-Digit OTP / Tracking ID| Portal[PublicTrackingPage]
+    Portal -->|2. GET /api/v1/tracking/public/:code| Backend[Express Tracking Route]
+    Backend -->|3. Find Order by OTP or ID| DB[(PostgreSQL Database)]
+    DB -->|4. Return Delivery + Driver Coords| Backend
+    Backend -->|5. Public Safe Payload| Portal
+    Portal -->|6. Render Live Map & Stepper| UI[Interactive Leaflet Canvas & 5-Step Timeline]
+```
+
+### A. Unauthenticated API & Privacy Sanitization
+* **Rate Limiting Protection**: Endpoint `GET /api/v1/tracking/public/:code` uses `generalApiLimiter` to prevent brute-force OTP enumerations.
+* **Privacy Isolation**: Omits driver emails, user password hashes, internal billing rates, and tenant secrets, returning only public-safe tracking metadata: status (`PENDING` $\rightarrow$ `DELIVERED`), pickup/dropoff coordinates, expected arrival deadline, assigned vehicle type, and verified POD certificate previews upon completion.
+
+### B. Live Leaflet Map & 5-Step Progress Stepper
+The frontend component ([PublicTrackingPage.tsx](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/features/tracking/pages/PublicTrackingPage.tsx)) renders a 5-stage shipment stepper line (`Order Placed` $\rightarrow$ `Courier Assigned` $\rightarrow$ `Cargo Collected` $\rightarrow$ `Out for Delivery` $\rightarrow$ `Delivered`) alongside an interactive CartoDB Dark Matter Leaflet map displaying real-time courier markers and route polyline paths.
+
+
+

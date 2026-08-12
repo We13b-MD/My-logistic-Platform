@@ -1,4 +1,6 @@
 import { TrackingRepository } from "./tracking.repository";
+import { prisma } from "../../../../config/prisma";
+
 
 export class TrackingService{
     private repository: TrackingRepository;
@@ -48,4 +50,60 @@ export class TrackingService{
             updatedAt: driver.updatedAt
         }))
     }
-}
+
+    /**
+     * Unauthenticated public tracking query by OTP or Delivery ID.
+     */
+    async getPublicTrackingInfo(code: string) {
+        const trimmedCode = code.trim();
+        const delivery = await prisma.delivery.findFirst({
+            where: {
+                OR: [
+                    { deliveryOtp: trimmedCode },
+                    { id: trimmedCode },
+                ],
+            },
+            include: {
+                tenant: {
+                    select: { companyName: true, logoUrl: true }
+                },
+                driver: {
+                    include: {
+                        user: { select: { email: true } }
+                    }
+                }
+            }
+        });
+
+        if (!delivery) {
+            throw new Error("No shipment found matching this tracking code or OTP");
+        }
+
+        return {
+            id: delivery.id,
+            status: delivery.status,
+            companyName: delivery.tenant?.companyName || "Swift Logistics",
+            pickupAddress: delivery.pickupAddress,
+            pickupLatitude: delivery.pickupLatitude,
+            pickupLongitude: delivery.pickupLongitude,
+            dropoffAddress: delivery.dropoffAddress,
+            dropoffLatitude: delivery.dropoffLatitude,
+            dropoffLongitude: delivery.dropoffLongitude,
+            recipientName: delivery.recipientName,
+            expectedDeliveryTime: delivery.expectedDeliveryTime,
+            proofOfDeliveryPhotoUrl: delivery.proofOfDeliveryPhotoUrl,
+            signaturePhotoUrl: delivery.signaturePhotoUrl,
+            driver: delivery.driver
+                ? {
+                    vehicleType: delivery.driver.vehicleType,
+                    licenseNumber: delivery.driver.licenseNumber,
+                    isOnline: delivery.driver.isOnline,
+                    latitude: delivery.driver.lastLatitude,
+                    longitude: delivery.driver.lastLongitude,
+                }
+                : null,
+            createdAt: delivery.createdAt,
+            updatedAt: delivery.updatedAt,
+        };
+    }
+}

@@ -44,7 +44,17 @@ deliveryRouter.patch(
     (req, res) => deliveryController.updateStatus(req, res)
 );
 
+// Upload POD photo & signature base64 strings to Cloudinary / local fallback
+deliveryRouter.post(
+    '/upload-pod',
+    authenticate,
+    generalApiLimiter,
+    (req, res) => deliveryController.uploadPOD(req, res)
+);
+
 export { deliveryRouter }
+
+
 
 
 /** update  delivery status (State machine transitions validated at service level ) */

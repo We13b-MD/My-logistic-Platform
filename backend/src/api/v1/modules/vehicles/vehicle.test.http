@@ -1,0 +1,40 @@
+### 1. Register a new vehicle asset (Super Admin)
+POST http://localhost:5000/api/v1/vehicles
+Content-Type: application/json
+Authorization: Bearer YOUR_SUPER_ADMIN_TOKEN
+
+{
+  "plateNumber": "LAG-9942-XD",
+  "vehicleType": "VAN",
+  "status": "IDLE",
+  "lastMaintenance": "2026-06-01T00:00:00.000Z",
+  "nextMaintenanceDue": "2026-09-01T00:00:00.000Z"
+}
+
+### 2. List all fleet vehicles (Tenant Admins)
+GET http://localhost:5000/api/v1/vehicles
+Authorization: Bearer YOUR_SUPER_ADMIN_TOKEN
+
+### 3. List vehicles filtered by status
+GET http://localhost:5000/api/v1/vehicles?status=IDLE
+Authorization: Bearer YOUR_SUPER_ADMIN_TOKEN
+
+### 4. Assign driver to vehicle
+PATCH http://localhost:5000/api/v1/vehicles/VEHICLE_ID_HERE/assign-driver
+Content-Type: application/json
+Authorization: Bearer YOUR_SUPER_ADMIN_TOKEN
+
+{
+  "driverId": "DRIVER_PROFILE_ID_HERE"
+}
+
+### 5. Update vehicle maintenance dates
+PUT http://localhost:5000/api/v1/vehicles/VEHICLE_ID_HERE
+Content-Type: application/json
+Authorization: Bearer YOUR_SUPER_ADMIN_TOKEN
+
+{
+  "status": "MAINTENANCE",
+  "lastMaintenance": "2026-08-11T12:00:00.000Z",
+  "nextMaintenanceDue": "2026-11-11T12:00:00.000Z"
+}

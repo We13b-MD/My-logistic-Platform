@@ -14,33 +14,47 @@ export class NearestDriverStrategy implements IDriverAssignmentStrategy {
         const latDelta = 0.1;
         const lngDelta = 0.1;
 
-        // Raw SQL using Haversine formula to find the nearest available driver
-        const closestDrivers = await prisma.$queryRaw<any[]>`
-            SELECT dp.id,
-              (6371 * acos(
-                cos(radians(${pickupLat})) * cos(radians(dp."lastLatitude")) *
-                cos(radians(dp."lastLongitude") - radians(${pickupLng})) +
-                sin(radians(${pickupLat})) * sin(radians(dp."lastLatitude"))
-              )) AS distance
-            FROM "DriverProfile" dp
-            INNER JOIN "User" u ON dp."userId" = u.id
-            WHERE u."tenantId" = ${tenantId}
-              AND dp."isOnline" = true
-              AND dp."isVerified" = true
-              AND dp."lastLatitude" BETWEEN ${pickupLat - latDelta} AND ${pickupLat + latDelta}
-              AND dp."lastLongitude" BETWEEN ${pickupLng - lngDelta} AND ${pickupLng + lngDelta}
-            ORDER BY distance ASC
-            LIMIT 1;
+        // Atomic UPDATE + RETURNING using FOR UPDATE SKIP LOCKED.
+        // This selects AND locks the nearest free driver in a single DB operation,
+        // preventing two concurrent workers from assigning the same driver.
+        const result = await prisma.$queryRaw<any[]>`
+            UPDATE "DriverProfile"
+            SET "updatedAt" = NOW()
+            WHERE id = (
+                SELECT dp.id
+                FROM "DriverProfile" dp
+                INNER JOIN "User" u ON dp."userId" = u.id
+                WHERE u."tenantId" = ${tenantId}
+                  AND dp."isOnline" = true
+                  AND dp."isVerified" = true
+                  AND dp."lastLatitude"  BETWEEN ${pickupLat - latDelta} AND ${pickupLat + latDelta}
+                  AND dp."lastLongitude" BETWEEN ${pickupLng - lngDelta} AND ${pickupLng + lngDelta}
+                  AND NOT EXISTS (
+                      SELECT 1 FROM "Delivery" d
+                      WHERE d."driverId" = dp.id
+                        AND d.status IN ('ASSIGNED', 'PICKED_UP', 'IN_TRANSIT')
+                  )
+                ORDER BY (
+                    6371 * acos(
+                        cos(radians(${pickupLat})) * cos(radians(dp."lastLatitude")) *
+                        cos(radians(dp."lastLongitude") - radians(${pickupLng})) +
+                        sin(radians(${pickupLat})) * sin(radians(dp."lastLatitude"))
+                    )
+                ) ASC
+                LIMIT 1
+                FOR UPDATE SKIP LOCKED
+            )
+            RETURNING id;
         `;
 
-        // Guard: No drivers available in the bounding box area
-        if (closestDrivers.length === 0) {
+        // Guard: No free driver available in the bounding box
+        if (result.length === 0) {
             return null;
         }
 
-        const assignedDriverId = closestDrivers[0].id;
+        const assignedDriverId = result[0].id;
 
-        // Update the delivery record: link the driver and change status to ASSIGNED
+        // Link the driver to the delivery and mark as ASSIGNED
         await prisma.delivery.update({
             where: { id: deliveryId },
             data: {
@@ -106,41 +120,73 @@ export class DeliveryService {
         providedOtp?: string,
         actualDropoffLatitude?: number,
         actualDropoffLongitude?: number,
+        proofOfDeliveryPhotoUrl?: string,
+        signaturePhotoUrl?: string,
     ) {
-        const delivery = await prisma.delivery.findUnique({
-            where: { id: deliveryId }
-        });
-        if (!delivery) throw new Error('Delivery not found');
-        if (delivery.tenantId !== tenantId) throw new Error('Access Denied: Tenant Isolation Breach');
-        if (newStatus === DeliveryStatus.PICKED_UP) {
-            if (delivery.status !== DeliveryStatus.ASSIGNED) {
-                throw new Error('Delivery must be assigned before it can be picked up')
-            }
-        }
-        if (newStatus === DeliveryStatus.DELIVERED) {
-            if (delivery.status !== DeliveryStatus.PICKED_UP && delivery.status !== DeliveryStatus.IN_TRANSIT) {
-                throw new Error('Delivery must be picked up or in transit before delivered ');
-            }
-            if (!providedOtp) throw new Error('otp is required to complete a delivery');
+        // Wrap in a transaction with a conditional update to prevent TOCTOU race conditions.
+        // If two requests arrive simultaneously, only one will succeed — the other gets count=0.
+        return await prisma.$transaction(async (tx) => {
+            // Step 1: Fetch delivery and run all validation guards
+            const delivery = await tx.delivery.findUnique({
+                where: { id: deliveryId }
+            });
 
-            // Constant-time comparison to prevent timing attacks
-            const otpMatches = crypto.timingSafeEqual(
-                Buffer.from(delivery.deliveryOtp),
-                Buffer.from(providedOtp)
-            );
-            if (!otpMatches) {
-                throw new Error('Invalid delivery otp');
-            }
-        }
+            if (!delivery) throw new Error('Delivery not found');
+            if (delivery.tenantId !== tenantId) throw new Error('Access Denied: Tenant Isolation Breach');
 
-        // Apply status transition and save actual drop-off coordinates (if provided)
-        return await prisma.delivery.update({
-            where: { id: deliveryId },
-            data: {
+            if (newStatus === DeliveryStatus.PICKED_UP) {
+                if (delivery.status !== DeliveryStatus.ASSIGNED) {
+                    throw new Error('Delivery must be assigned before it can be picked up');
+                }
+            }
+
+            if (newStatus === DeliveryStatus.DELIVERED) {
+                if (delivery.status !== DeliveryStatus.PICKED_UP && delivery.status !== DeliveryStatus.IN_TRANSIT) {
+                    throw new Error('Delivery must be picked up or in transit before delivered');
+                }
+                if (!providedOtp) throw new Error('otp is required to complete a delivery');
+
+                // Constant-time comparison to prevent timing attacks
+                const otpMatches = crypto.timingSafeEqual(
+                    Buffer.from(delivery.deliveryOtp),
+                    Buffer.from(providedOtp)
+                );
+                if (!otpMatches) {
+                    throw new Error('Invalid delivery otp');
+                }
+            }
+
+            // Step 2: Conditional update — only succeeds if status hasn't changed since we read it.
+            // This is the race condition fix: if a concurrent request already changed the status,
+            // the WHERE clause won't match and count will be 0.
+            const updatePayload: any = {
                 status: newStatus,
                 actualDropoffLatitude,
                 actualDropoffLongitude,
-            },
+            };
+
+            if (proofOfDeliveryPhotoUrl) {
+                updatePayload.proofOfDeliveryPhotoUrl = proofOfDeliveryPhotoUrl;
+            }
+            if (signaturePhotoUrl) {
+                updatePayload.signaturePhotoUrl = signaturePhotoUrl;
+            }
+
+            const updated = await tx.delivery.updateMany({
+                where: {
+                    id: deliveryId,
+                    status: delivery.status, // must still be the same status we read
+                },
+                data: updatePayload,
+            });
+
+            if (updated.count === 0) {
+                throw new Error('Concurrent update conflict: delivery status was already changed by another request');
+            }
+
+
+            // Return the updated delivery record
+            return tx.delivery.findUnique({ where: { id: deliveryId } });
         });
     }
 
@@ -219,4 +265,3 @@ export class DeliveryService {
         };
     }
 }
-

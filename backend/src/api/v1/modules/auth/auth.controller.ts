@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
 import { AuthService } from "./auth.service";
+import { GoogleAuthService } from "./googleAuth.service";
 
 const authService = new AuthService();
+const googleAuthService = new GoogleAuthService();
 
 export class AuthController {
   async register(req: Request, res: Response): Promise<void> {
@@ -48,4 +50,41 @@ export class AuthController {
       });
     }
   }
+
+  async googleAuth(req: Request, res: Response): Promise<void> {
+    try {
+      const { email, googleId, idToken, name, avatarUrl, requestedRole } = req.body;
+      if (!email && !idToken) {
+        res.status(400).json({ status: "error", message: "Email or ID Token is required for Google OAuth" });
+        return;
+      }
+
+      const result = await googleAuthService.authenticateWithGoogle({
+        email,
+        googleId,
+        idToken,
+        name,
+        avatarUrl,
+        requestedRole,
+      });
+
+
+      res.status(200).json({
+        status: "success",
+        data: {
+          user: result.user,
+          token: result.token,
+          isNewUser: result.isNewUser,
+        },
+      });
+    } catch (error: any) {
+      console.error("Google Auth Backend Exception:", error);
+      res.status(400).json({
+        status: "error",
+        message: error.message || "Google authentication failed",
+      });
+    }
+  }
+
 }
+

@@ -16,8 +16,8 @@ export interface IDashboardMetrics {
         maintenance: number;
     };
     alerts: Array<{
-        type: "DELIVERY_DELAY" | "MAINTENANCE_DUE" | "DRIVER_INACTIVE";
+        type: "DELIVERY_DELAY" | "MAINTENANCE_DUE" | "DRIVER_INACTIVE" | "LOW_FUEL";
         message: string;
-        severity: "HIGH" | "MEDIUM";
+        severity: "HIGH" | "MEDIUM" | "LOW";
     }>;
-}
+}

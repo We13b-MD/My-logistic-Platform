@@ -5,27 +5,29 @@ This directory contains the central services, APIs, and business logic for the l
 ## Overview
 The backend is responsible for:
 - REST and/or GraphQL API gateways
-- Real-time driver dispatching, tracking, and telemetry logic
-- Geofencing and route optimization services
-- Database persistence, caching, and background job processing
-- User authentication and authorization (RBAC)
+- Real-time driver dispatching, tracking, and telemetry logic (Socket.io)
+- Multi-tenant SaaS company onboarding & JWT Role-Based Access Control (RBAC)
+- **Fleet & Vehicle Management**: Vehicle asset inventory, Super Admin anti-fraud controls, driver assignment, and maintenance overdue tracking
+- **Proof of Delivery (POD) Engine**: Base64 photo & HTML5 digital signature canvas uploads powered by **Cloudinary CDN Cloud Storage**
+- BullMQ smart driver auto-matching background dispatch queue
 
-## Proposed Structure
-When initialized, a standard layered architecture is recommended:
+## Module Architecture
 ```
-backend/
-├── src/
-│   ├── config/          # Database, environment variables, and app configurations
-│   ├── controllers/     # Route handlers processing requests and returning responses
-│   ├── middleware/      # Auth, logging, error handling, validation filters
-│   ├── models/          # Database schemas and data models
-│   ├── routes/          # API endpoint declarations
-│   ├── services/        # Business logic, third-party integrations (e.g., Maps, SMS)
-│   └── utils/           # Shared helpers, cryptos, calculations
-├── tests/               # Unit, integration, and load tests
-├── package.json
-└── README.md
+backend/src/api/v1/modules/
+├── auth/           ← Registration, JWT login, bcrypt verification, rate limiters
+├── tenant/         ← Multi-tenant SaaS onboarding, industry classification
+├── drivers/        ← Driver profile management, duty toggling, GPS coordinates
+├── vehicles/       ← Super Admin Fleet CRUD, vehicle statuses (IDLE/IN_USE/MAINTENANCE), maintenance deadlines
+├── deliveries/     ← Order creation, state transitions, OTP validation, POD photo & signature uploads
+├── tracking/       ← Real-time Socket.io driver location streaming & room routing
+└── users/          ← User profile management & RBAC queries
 ```
 
 ## Setup & Running
-*(Stack pending selection. Once the runtime/language is finalized, setup instructions will be updated here).*
+
+```bash
+cd backend
+npm install
+npm run dev    # Starts API server on port 3000
+```
+

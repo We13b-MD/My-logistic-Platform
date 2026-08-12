@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import { DeliveryService } from './delivery.service';
+import { uploadToCloudStorage } from '../../../../utils/upload.util';
 
 const deliveryService = new DeliveryService();
+
 
 export class DeliveryController {
     async create(req: Request, res: Response) {
@@ -40,21 +42,25 @@ export class DeliveryController {
             })
         }
     }
+
     async updateStatus(req: Request, res: Response) {
         try {
             const tenantId = (req as any).user.tenantId;
-             const deliveryId = req.params.id as string;
+            const deliveryId = req.params.id as string;
 
             const {
-                status, deliveryOtp, actualDropoffLatitude, actualDropoffLongitude
-            } = req.body
+                status, deliveryOtp, actualDropoffLatitude, actualDropoffLongitude,
+                proofOfDeliveryPhotoUrl, signaturePhotoUrl
+            } = req.body;
             const updatedDelivery = await deliveryService.updateStatus(
                 deliveryId,
                 tenantId,
                 status,
                 deliveryOtp,
                 actualDropoffLatitude,
-                actualDropoffLongitude
+                actualDropoffLongitude,
+                proofOfDeliveryPhotoUrl,
+                signaturePhotoUrl
             );
             return res.status(200).json({
                 status: 'success',
@@ -67,6 +73,39 @@ export class DeliveryController {
             })
         }
     }
+
+    /**
+     * Upload base64 POD photo and digital signature canvas drawing to Cloudinary (or local disk fallback).
+     */
+    async uploadPOD(req: Request, res: Response) {
+        try {
+            const { photoBase64, signatureBase64 } = req.body;
+            let photoUrl: string | undefined;
+            let signatureUrl: string | undefined;
+
+            if (photoBase64) {
+                photoUrl = await uploadToCloudStorage(photoBase64, 'photos');
+            }
+
+            if (signatureBase64) {
+                signatureUrl = await uploadToCloudStorage(signatureBase64, 'signatures');
+            }
+
+            return res.status(200).json({
+                status: 'success',
+                data: {
+                    proofOfDeliveryPhotoUrl: photoUrl,
+                    signaturePhotoUrl: signatureUrl,
+                }
+            });
+        } catch (err: any) {
+            return res.status(400).json({
+                status: 'error',
+                message: err.message || 'Failed to upload POD images'
+            });
+        }
+    }
+
 
 
         async list(req: Request, res: Response) {

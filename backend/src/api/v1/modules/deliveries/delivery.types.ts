@@ -18,7 +18,10 @@ export interface UpdateDeliveryStatusDTO{
     deliveryOtp?:string;
     actualDropoffLatitude?:number;
     actualDropoffLongitude?:number;
+    proofOfDeliveryPhotoUrl?:string;
+    signaturePhotoUrl?:string;
 }
+
 
 //required only when transitioning to delivered 
 

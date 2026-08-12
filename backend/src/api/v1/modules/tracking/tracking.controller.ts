@@ -32,23 +32,46 @@ export class TrackingController{
 
 //Retrieves all active online drivers for the tenant
 
-async getActiveDriverLocations(req:Request, res:Response):Promise<void>{
-    try{
-        const tenantId = req.user?.tenantId;
-        if(!tenantId){
-            res.status(401).json({message: 'Unauthorized missing tenant'});
-            return
+    async getActiveDriverLocations(req:Request, res:Response):Promise<void>{
+        try{
+            const tenantId = req.user?.tenantId;
+            if(!tenantId){
+                res.status(401).json({message: 'Unauthorized missing tenant'});
+                return
+            }
+            const drivers = await this.service.getActiveDriversLocations(tenantId);
+            res.status(200).json({
+                status:'success', data: drivers
+            })
+        }catch(error: any){
+            res.status(400).json({
+                status:'error', message:error.message 
+            })
         }
-const drivers = await this.service.getActiveDriversLocations(tenantId);
-res.status(200).json({
-    status:'success', data: drivers
-})
-
-    }catch(error: any){
-        res.status(400).json({
-            status:'error', message:error.message 
-        })
     }
 
-}
-}
+    /**
+     * Unauthenticated public tracking request by code or OTP.
+     */
+    async getPublicTrackingInfo(req: Request, res: Response): Promise<void> {
+        try {
+            const code = (req.params.code as string) || (req.query.code as string);
+            if (!code) {
+                res.status(400).json({ status: "error", message: "Tracking code or OTP is required" });
+                return;
+            }
+
+            const data = await this.service.getPublicTrackingInfo(code);
+            res.status(200).json({
+                status: "success",
+                data,
+            });
+        } catch (error: any) {
+            const statusCode = error.message?.includes("No shipment found") ? 404 : 400;
+            res.status(statusCode).json({
+                status: "error",
+                message: error.message || "Failed to retrieve public tracking info",
+            });
+        }
+    }
+}

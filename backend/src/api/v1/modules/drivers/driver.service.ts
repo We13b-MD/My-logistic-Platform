@@ -1,9 +1,12 @@
 import { prisma } from "../../../../config/prisma";
+import { Prisma } from "@prisma/client";
 
 export class DriverService {
   /**
    * Create a new driver profile linked to a user.
    * Ensures the user exists, belongs to the correct tenant, has the DRIVER role, and does not already have a profile.
+   * Uses a catch on the DB unique constraint (P2002) instead of a check-then-create pattern
+   * to eliminate the TOCTOU race condition on double-tap / duplicate requests.
    */
   async createProfile(
     userId: string,
@@ -27,25 +30,28 @@ export class DriverService {
       throw new Error("Only users with role DRIVER can create a driver profile");
     }
 
-    // 2. Check if profile already exists
-    const existingProfile = await prisma.driverProfile.findUnique({
-      where: { userId },
-    });
+    // 2. Attempt to create the profile — let the DB unique constraint be the race-condition guard.
+    // If two requests arrive simultaneously, one will get a P2002 unique violation which we
+    // catch and convert to a clean, user-friendly error message.
+    try {
+      const profile = await prisma.driverProfile.create({
+        data: {
+          userId,
+          vehicleType: data.vehicleType,
+          licenseNumber: data.licenseNumber,
+        },
+      });
 
-    if (existingProfile) {
-      throw new Error("Driver profile already exists for this user");
+      return profile;
+    } catch (e) {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === "P2002"
+      ) {
+        throw new Error("Driver profile already exists for this user");
+      }
+      throw e; // rethrow anything unexpected
     }
-
-    // 3. Create the profile
-    const profile = await prisma.driverProfile.create({
-      data: {
-        userId,
-        vehicleType: data.vehicleType,
-        licenseNumber: data.licenseNumber,
-      },
-    });
-
-    return profile;
   }
 
   /**
@@ -114,7 +120,7 @@ export class DriverService {
   /**
    * Toggle the online/offline status for a driver, ensuring tenant isolation.
    */
-  async toggleOnlineStatus(userId: string, tenantId: string, isOnline: boolean,  latitude?: number, 
+  async toggleOnlineStatus(userId: string, tenantId: string, isOnline: boolean, latitude?: number,
     longitude?: number) {
     const profile = await prisma.driverProfile.findUnique({
       where: { userId },
@@ -131,9 +137,11 @@ export class DriverService {
 
     const updatedProfile = await prisma.driverProfile.update({
       where: { userId },
-      data: { isOnline , lastLatitude: latitude,
-        lastLongitude: longitude},
-      
+      data: {
+        isOnline,
+        lastLatitude: latitude,
+        lastLongitude: longitude,
+      },
     });
 
     return updatedProfile;

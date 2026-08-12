@@ -72,4 +72,93 @@ export class TenantService {
       token,
     };
   }
+
+  async getBySubdomain(subdomain: string) {
+    return await prisma.tenant.findUnique({
+      where: { subdomain: subdomain.toLowerCase() },
+      select: {
+        id: true,
+        companyName: true,
+        subdomain: true,
+        industry: true,
+      },
+    });
+  }
+
+  /**
+   * List all registered tenants with user, driver, and delivery count.
+   */
+  async listAllTenants() {
+    const tenants = await prisma.tenant.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        _count: {
+          select: {
+            users: true,
+            deliveries: true,
+            vehicles: true,
+          },
+        },
+        users: {
+          where: { role: "TENANT_SUPER_ADMIN" },
+          select: { email: true },
+          take: 1,
+        },
+      },
+    });
+
+    return tenants.map((t) => ({
+      id: t.id,
+      companyName: t.companyName,
+      subdomain: t.subdomain,
+      logoUrl: t.logoUrl,
+      isActive: t.isActive,
+      industry: t.industry,
+      createdAt: t.createdAt,
+      adminEmail: t.users[0]?.email || "N/A",
+      totalUsers: t._count.users,
+      totalDeliveries: t._count.deliveries,
+      totalVehicles: t._count.vehicles,
+    }));
+  }
+
+  /**
+   * Toggle a tenant's active status (activate/suspend).
+   */
+  async toggleTenantStatus(id: string, isActive: boolean) {
+    const tenant = await prisma.tenant.findUnique({ where: { id } });
+    if (!tenant) throw new Error("Tenant not found");
+
+    return await prisma.tenant.update({
+      where: { id },
+      data: { isActive },
+      select: { id: true, companyName: true, isActive: true },
+    });
+  }
+
+  /**
+   * Compute platform-wide performance metrics for platform admins.
+   */
+  async getPlatformMetrics() {
+    const [totalTenants, activeTenants, totalUsers, totalDrivers, totalDeliveries, completedDeliveries] =
+      await Promise.all([
+        prisma.tenant.count(),
+        prisma.tenant.count({ where: { isActive: true } }),
+        prisma.user.count(),
+        prisma.driverProfile.count(),
+        prisma.delivery.count(),
+        prisma.delivery.count({ where: { status: "DELIVERED" } }),
+      ]);
+
+    return {
+      totalTenants,
+      activeTenants,
+      suspendedTenants: totalTenants - activeTenants,
+      totalUsers,
+      totalDrivers,
+      totalDeliveries,
+      completedDeliveries,
+    };
+  }
 }
+

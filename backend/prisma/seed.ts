@@ -39,9 +39,20 @@ async function main() {
 
   console.log("🏢 Created Tenants:", tenantA.companyName, "and", tenantB.companyName);
 
+  // Create Platform Super Admin
+  await prisma.user.create({
+    data: {
+      email: "superadmin@platform.com",
+      password: hashedPassword,
+      role: Role.PLATFORM_SUPER_ADMIN,
+      tenantId: tenantA.id,
+    },
+  });
+
   // ==========================================
   // 2. CREATE TENANT A USERS (Swift Logistics)
   // ==========================================
+
   const swiftAdmin = await prisma.user.create({
     data: {
       email: "admin@swift.com",

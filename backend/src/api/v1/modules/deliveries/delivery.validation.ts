@@ -29,8 +29,15 @@ export const updateStatusSchema = z.object({
     deliveryOtp: z.string().length(6, "OTP must be exactly 6 characters").optional(),
     actualDropoffLatitude:z.number().min(-90).max(90).optional(),
     actualDropoffLongitude:z.number().min(-180).max(180).optional(),
+    proofOfDeliveryPhotoUrl: z.string().optional(),
+    signaturePhotoUrl: z.string().optional(),
+});
 
-})
+export const uploadPodSchema = z.object({
+    photoBase64: z.string().optional(),
+    signatureBase64: z.string().optional(),
+});
+
 
 
 //middleware helper to validate request bodies
