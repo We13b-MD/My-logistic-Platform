@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # Database Service (Postgres)
+  postgres:
+    image: postgres:15-alpine
+    container_name: logistel_db
+    restart: always
+    environment:
+      POSTGRES_USER: logistel_user
+      POSTGRES_PASSWORD: logistel_password
+      POSTGRES_DB: logistel_prod
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Cache & Queue Broker Service (Redis for BullMQ matching queues)
+  redis:
+    image: redis:7-alpine
+    container_name: logistel_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # Backend Express API Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: logistel_api
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://logistel_user:logistel_password@postgres:5432/logistel_prod?sslmode=disable
+      - REDIS_URL=redis://redis:6379
+      - PORT=3000
+      - NODE_ENV=production
+      - JWT_SECRET=change_this_to_a_secure_random_key_in_production
+    depends_on:
+      - postgres
+      - redis
+
+volumes:
+  postgres_data:
+  redis_data:

@@ -106,4 +106,34 @@ export class TrackingService{
             updatedAt: delivery.updatedAt,
         };
     }
-}
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // GPS Breadcrumb Trail (Gap 1 — Cargo Diversion Prevention)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * getBreadcrumbTrail
+     * Returns the full ordered GPS history of a delivery for admin map replay.
+     * Admins can use this to investigate cargo diversion or transloading fraud
+     * by seeing the exact path the vehicle took, including any unauthorized stops.
+     */
+    async getBreadcrumbTrail(deliveryId: string, tenantId: string) {
+        const trail = await this.repository.getBreadcrumbTrail(deliveryId, tenantId);
+
+        if (trail === null) {
+            throw new Error('Delivery not found or access denied');
+        }
+
+        return {
+            deliveryId,
+            totalPoints: trail.length,
+            // Return as [lat, lng] pairs — ready for Leaflet Polyline positions
+            trail: trail.map(point => ({
+                lat:        point.latitude,
+                lng:        point.longitude,
+                recordedAt: point.recordedAt,
+            })),
+        };
+    }
+}
+

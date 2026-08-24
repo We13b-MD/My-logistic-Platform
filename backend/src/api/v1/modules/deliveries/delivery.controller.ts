@@ -116,8 +116,13 @@ export class DeliveryController {
 
             const { status, limit, page } = req.query;
 
+            const validStatuses = ['PENDING', 'ASSIGNED', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED'];
+            const cleanStatus = typeof status === 'string' && validStatuses.includes(status.toUpperCase())
+                ? status.toUpperCase() as any
+                : undefined;
+
             const filters: any = {
-                status: status as any,
+                status: cleanStatus,
                 limit: limit ? parseInt(limit as string) : undefined,
                 page: page ? parseInt(page as string) : undefined,
             };
@@ -127,6 +132,7 @@ export class DeliveryController {
                 filters.driverUserId = userId; // Let the service resolve this to driverId
             } else if (role === 'CUSTOMER') {
                 filters.senderId = userId;
+                filters.customerEmail = (req as any).user.email;
             }
 
             const result = await deliveryService.list(tenantId, filters);

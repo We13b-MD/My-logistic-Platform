@@ -8,7 +8,7 @@ import { initTrackingSocket } from './src/api/v1/modules/tracking/tracking.socke
 
 import path from 'path';
 
-// Load environment variables from .env file
+// Load environment variables from .env file (SMTP & Cloudflare R2 enabled)
 dotenv.config();
 
 const app = express();

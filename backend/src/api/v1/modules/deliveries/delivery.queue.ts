@@ -13,8 +13,8 @@
             delay: 5000, //Retry is 5s then 10secs, 20 secs to prevent database storms
         },
         removeOnComplete: true,
-        //Delete successful jobs to keep redis memory footprint small 
-        removeOnFail: false,
-        //keep failed jobs so we can inspect and debug errors later 
+        // Delete successful jobs immediately to keep redis memory footprint minimal
+        removeOnFail: { count: 100 },
+        // Cap retained failed jobs to max 100 items to inspect errors without memory leaks
     },
  })

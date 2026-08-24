@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { tenantApi } from "@/api/tenant.api";
 import { toast } from "sonner";
 import { Industry } from "@/types";
+import { Icon } from "@iconify/react";
 
 export function TenantOnboardPage() {
   const navigate = useNavigate();
@@ -175,42 +176,34 @@ export function TenantOnboardPage() {
   };
 
   return (
-    <div className="bg-midnight text-on-surface font-body-md min-h-screen w-full flex flex-col items-center justify-center py-12 relative overflow-x-hidden">
-      {/* Ambient background effect */}
-      <div className="fixed inset-0 pointer-events-none opacity-20">
-        <div className="ambient-blob absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[120px] transition-transform duration-300 ease-out"></div>
-        <div className="ambient-blob absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-secondary/10 rounded-full blur-[120px] transition-transform duration-300 ease-out"></div>
-      </div>
-
+    <div className="min-h-screen w-full flex flex-col items-center justify-center p-6 relative bg-[#080d1a] text-slate-100 py-12 selection:bg-teal-500 selection:text-slate-950">
       {/* Main Content Canvas */}
-      <main className="w-full max-w-[1200px] grid lg:grid-cols-2 gap-8 px-gutter py-lg items-center z-10">
+      <main className="w-full max-w-[1100px] grid lg:grid-cols-2 gap-12 px-4 py-8 items-center z-10">
         {/* Branding Section (Visible on Desktop) */}
-        <div className="hidden lg:flex flex-col space-y-6 pr-12">
-          <div className="flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-primary text-[48px]" aria-hidden="true">
-              hub
-            </span>
-            <h1 className="font-headline-lg text-headline-lg text-primary tracking-tight">Logistel</h1>
+        <div className="hidden lg:flex flex-col space-y-6 pr-8">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-[#29a195] rounded-2xl flex items-center justify-center shadow-md">
+              <span className="material-symbols-outlined text-slate-950 text-[28px]">hub</span>
+            </div>
+            <h1 className="font-display text-2xl text-slate-100 font-bold tracking-tight">Logistel</h1>
           </div>
           <div className="space-y-4">
-            <h2 className="font-display-lg text-display-lg leading-tight">Master your global supply chain.</h2>
-            <p className="font-body-lg text-body-lg text-on-surface-variant max-w-md">
-              Join the next generation of logistics owners. Scale your operations with precision tracking, automated dispatching, and high-density analytics.
+            <h2 className="font-display text-3xl text-slate-100 font-bold leading-tight">Master your global supply chain.</h2>
+            <p className="text-sm text-slate-400 max-w-md leading-relaxed">
+              Join the next generation of logistics owners. Scale your operations with precision tracking, automated dispatching, and real-time fleet analytics.
             </p>
           </div>
           {/* Feature Micro-Grid */}
-          <div className="grid grid-cols-2 gap-4 mt-8">
-            <div className="glass-panel p-4 rounded-xl flex flex-col gap-2">
-              <span className="material-symbols-outlined text-primary" aria-hidden="true">
-                rocket_launch
-              </span>
-              <span className="font-label-md text-label-md">Rapid Onboarding</span>
+          <div className="grid grid-cols-2 gap-4 pt-4">
+            <div className="glass-panel p-4 rounded-xl flex flex-col gap-2 border border-slate-800">
+              <Icon icon="solar:rocket-bold-duotone" className="text-teal-400 text-2xl" />
+              <span className="text-xs font-bold text-slate-200">Rapid Onboarding</span>
+              <span className="text-[11px] text-slate-400">Launch your hub in under 2 minutes</span>
             </div>
-            <div className="glass-panel p-4 rounded-xl flex flex-col gap-2">
-              <span className="material-symbols-outlined text-secondary" aria-hidden="true">
-                security
-              </span>
-              <span className="font-label-md text-label-md">Enterprise Security</span>
+            <div className="glass-panel p-4 rounded-xl flex flex-col gap-2 border border-slate-800">
+              <Icon icon="solar:shield-check-bold-duotone" className="text-cyan-400 text-2xl" />
+              <span className="text-xs font-bold text-slate-200">Enterprise Security</span>
+              <span className="text-[11px] text-slate-400">Multi-tenant data isolation</span>
             </div>
           </div>
         </div>
@@ -218,17 +211,17 @@ export function TenantOnboardPage() {
         {/* Registration Form Container */}
         <div className="flex flex-col w-full max-w-md mx-auto">
           {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center justify-center gap-1.5 mb-6">
-            <span className="material-symbols-outlined text-primary text-[32px]" aria-hidden="true">
-              hub
-            </span>
-            <span className="font-headline-md text-headline-md text-primary font-bold">Logistel</span>
+          <div className="lg:hidden flex items-center justify-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-teal-500 rounded-xl flex items-center justify-center">
+              <Icon icon="solar:shipping-truck-bold-duotone" className="text-slate-950 text-2xl" />
+            </div>
+            <span className="font-display text-xl text-slate-100 font-bold">Logistel</span>
           </div>
 
-          <div className="glass-panel linear-light-border p-6 rounded-xl shadow-2xl space-y-4">
+          <div className="glass-panel p-6 md:p-8 rounded-2xl shadow-xl space-y-5 border border-slate-800">
             <div className="space-y-1">
-              <h3 className="font-headline-md text-headline-md text-on-surface">Register Company</h3>
-              <p className="font-body-md text-on-surface-variant">Set up your logistics hub in minutes.</p>
+              <h3 className="font-display text-xl text-slate-100 font-bold">Register Company</h3>
+              <p className="text-xs text-slate-400">Set up your logistics hub in minutes.</p>
             </div>
 
             {/* General Error alert at the top of form */}
@@ -236,14 +229,12 @@ export function TenantOnboardPage() {
               <div
                 ref={errorAlertRef}
                 tabIndex={-1}
-                className="flex items-center gap-2 text-error bg-error-container/20 p-3 rounded-lg border border-error/30 focus:outline-none"
+                className="flex items-center gap-2.5 text-rose-300 bg-rose-500/10 p-3 rounded-xl border border-rose-500/30 text-xs focus:outline-none"
                 role="alert"
                 aria-live="assertive"
               >
-                <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
-                  error
-                </span>
-                <p className="font-code-sm text-code-sm font-semibold">{generalError}</p>
+                <Icon icon="solar:danger-triangle-bold" className="text-rose-400 text-lg flex-shrink-0" />
+                <p className="font-semibold">{generalError}</p>
               </div>
             )}
 
@@ -441,48 +432,47 @@ export function TenantOnboardPage() {
               {/* Submit button with loader */}
               {isLoading ? (
                 <button
-                  className="w-full bg-primary-container text-on-primary-container font-headline-md py-3 rounded-lg flex items-center justify-center gap-2 transition-all opacity-80 pointer-events-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-midnight"
+                  className="w-full bg-teal-500/80 text-slate-950 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 cursor-not-allowed opacity-80"
                   disabled
                   aria-busy="true"
                   type="submit"
                 >
-                  <span className="material-symbols-outlined animate-spin" aria-hidden="true">
-                    progress_activity
-                  </span>
-                  Provisioning...
+                  <Icon icon="lucide:loader-2" className="animate-spin text-lg" />
+                  <span>Provisioning Company Hub...</span>
                 </button>
               ) : (
                 <button
-                  className="w-full bg-primary-container text-on-primary-container font-headline-md py-3 rounded-lg flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-[0.98] btn-glow focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-midnight"
+                  className="w-full bg-[#29a195] hover:bg-[#22877d] text-slate-950 font-bold py-3.5 rounded-xl transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2"
                   type="submit"
                 >
-                  Register Company
+                  <span>Register Logistics Company</span>
+                  <Icon icon="lucide:arrow-right" className="text-base" />
                 </button>
               )}
             </form>
 
             {/* Divider */}
             <div className="flex items-center gap-4 py-1" aria-hidden="true">
-              <div className="h-px bg-outline-variant flex-1"></div>
-              <span className="text-on-surface-variant font-label-md">OR</span>
-              <div className="h-px bg-outline-variant flex-1"></div>
+              <div className="h-px bg-slate-800 flex-1"></div>
+              <span className="text-slate-500 text-xs font-bold uppercase tracking-widest">OR</span>
+              <div className="h-px bg-slate-800 flex-1"></div>
             </div>
 
             {/* Social Auth */}
-            <button className="w-full bg-surface-container-high border border-outline-variant text-on-surface font-body-md py-2.5 rounded-lg flex items-center justify-center gap-3 transition-all hover:bg-surface-variant active:scale-[0.98] focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-midnight">
+            <button className="w-full bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-200 font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-3 cursor-pointer">
               <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"></path>
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 12-4.53z" fill="#EA4335"></path>
               </svg>
-              Continue with Google
+              <span>Continue with Google</span>
             </button>
 
-            <div className="text-center">
-              <p className="font-body-md text-on-surface-variant">
+            <div className="text-center pt-1">
+              <p className="text-xs text-slate-400">
                 Already registered?{" "}
-                <Link className="text-primary hover:underline font-bold transition-all focus:outline-none focus:underline" to="/login">
+                <Link className="text-teal-400 hover:underline font-bold transition-all" to="/login">
                   Sign In
                 </Link>
               </p>
@@ -490,31 +480,25 @@ export function TenantOnboardPage() {
           </div>
 
           {/* Trust Badges */}
-          <div className="mt-4 flex justify-between items-center opacity-40 px-4">
-            <div className="flex items-center gap-1">
-              <span className="material-symbols-outlined text-[14px]" aria-hidden="true" style={{ fontVariationSettings: "'FILL' 1" }}>
-                lock
-              </span>
+          <div className="mt-4 flex justify-between items-center text-slate-500 px-2">
+            <div className="flex items-center gap-1.5">
+              <Icon icon="solar:lock-bold" className="text-slate-400 text-xs" />
               <span className="text-[10px] uppercase tracking-widest font-bold">SSL Secure</span>
             </div>
-            <div className="flex items-center gap-1">
-              <span className="material-symbols-outlined text-[14px]" aria-hidden="true" style={{ fontVariationSettings: "'FILL' 1" }}>
-                verified_user
-              </span>
+            <div className="flex items-center gap-1.5">
+              <Icon icon="solar:verified-check-bold" className="text-slate-400 text-xs" />
               <span className="text-[10px] uppercase tracking-widest font-bold">GDPR Compliant</span>
             </div>
-            <div className="flex items-center gap-1">
-              <span className="material-symbols-outlined text-[14px]" aria-hidden="true" style={{ fontVariationSettings: "'FILL' 1" }}>
-                cloud
-              </span>
+            <div className="flex items-center gap-1.5">
+              <Icon icon="solar:cloud-bold" className="text-slate-400 text-xs" />
               <span className="text-[10px] uppercase tracking-widest font-bold">High Availability</span>
             </div>
           </div>
         </div>
       </main>
 
-      <footer className="mt-auto py-8 text-on-surface-variant/30 font-label-md text-[10px] uppercase tracking-[0.2em] z-10">
-        © 2024 Logistel Systems. All rights reserved.
+      <footer className="mt-auto py-6 text-slate-500 text-[10px] uppercase tracking-widest font-mono z-10">
+        © 2026 Logistel Systems. All rights reserved.
       </footer>
     </div>
   );

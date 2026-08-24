@@ -10,6 +10,7 @@ export interface CreateDeliveryDTO{
     dropoffLongitude:number;
     recipientName:string;
     recipientPhone:string;
+    recipientEmail?:string;
 }
 
 

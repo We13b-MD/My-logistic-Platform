@@ -6,6 +6,7 @@ import { deliveryApi } from "@/api/delivery.api";
 import { toast } from "sonner";
 import { Delivery, DriverProfile } from "@/types";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
+import { Icon } from "@iconify/react";
 
 // Leaflet imports
 
@@ -415,11 +416,11 @@ export function DriverDashboardPage() {
 
             <button
               disabled={submittingProfile}
-              className="w-full bg-[#0D9488] hover:bg-[#0F766E] text-white font-headline-md text-[16px] py-3.5 rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20"
+              className="w-full bg-[#29a195] hover:bg-[#22877d] text-slate-950 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm"
               type="submit"
             >
-              {submittingProfile && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
-              Save Profile
+              {submittingProfile && <Icon icon="lucide:loader-2" className="animate-spin text-lg" />}
+              <span>Save Profile</span>
             </button>
           </form>
 

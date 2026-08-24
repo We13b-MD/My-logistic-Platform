@@ -1045,11 +1045,18 @@ Our global Axios network interceptor intercepts `401 Unauthorized` responses to 
   ```
   This allows the login form to receive and display credentials errors locally without reloading the browser.
 
+  > **Simplified Analogy**: Think of the interceptor as a security bouncer. Normally, if someone's session badge expires while browsing, the bouncer redirects them to `/login`. But when a user tries logging in with an invalid password, the server *also* returns `401 Unauthorized`. Without the `!includes('/auth/login')` check, the bouncer freaked out during login attempts and refreshed the page, wiping away the red "Invalid Credentials" error message before the user could read it.
+
 ---
 
 ## 26. Fleet Management & Super Admin Anti-Fraud Architecture
 
 To combat asset theft, phantom breakdowns, and driver collusion, we designed the Fleet Management Module (`backend/src/api/v1/modules/vehicles`) around **Strict Super Admin RBAC Control**.
+
+### What is RBAC (Role-Based Access Control)?
+**RBAC** is a security framework where user permissions are determined by their assigned **Role** (`TENANT_SUPER_ADMIN`, `DISPATCHER`, `DRIVER`, `CUSTOMER`) rather than individual user configurations:
+1. **Role Definition**: Privileges are bound to roles instead of individual users.
+2. **Access Locks**: Middlewares check `req.user.role`. If an unprivileged role calls a protected endpoint, the system responds with `403 Forbidden`.
 
 ### A. Operational Security & Anti-Fraud Gates
 * **Driver & Customer Mutation Lock (`403 Forbidden`)**: Drivers and customers have zero permission to register vehicles, set maintenance dates, or toggle vehicle statuses (`IDLE`, `IN_USE`, `MAINTENANCE`).
@@ -1067,24 +1074,24 @@ When `isMaintenanceOverdue` evaluates to `true`, the Admin Dashboard automatical
 
 ---
 
-## 27. Proof of Delivery (POD) & Cloudinary CDN Architecture
+## 27. Proof of Delivery (POD) & Cloudflare R2 Object Storage Architecture
 
-To secure cargo chain-of-custody and eliminate backend server memory exhaustion from photo uploads, we implemented **Proof of Delivery (POD)** backed by **Cloudinary CDN Cloud Storage**.
+To secure cargo chain-of-custody and eliminate backend server memory exhaustion from photo uploads while avoiding bandwidth egress fees, we implemented **Proof of Delivery (POD)** backed by **Cloudflare R2 Object Storage** (`@aws-sdk/client-s3`).
 
 ```mermaid
 graph TD
     Driver[Driver App / Handoff] -->|1. Draw Recipient Signature| Canvas[HTML5 Signature Canvas]
     Driver -->|2. Snap Cargo Photo| Photo[Delivery Photo Upload]
     Driver -->|3. Submit Base64 Payload| Server[Backend /upload-pod Endpoint]
-    Server -->|4. Cloudinary SDK Stream| Cloudinary[Cloudinary Global CDN]
-    Cloudinary -->|5. Return Secure HTTPS URLs| Server
+    Server -->|4. PutObjectCommand S3 Stream| R2[Cloudflare R2 Object Storage]
+    R2 -->|5. Return Secure HTTPS URLs| Server
     Server -->|6. Save URLs & Verify OTP| DB[(PostgreSQL Database)]
     Admin[Tenant Admin Dashboard] -->|7. View POD Certificate| Modal[POD Inspection Modal]
 ```
 
 ### A. Cloud Storage & Graceful Local Fallback
-* **Cloudinary CDN Streaming**: When `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` are configured in `.env`, uploaded base64 data strings are streamed to Cloudinary's secure cloud storage using auto-compression (`quality: "auto:good"`, `fetch_format: "auto"`).
-* **Development Fallback**: If Cloudinary environment variables are missing during offline local development, the utility (`upload.util.ts`) gracefully decodes the base64 payload and writes PNG files to `/uploads/pod/photos` and `/uploads/pod/signatures`, serving them via Express static middleware (`app.use('/uploads', express.static(...))`).
+* **Cloudflare R2 S3 Streaming**: When `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, and `R2_SECRET_ACCESS_KEY` are configured in `.env`, uploaded base64 data strings are streamed to Cloudflare R2 via `@aws-sdk/client-s3` (`PutObjectCommand`) under keys `pod/photos/` and `pod/signatures/`. This grants **$0 egress bandwidth fees** and global edge CDN caching.
+* **Development Fallback**: If Cloudflare R2 environment variables are missing during offline local development, the utility ([upload.util.ts](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/src/utils/upload.util.ts)) gracefully decodes the base64 payload and writes PNG files to `/uploads/pod/photos` and `/uploads/pod/signatures`, serving them via Express static middleware (`app.use('/uploads', express.static(...))`).
 
 ### B. HTML5 Digital Signature Canvas
 The recipient digital signature pad ([SignatureCanvas.tsx](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/components/SignatureCanvas.tsx)) captures vector stroke movements across mouse (`onMouseDown`, `onMouseMove`, `onMouseUp`) and mobile touch screens (`onTouchStart`, `onTouchMove`, `onTouchEnd`). Exported PNG data URLs (`canvas.toDataURL("image/png")`) are processed by the POD endpoint before completing order handoffs (`DELIVERED`).
@@ -1111,6 +1118,459 @@ graph TD
 
 ### B. Live Leaflet Map & 5-Step Progress Stepper
 The frontend component ([PublicTrackingPage.tsx](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/features/tracking/pages/PublicTrackingPage.tsx)) renders a 5-stage shipment stepper line (`Order Placed` $\rightarrow$ `Courier Assigned` $\rightarrow$ `Cargo Collected` $\rightarrow$ `Out for Delivery` $\rightarrow$ `Delivered`) alongside an interactive CartoDB Dark Matter Leaflet map displaying real-time courier markers and route polyline paths.
+
+---
+
+## 29. Redis In-Memory Infrastructure & BullMQ Asynchronous Queues
+
+To scale the backend to support 1,000+ concurrent active logistics orders without database lockups or job loss, we integrated **Redis** (`ioredis`) alongside **BullMQ**.
+
+### A. Primary Use Cases for Redis in this Application
+1. **Asynchronous Driver Auto-Matching (`MATCH_DRIVER`)**: When a delivery is booked, matching nearby drivers requires heavy geospatial distance calculations. Instead of executing this on the main Express HTTP thread, the task is pushed into Redis via [delivery.queue.ts](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/src/api/v1/modules/deliveries/delivery.queue.ts).
+2. **Postgres Connection & CPU Protection**: A background BullMQ worker ([delivery.worker.ts](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/src/api/v1/modules/deliveries/delivery.worker.ts)) pulls jobs from Redis with controlled concurrency (`concurrency: 5`), preventing database CPU spikes during traffic surges.
+3. **Resilience & Auto-Retry Loops**: If no driver is in range immediately, BullMQ uses Redis to retry driver matching using exponential backoff (e.g. 5s $\rightarrow$ 10s $\rightarrow$ 20s). Even if the backend Node process restarts, queued matching jobs are persisted in Redis and resumed automatically.
+4. **Memory Footprint Optimization**: Successful matching jobs are automatically pruned from Redis (`removeOnComplete: true`), keeping the memory footprint low.
+
+### B. Redis Out-of-Memory (OOM) Protection Strategies
+To prevent Redis from exhausting RAM in production under heavy concurrent load, we implement a 5-tier memory defense:
+1. **Automated BullMQ Job Pruning**: Configured in [delivery.queue.ts](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/src/api/v1/modules/deliveries/delivery.queue.ts#L15) with `removeOnComplete: true` (immediate purge upon driver assignment) and `removeOnFail: { count: 100 }` (capping failed job logs to max 100 items).
+2. **Redis Memory Cap (`maxmemory 256mb`)**: Restricts Redis RAM allocation in `redis.conf` so it never consumes all server memory.
+3. **LRU Eviction Policy (`maxmemory-policy allkeys-lru`)**: If RAM hits 256 MB, Redis automatically purges the Least Recently Used keys instead of crashing or throwing Out-of-Memory (OOM) errors.
+4. **Key Time-to-Live (TTL Expiration)**: Temporary cached telemetry data and session keys are set with explicit TTL expiration timers (e.g. `EXPIRE 3600`).
+5. **Memory Usage Alerting**: Monitoring `used_memory` metrics via Redis CLI / Cloud dashboards to alert devops at 80% RAM utilization.
+
+---
+
+## 31. Free Transactional Email & OTP Verification Architecture
+
+To provide 100% free ($0.00) transactional email verification, OTP delivery handoffs, and password resets for hundreds of daily users, we integrated **Nodemailer** with SMTP transport.
+
+```mermaid
+graph TD
+    Trigger[Auth / Delivery Handoff / Reset] -->|1. Generate 6-Digit Code| Utility[email.util.ts]
+    Utility -->|2. Check SMTP Config| Config[mail.ts Transporter]
+    Config -->|3a. SMTP Configured| Provider[Gmail / Brevo / Resend SMTP]
+    Provider -->|4a. Deliver HTML Email| Inbox[User Email Inbox]
+    Config -->|3b. SMTP Keys Missing| Console[Dev Terminal Console Logger]
+```
+
+### A. Modular SMTP Architecture & Fallback
+* **Transporter module**: Configured in [mail.ts](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/src/config/mail.ts) targeting standard SMTP providers (`smtp.gmail.com`, `smtp.brevo.com`, `smtp.resend.com`).
+* **Email Helper Utility**: Function `sendOtpEmail()` in [email.util.ts](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/src/utils/email.util.ts) compiles branded HTML templates for `VERIFICATION`, `DELIVERY_HANDOFF`, and `PASSWORD_RESET`.
+* **Zero-Config Offline Fallback**: If SMTP environment variables are missing during local development, the utility logs the 6-digit OTP code directly to the backend terminal console, allowing offline testing without cloud keys.
+* **Scaling Path**: Supports up to 500 emails/day free on Gmail SMTP or 9,000 emails/month free on Brevo. To scale to 100,000+ emails/month, updating `SMTP_HOST` in `.env` to Amazon SES ($0.10 per 1,000 emails) requires zero code changes.
+
+---
+
+## 30. Dynamic Pricing, Paystack Subscription & Automated Invoicing Architecture
+
+We integrated a modular pricing and billing engine designed for multi-tenant scalability:
+
+### A. Dynamic Pricing Formula (Geospatial Haversine calculation)
+The backend dynamically quotes delivery costs based on pickup/dropoff coordinates, distance (Haversine formula in km), vehicle multipliers, and tenant pricing rules:
+
+$$\text{Total Price} = \left[ \text{Base Fare} + (\text{Distance in km} \times \text{Per-KM Rate}) \right] \times \text{Vehicle Multiplier} \times \text{Surge Multiplier}$$
+
+* **Base Fare**: Configurable per tenant (default ₦1,000).
+* **Per-KM Rate**: Configurable per tenant (default ₦100).
+* **Vehicle Multipliers**: `BIKE` ($1.0\times$), `CAR` ($1.2\times$), `VAN` ($1.5\times$), `TRUCK` ($2.5\times$).
+
+### B. Paystack 30-Day Free Trial & Recurring Billing
+Monetization for tenants uses Paystack subscriptions:
+* **30-Day Free Trial**: New tenants are provisioned with `subscriptionStatus: TRIAL` for 30 days.
+* **Recurring Billing**: Automatically tokenizes cards for ₦50,000/month or upfront ₦500,000/year subscription renewals.
+* **Webhook Listeners**: Processes events (`charge.success`, `subscription.create`, `invoice.payment_failed`) to update status.
+
+### C. Automated Invoice Generation
+Upon delivery completion, the `Invoice` model stores a permanent record of the fare breakdown, protecting historical sales data from subsequent pricing rule updates.
+
+---
+
+## 31. OSRM — Open Source Routing Machine (Real-Road Navigation Engine)
+
+### A. What is OSRM?
+
+**OSRM (Open Source Routing Machine)** is a free, open-source, high-performance routing engine built on top of **OpenStreetMap (OSM)** road data. It is the same technology stack that powers many real-world navigation and logistics products.
+
+Think of it in three layers:
+
+| Layer | Technology | What it provides |
+|---|---|---|
+| **Map Tiles** (what you see) | OpenStreetMap / CartoDB | The visual map drawn on screen |
+| **Geocoding** (address → coordinates) | Nominatim / Google | Converts "15 Broad Street, Lagos" → `[6.4531, 3.3958]` |
+| **Routing** (path between two points) | **OSRM** | Calculates the fastest road path, distance & ETA |
+
+Without a routing engine, a map can only place pins. OSRM is what makes those pins **connected by real roads**.
+
+---
+
+### B. The Problem OSRM Solves
+
+Before OSRM, our maps drew a **straight-line Polyline** (called an "as the crow flies" path) directly between pickup and dropoff coordinates:
+
+```
+Pickup ●- - - - - - - - - - - - -● Dropoff
+         (cuts through buildings, water, walls)
+```
+
+This is **technically wrong** for a logistics platform because:
+1. Riders cannot fly through buildings or across rivers
+2. Customers see a fake route that does not match what the driver actually drives
+3. ETAs cannot be calculated — you have no idea of actual road distance or drive time
+
+OSRM solves this by returning the **actual road path** a vehicle would drive:
+
+```
+Pickup ●──╮
+          │ (follows Eko Bridge, Third Mainland Bridge, Ikorodu Road)
+          ╰────────────────╮
+                           ╰──● Dropoff
+              "18.4 km · 34 minutes by road"
+```
+
+---
+
+### C. How OSRM Works Internally
+
+OSRM pre-processes the entire OpenStreetMap road network of a country or continent into a compressed graph structure stored on disk. This preprocessing step can take hours, but once done, individual route queries are answered in **milliseconds** — even for continent-scale maps.
+
+**The algorithm it uses is called Contraction Hierarchies (CH):**
+
+```mermaid
+graph TD
+    A[Raw OSM Road Data] -->|Preprocessing| B[Contracted Graph]
+    B -->|Store on Disk| C[OSRM Server]
+    C -->|API Query: lng1,lat1 → lng2,lat2| D[Bidirectional Dijkstra]
+    D -->|Milliseconds| E[Route Response: GeoJSON path + distance + duration]
+```
+
+1. **OSM Data Ingestion**: OSRM reads `.osm.pbf` files (OpenStreetMap export) that encode every road, lane, speed limit, and turn restriction for a region.
+2. **Graph Contraction**: Less important intermediate nodes are "contracted" (removed) and replaced with shortcuts. This reduces the search space by ~99% while preserving optimal paths.
+3. **Bidirectional Dijkstra**: When a query arrives, OSRM runs Dijkstra's shortest-path algorithm simultaneously from both endpoints, meeting in the middle — dramatically faster than one-directional search.
+4. **Response**: Returns a **GeoJSON LineString** (a list of `[longitude, latitude]` coordinate pairs tracing the road path), total distance in metres, and total duration in seconds.
+
+---
+
+### D. The Public OSRM API — No Key Required
+
+For development and low-volume production use, OSRM provides a **free public demo server** at:
+
+```
+https://router.project-osrm.org
+```
+
+**Endpoint format:**
+```
+GET /route/v1/{profile}/{lng1},{lat1};{lng2},{lat2}?overview=full&geometries=geojson
+```
+
+| Parameter | Value | Meaning |
+|---|---|---|
+| `profile` | `driving` / `walking` / `cycling` | The travel mode |
+| `lng,lat` | `3.3958,6.4531` | **Longitude first**, then latitude (opposite of Leaflet!) |
+| `overview=full` | — | Return the complete road path (not a simplified one) |
+| `geometries=geojson` | — | Return coordinates as a GeoJSON object |
+
+**Example request** for a Lagos route:
+```
+https://router.project-osrm.org/route/v1/driving/3.358,6.502;3.4219,6.4281?overview=full&geometries=geojson
+```
+
+**Example response (simplified):**
+```json
+{
+  "code": "Ok",
+  "routes": [
+    {
+      "distance": 18423.4,
+      "duration": 2048.1,
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [3.358, 6.502],
+          [3.361, 6.498],
+          [3.379, 6.467],
+          "...hundreds more road-following points...",
+          [3.4219, 6.4281]
+        ]
+      }
+    }
+  ]
+}
+```
+
+> [!IMPORTANT]
+> OSRM returns coordinates as `[longitude, latitude]` in GeoJSON format. Leaflet's `<Polyline>` expects `[latitude, longitude]`. You **must** flip them when mapping the response. Our `useOsrmRoute` hook handles this automatically.
+
+---
+
+### E. How We Integrated OSRM — The `useOsrmRoute` Hook
+
+We encapsulated the OSRM API call inside a reusable React hook at [`useOsrmRoute.ts`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/utils/useOsrmRoute.ts).
+
+**What the hook does:**
+
+```typescript
+const { routeCoords, distanceKm, durationMins, loading, error } = useOsrmRoute(
+  pickupLat, pickupLng,
+  dropoffLat, dropoffLng
+);
+```
+
+| Return value | Type | Description |
+|---|---|---|
+| `routeCoords` | `[number, number][]` | Array of `[lat, lng]` tuples for Leaflet `<Polyline>` |
+| `distanceKm` | `number \| null` | Road distance in kilometres (e.g. `18.4`) |
+| `durationMins` | `number \| null` | Estimated drive time in minutes (e.g. `34`) |
+| `loading` | `boolean` | `true` while the API call is in flight |
+| `error` | `string \| null` | Error message if route cannot be calculated |
+
+**Lifecycle behaviour:**
+- Fires automatically when any coordinate changes (React `useEffect` dependency array)
+- Uses a `cancelled` flag to prevent stale data race conditions if coordinates change before the first fetch completes
+- Falls back silently if OSRM is unreachable — the UI degrades to a straight-line dashed fallback without crashing
+
+**Data flow through the stack:**
+
+```mermaid
+graph LR
+    A[selectedDelivery coordinates] -->|pickupLat, pickupLng, dropoffLat, dropoffLng| B[useOsrmRoute hook]
+    B -->|fetch| C[OSRM Public API]
+    C -->|GeoJSON LineString| B
+    B -->|routeCoords flipped to lat,lng| D[Leaflet Polyline]
+    B -->|distanceKm, durationMins| E[Road Info Badge UI]
+```
+
+---
+
+### F. Where OSRM Is Used in This Application
+
+| Page | File | What OSRM provides |
+|---|---|---|
+| **Public Tracking Page** | `PublicTrackingPage.tsx` | Real road path from pickup → dropoff for end-customers tracking shipments |
+| **Customer Dashboard** | `CustomerDashboardPage.tsx` | Road route for each selected delivery, with distance & ETA in the info panel |
+
+Both pages show:
+1. A solid road-following Polyline on the Leaflet map
+2. A **"Road Route Info"** badge displaying road distance (km) and drive time (mins)
+3. A "Calculating road route..." spinner while the fetch is in progress
+4. A graceful dashed straight-line fallback if OSRM is unavailable
+
+---
+
+### G. Real-World Use Cases of OSRM
+
+OSRM (or its commercial equivalents) powers these logistics features across the industry:
+
+| Use Case | How OSRM enables it |
+|---|---|
+| **Live driver tracking** | Draw the driver's actual road path on the map, not a GPS dot floating across buildings |
+| **ETA calculation** | Return drive time based on road speed limits and turn restrictions |
+| **Route optimisation (multi-stop)** | The OSRM `trip` endpoint solves the Travelling Salesman Problem to order multiple delivery stops efficiently |
+| **Geofencing** | Snap a driver's GPS coordinates to the nearest road to determine if they are on-route or off-route |
+| **Fare calculation** | Use real road distance (not straight-line Haversine) as the base for pricing |
+| **Dispatch assignment** | Calculate which driver is genuinely closest by road, not by straight-line proximity |
+
+---
+
+### H. OSRM vs. Alternatives
+
+| Service | Cost | Requires API Key | Notes |
+|---|---|---|---|
+| **OSRM Public Demo** | Free | ❌ No | Rate-limited; suitable for development and low-volume launch |
+| **Self-hosted OSRM** | Server cost only | ❌ No | Full control, no rate limits; requires a Linux server with OSM data pre-processed |
+| **Google Maps Directions API** | $5 per 1,000 requests | ✅ Yes | Most accurate globally; expensive at scale |
+| **Mapbox Directions API** | Free up to 100,000 req/month | ✅ Yes | Premium UX, good Nigeria coverage |
+| **OpenRouteService** | Free up to 2,000 req/day | ✅ Yes | Good open-source alternative to OSRM |
+
+> [!TIP]
+> **Our upgrade path**: At Stage 1 (launch), we use the free OSRM public demo server. When we reach Stage 2 and need reliability guarantees, we can self-host OSRM on a ₦5,000/month VPS with the Nigeria OSM extract (~200MB), giving us unlimited, zero-cost routing with no external dependency.
+
+---
+
+### I. Key Technical Gotchas
+
+1. **Coordinate order flip**: OSRM API takes `longitude, latitude` but Leaflet takes `latitude, longitude`. Always flip the array when mapping GeoJSON coordinates to Leaflet positions.
+2. **Distance units**: OSRM returns distance in **metres**, not kilometres. Divide by 1000.
+3. **Duration units**: OSRM returns duration in **seconds**, not minutes. Divide by 60.
+4. **No Nigeria-specific traffic data**: The public OSRM server uses average speed limits from OSM, not real-time Lagos traffic. ETAs are estimates, not live predictions.
+5. **Rate limits**: The public demo server may throttle requests. For production, self-host or use a paid tier.
+
+---
+
+## 32. Cargo Diversion Prevention & GPS Audit Breadcrumb Trail Architecture
+
+### A. The Business Problem: Cargo Diversion & Transloading Fraud
+
+In logistics operations across West Africa (e.g., FMCG, haulage, pharmaceuticals), a common form of theft is **cargo diversion / transloading fraud**:
+1. Drivers accept a load at a warehouse or factory.
+2. En route, drivers divert off the planned course to an unauthorized location (e.g., an unmonitored warehouse or roadside point).
+3. Drivers offload a portion of the cargo to sell on the grey market.
+4. Drivers return to the main highway and arrive at the destination with missing or tampered goods.
+
+**Why Basic GPS Tracking Fails**: Standard tracking only records the **current (last known)** position of a driver (`lastLatitude`, `lastLongitude`). Every new ping overwrites the previous position. Once the driver reaches the final destination, the history of where they went in between is permanently lost.
+
+---
+
+### B. Solution Architecture: Append-Only GPS Breadcrumb Engine
+
+To solve this, we implemented an **Append-Only GPS Audit Trail System**. Every location ping emitted by a driver's device is saved as an immutable, timestamped row linked to both the driver and the active delivery order.
+
+```mermaid
+graph TD
+    DriverDevice[Driver Mobile / Telemetry Device] -->|1. Socket.io driver_location_update| SocketServer[Socket.io Gateway tracking.socket.ts]
+    SocketServer -->|2. Update current position| DriverProfileDB[(DriverProfile: lastLatitude/lastLongitude)]
+    SocketServer -->|3. Async Append GPS Ping| BreadcrumbDB[(LocationBreadcrumb Table)]
+    
+    AdminUser[Tenant Fleet Admin] -->|4. Request Audit GET /tracking/trail/:deliveryId| BackendAPI[Tracking Controller & Service]
+    BackendAPI -->|5. Query ordered breadcrumbs| BreadcrumbDB
+    BackendAPI -->|6. Return ordered lat/lng array| AdminDashboardUI[Tenant Dashboard Map]
+    AdminDashboardUI -->|7. Render Orange Path Polyline| MapView[Leaflet Visual Audit Panel]
+```
+
+---
+
+### C. Backend Implementation & Code Snippets
+
+#### 1. Database Model (`schema.prisma`)
+The `LocationBreadcrumb` model acts as an append-only ledger with composite indexes for fast range queries and investigation audits:
+
+```prisma
+model LocationBreadcrumb {
+  id         String        @id @default(uuid())
+  driverId   String
+  driver     DriverProfile @relation(fields: [driverId], references: [id])
+  deliveryId String
+  delivery   Delivery      @relation(fields: [deliveryId], references: [id])
+  latitude   Float
+  longitude  Float
+  recordedAt DateTime      @default(now()) // Exact UTC timestamp of this GPS ping
+
+  @@index([deliveryId]) // Fast lookup: all breadcrumbs for a delivery
+  @@index([driverId])   // Fast lookup: all pings for a driver
+  @@index([recordedAt]) // Fast time-range queries for investigations
+}
+```
+
+#### 2. Non-Blocking Real-Time Ingestion (`tracking.socket.ts`)
+When a driver sends a location ping, we asynchronously append a breadcrumb for every active delivery they are handling. The write operation uses a detached promise catch block so database latencies never block real-time Socket.io broadcasts:
+
+```typescript
+// Broadcast to active delivery rooms
+const activeDeliveries = await repository.getActiveDeliveriesForDriver(driverProfile.id);
+
+for (const delivery of activeDeliveries) {
+  io.to(`delivery:${delivery.id}`).emit("delivery_location_changed", {
+    deliveryId: delivery.id,
+    driverId: driverProfile.id,
+    latitude,
+    longitude,
+    updatedAt: eventData.updatedAt,
+  });
+
+  // Save a permanent breadcrumb for every active delivery.
+  // Silent failure catch prevents DB issues from interrupting live socket broadcasts.
+  repository.saveBreadcrumb(driverProfile.id, delivery.id, latitude, longitude)
+    .catch((err: Error) => {
+      console.error(`[Breadcrumb] Failed to save GPS point for delivery ${delivery.id}:`, err.message);
+    });
+}
+```
+
+#### 3. Audit Trail Service (`tracking.service.ts`)
+Formated to return chronological lat/long coordinates ready for direct rendering in Leaflet:
+
+```typescript
+async getBreadcrumbTrail(deliveryId: string, tenantId: string) {
+    const trail = await this.repository.getBreadcrumbTrail(deliveryId, tenantId);
+
+    if (trail === null) {
+        throw new Error('Delivery not found or access denied');
+    }
+
+    return {
+        deliveryId,
+        totalPoints: trail.length,
+        trail: trail.map(point => ({
+            lat:        point.latitude,
+            lng:        point.longitude,
+            recordedAt: point.recordedAt,
+        })),
+    };
+}
+```
+
+---
+
+### D. Frontend Visual Audit UI (`TenantDashboardPage.tsx`)
+
+On the Admin Dashboard, under **Deliveries Management**, each shipment row includes a **"GPS Trail"** trigger button:
+
+```tsx
+{/* GPS Trail Investigation Button */}
+<button
+  type="button"
+  onClick={() => fetchTrail(delivery)}
+  className="text-[10px] font-bold text-orange-400 hover:text-orange-300 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded flex items-center gap-1 transition-all"
+>
+  <Icon icon="solar:routing-bold-duotone" className="text-[12px]" />
+  GPS Trail
+</button>
+```
+
+When clicked, an investigation panel opens below the table, fetching the breadcrumbs and rendering an orange Polyline trail over the Leaflet map:
+
+```tsx
+{/* Actual GPS Trail — bright orange so deviations are instantly visible */}
+{trailPoints.length > 1 && (
+  <Polyline
+    positions={trailPoints}
+    color="#f97316"
+    weight={4}
+    opacity={0.9}
+  />
+)}
+```
+
+---
+
+### E. How Admins Use This to Detect Theft
+
+1. **Route Comparison**: The map displays the pickup pin (Blue), dropoff pin (Green), and the driver's actual recorded trail (Orange).
+2. **Deviation Spotting**: If the orange trail strays away from expected transport highways into remote zones, admins can zoom into the exact coordinates.
+3. **Timestamp Verification**: Each breadcrumb stores its `recordedAt` timestamp, allowing managers to calculate how many minutes a vehicle remained stationary at an unauthorized stop point (indicating transloading).
+
+
+The Gap theorems  
+
+
+Gap 1 — GPS Breadcrumb Trail (Most Critical)
+Instead of overwriting lastLatitude / lastLongitude, we save every location update to a new LocationBreadcrumb table:
+
+LocationBreadcrumb
+─────────────────
+id
+driverId
+deliveryId
+latitude
+longitude
+recordedAt        ← timestamp of when driver was at this exact point
+This creates a permanent, tamper-proof map of every road the truck drove. If a diversion happened, you can replay the exact route on a map and see it.
+
+Gap 2 — Route Deviation Alert
+Using the OSRM route we already calculate, the backend compares the driver's real GPS position against the expected road path. If the driver is more than 500 metres away from the planned route, it automatically:
+
+Sends an SMS/email alert to the fleet manager
+Logs a ROUTE_DEVIATION event in the database with timestamp + coordinates
+Gap 3 — Stoppage / Idle Detection
+If the driver broadcasts the same coordinates (or coordinates within 50 metres) for more than 15 minutes, the system flags a SUSPICIOUS_STOP event — because legitimate drivers rarely park that long mid-delivery unless at a fuelling station or traffic.
+
+Gap 4 — Transload Checkpoint Enforcement
+For companies that do authorized transloading, we can add a mandatory checkpoint system:
+
+The dispatch manager pre-registers allowed transload locations
+If the driver stops at an unregistered location, they must submit a photo + reason before the delivery can continue
+The system logs every checkpoint as a formal record: "Goods transferred at Lagos Island Warehouse, 14:32, supervised by [name]"
 
 
 

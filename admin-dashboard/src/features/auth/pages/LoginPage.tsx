@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { authApi } from "@/api/auth.api";
 import { toast } from "sonner";
 import { useGoogleLogin } from "@react-oauth/google";
+import { Icon } from "@iconify/react";
 
 export function LoginPage() {
 
@@ -151,21 +152,8 @@ export function LoginPage() {
     }
   };
 
-
-
-
   return (
-
-    <div
-      className="min-h-screen w-full flex flex-col items-center justify-center p-gutter relative overflow-x-hidden selection:bg-primary selection:text-on-primary py-12"
-      style={{
-        backgroundColor: "#0b1326",
-        backgroundImage: `
-          radial-gradient(at 0% 0%, rgba(13, 148, 136, 0.15) 0px, transparent 50%),
-          radial-gradient(at 100% 100%, rgba(3, 181, 211, 0.1) 0px, transparent 50%)
-        `,
-      }}
-    >
+    <div className="min-h-screen w-full flex flex-col items-center justify-center p-6 relative bg-[#080d1a] text-slate-100 py-12">
       {/* Background Decorative Element */}
       <div className="fixed inset-0 z-0 pointer-events-none opacity-40"></div>
 
@@ -174,39 +162,36 @@ export function LoginPage() {
 
         {/* Logo Area */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 bg-primary rounded-xl flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(107,216,203,0.3)]">
-            <span className="material-symbols-outlined text-on-primary text-[32px]" aria-hidden="true">
-              hub
-            </span>
+          <div className="w-14 h-14 bg-[#29a195] rounded-2xl flex items-center justify-center mb-4 shadow-md">
+            <span className="material-symbols-outlined text-slate-950 text-[32px]">hub</span>
           </div>
-          <h1 className="font-headline-lg text-headline-lg text-on-surface tracking-tight">Logistel</h1>
-          <p className="font-body-md text-body-md text-on-surface-variant mt-1">
+          <h1 className="font-display text-2xl text-slate-100 font-bold tracking-tight">Logistel</h1>
+          <p className="text-xs text-slate-400 mt-1">
             Global Freight Intelligence Engine
           </p>
         </div>
 
         {/* Login Card */}
-        <div className="glass-panel rounded-xl p-6 md:p-8">
+        <div className="glass-panel rounded-2xl p-6 md:p-8 border border-slate-800">
 
           {/* General Error alert (role="alert" for dynamic voice announcements) */}
           {generalError && (
             <div
               ref={errorAlertRef}
               tabIndex={-1}
-              className="flex items-center gap-2 text-error bg-error-container/20 p-3 mb-4 rounded-lg border border-error/30 focus:outline-none"
+              className="flex items-center gap-2.5 text-rose-300 bg-rose-500/10 p-3 mb-4 rounded-xl border border-rose-500/30 text-xs focus:outline-none"
               role="alert"
               aria-live="assertive"
             >
-              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
-                error
-              </span>
-              <p className="font-code-sm text-code-sm font-semibold">{generalError}</p>
+              <Icon icon="solar:danger-triangle-bold" className="text-rose-400 text-lg flex-shrink-0" />
+              <p className="font-semibold">{generalError}</p>
             </div>
           )}
 
           {/* Quick Demo Login Preset Badges */}
 
-          <div className="mb-5 p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
+          <div className="mb-5 p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+
             <span className="text-[11px] font-semibold tracking-wider text-slate-400 uppercase block">
               ⚡ Demo Quick Fill Credentials:
             </span>
@@ -305,9 +290,7 @@ export function LoginPage() {
                   }}
                 />
                 {emailError && (
-                  <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-error text-[20px]" aria-hidden="true">
-                    error
-                  </span>
+                  <Icon icon="solar:danger-circle-bold" className="absolute right-3 top-1/2 -translate-y-1/2 text-rose-400 text-lg" />
                 )}
               </div>
               {emailError && (
@@ -343,12 +326,12 @@ export function LoginPage() {
                   }}
                 />
                 <button
-                  className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px] hover:text-on-surface transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? "visibility_off" : "visibility"}
+                  <Icon icon={showPassword ? "solar:eye-closed-bold-duotone" : "solar:eye-bold-duotone"} className="text-lg" />
                 </button>
               </div>
             </div>
@@ -356,24 +339,21 @@ export function LoginPage() {
             {/* Sign In Button */}
             {isLoading ? (
               <button
-                className="w-full bg-[#0D9488] text-white font-headline-md text-[16px] py-3.5 rounded-lg flex items-center justify-center gap-3 transition-all opacity-80 pointer-events-none"
+                className="w-full bg-teal-500/80 text-slate-950 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 cursor-not-allowed opacity-80"
                 disabled
                 aria-busy="true"
                 type="submit"
               >
-                {/* SVG Loading Spinner */}
-                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+                <Icon icon="lucide:loader-2" className="animate-spin text-lg" />
                 <span>Signing In...</span>
               </button>
             ) : (
               <button
-                className="w-full bg-[#0D9488] hover:bg-[#0F766E] text-white font-headline-md text-[16px] py-3.5 rounded-lg flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] glow-cyan shadow-lg focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-midnight"
+                className="w-full bg-[#29a195] hover:bg-[#22877d] text-slate-950 font-bold py-3.5 rounded-xl transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2"
                 type="submit"
               >
-                Sign In
+                <span>Sign In to Platform</span>
+                <Icon icon="lucide:arrow-right" className="text-base" />
               </button>
             )}
           </form>

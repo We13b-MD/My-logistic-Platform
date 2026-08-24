@@ -15,14 +15,15 @@ export const createDeliverySchema =
         pickupAddress: z.string().min(5, "Pick up address should be at least 5 characters long"),
         pickupLatitude: z.number().min(-90).max(90, "Latitude must be between -90 and 90"),
         pickupLongitude: z.number().min(-180).max(180, "Longitude must be at least -180 and 180"),
-        senderPhone: z.string().min(7, "Invalid sender phone neumber"),
+        senderPhone: z.string().min(7, "Invalid sender phone number"),
         dropoffAddress: z.string().min(5, "Drop off address must be at least 5 characters long"),
         dropoffLatitude: z.number().min(-90).max(90),
         dropoffLongitude: z.number().min(-180).max(180, "Longitude must be between -180 and 180"),
         recipientName: z.string().min(2, "Recipient name must be at least 2 characters long"),
-        recipientPhone: z.string().min(7, "Invalid recipient phone number ")
-
-    });
+        recipientPhone: z.string().min(7, "Invalid recipient phone number"),
+        recipientEmail: z.string().email("Invalid recipient email address").optional().or(z.literal("")),
+        expectedDeliveryTime: z.string().optional()
+    }).passthrough();
 
 export const updateStatusSchema = z.object({
     status: z.nativeEnum(DeliveryStatus),

@@ -9,6 +9,7 @@ const authController = new AuthController();
 authRouter.post("/register", validateRegister, (req, res) => authController.register(req, res));
 authRouter.post("/login", validateLogin, (req, res) => authController.login(req, res));
 authRouter.post("/google", (req, res) => authController.googleAuth(req, res));
+authRouter.post("/request-otp", (req, res) => authController.requestOtp(req, res));
 
 
 // Protected profile route to test authentication middleware

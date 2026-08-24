@@ -120,7 +120,17 @@ export function initTrackingSocket(io: Server) {
             longitude,
             updatedAt: eventData.updatedAt,
           });
+
+          // Save a permanent breadcrumb for every active delivery.
+          // This is the cargo diversion audit trail — rows are never overwritten.
+          // Silent failure: if breadcrumb save fails, it must NOT interrupt
+          // the live location broadcast to customers.
+          repository.saveBreadcrumb(driverProfile.id, delivery.id, latitude, longitude)
+            .catch((err: Error) => {
+              console.error(`[Breadcrumb] Failed to save GPS point for delivery ${delivery.id}:`, err.message);
+            });
         }
+
 
       } catch (error: any) {
         console.error(`[Socket] Error updating driver location:`, error.message);

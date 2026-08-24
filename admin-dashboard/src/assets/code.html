@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Logistel | The Operating System for Global Logistics</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Outfit:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config defined by Design System -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-error-container": "#ffdad6",
+                    "primary-fixed-dim": "#6bd8cb",
+                    "on-primary-container": "#00302b",
+                    "secondary-fixed-dim": "#4cd7f6",
+                    "surface-container-lowest": "#060e20",
+                    "inverse-on-surface": "#283044",
+                    "inverse-surface": "#dae2fd",
+                    "surface-container-high": "#222a3d",
+                    "outline-variant": "#3d4947",
+                    "secondary": "#4cd7f6",
+                    "on-tertiary-fixed-variant": "#2f2ebe",
+                    "tertiary-fixed-dim": "#c0c1ff",
+                    "on-tertiary-container": "#0d0096",
+                    "on-tertiary": "#1000a9",
+                    "error-container": "#93000a",
+                    "surface-container": "#171f33",
+                    "on-primary": "#003732",
+                    "surface-container-low": "#131b2e",
+                    "on-error": "#690005",
+                    "tertiary-fixed": "#e1e0ff",
+                    "on-secondary": "#003640",
+                    "primary": "#6bd8cb",
+                    "on-secondary-fixed-variant": "#004e5c",
+                    "surface-container-highest": "#2d3449",
+                    "on-primary-fixed": "#00201d",
+                    "tertiary-container": "#8083ff",
+                    "surface-bright": "#31394d",
+                    "on-tertiary-fixed": "#07006c",
+                    "tertiary": "#c0c1ff",
+                    "error": "#ffb4ab",
+                    "on-surface": "#dae2fd",
+                    "surface": "#0b1326",
+                    "on-secondary-fixed": "#001f26",
+                    "on-background": "#dae2fd",
+                    "on-secondary-container": "#00424e",
+                    "outline": "#879391",
+                    "background": "#0b1326",
+                    "surface-dim": "#0b1326",
+                    "secondary-container": "#03b5d3",
+                    "surface-variant": "#2d3449",
+                    "on-primary-fixed-variant": "#005049",
+                    "primary-fixed": "#89f5e7",
+                    "inverse-primary": "#006a61",
+                    "secondary-fixed": "#acedff",
+                    "on-surface-variant": "#bcc9c6",
+                    "surface-tint": "#6bd8cb",
+                    "primary-container": "#29a195"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "sm": "8px",
+                    "lg": "24px",
+                    "container-max": "1440px",
+                    "base": "4px",
+                    "gutter": "24px",
+                    "md": "16px",
+                    "margin-mobile": "16px",
+                    "xs": "4px",
+                    "xl": "48px"
+            },
+            "fontFamily": {
+                    "body-md": [
+                            "Inter"
+                    ],
+                    "label-md": [
+                            "Inter"
+                    ],
+                    "display-lg": [
+                            "Outfit"
+                    ],
+                    "headline-md": [
+                            "Outfit"
+                    ],
+                    "body-lg": [
+                            "Inter"
+                    ],
+                    "headline-lg-mobile": [
+                            "Outfit"
+                    ],
+                    "headline-lg": [
+                            "Outfit"
+                    ],
+                    "code-sm": [
+                            "Inter"
+                    ],
+                    "title-lg": [
+                            "Inter"
+                    ]
+            },
+            "fontSize": {
+                    "body-md": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-md": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "display-lg": [
+                            "48px",
+                            {
+                                    "lineHeight": "56px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-lg": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-lg-mobile": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "code-sm": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "title-lg": [
+                            "20px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "600"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<style>
+        /* Custom Styles for Glow and Glassmorphism */
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            border-left: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-primary-glow:hover {
+            box-shadow: 0 0 15px rgba(107, 216, 203, 0.5); /* Primary Cyan glow */
+        }
+        
+        .accent-glow {
+            text-shadow: 0 0 10px rgba(107, 216, 203, 0.4);
+        }
+        
+        /* Subtle grid background pattern */
+        .bg-grid-pattern {
+            background-image: 
+                linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-md bg-grid-pattern relative overflow-x-hidden selection:bg-primary/30 selection:text-primary-fixed">
+<!-- Ambient Background Glows -->
+<div class="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] -z-10 pointer-events-none mix-blend-screen"></div>
+<div class="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-secondary/10 rounded-full blur-[100px] -z-10 pointer-events-none mix-blend-screen"></div>
+<!-- TopAppBar Shell (Marketing variation - simplified) -->
+<nav class="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-gutter h-16 bg-surface/70 dark:bg-surface/70 backdrop-blur-xl shadow-sm border-b border-white/10 transition-transform duration-300">
+<div class="flex items-center gap-sm cursor-pointer active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary text-[28px]" style="font-variation-settings: 'FILL' 1;">hub</span>
+<span class="font-headline-md text-headline-md font-bold text-primary tracking-tight">Logistel</span>
+</div>
+<!-- Desktop Nav -->
+<div class="hidden md:flex items-center gap-lg">
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md uppercase tracking-wider" href="#">Features</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md uppercase tracking-wider" href="#">Solutions</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md uppercase tracking-wider" href="#">Pricing</a>
+</div>
+<div class="flex items-center gap-md">
+<button class="hidden md:flex text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md uppercase tracking-wider">Sign In</button>
+<button class="bg-primary text-on-primary-fixed px-4 py-2 rounded-lg font-label-md text-label-md uppercase tracking-wider hover:bg-primary-fixed transition-colors btn-primary-glow">Get Started</button>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-grow pt-24 pb-xl px-gutter md:px-xl max-w-container-max mx-auto w-full z-10 flex flex-col gap-xl">
+<!-- Hero Section -->
+<section class="flex flex-col items-center justify-center text-center py-24 md:py-32 relative">
+<div class="inline-flex items-center gap-xs px-3 py-1 rounded-full bg-surface-container border border-outline-variant mb-6 shadow-sm">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(107,216,203,0.8)]"></span>
+<span class="font-label-md text-label-md text-on-surface-variant uppercase">Logistel OS v2.4 Live</span>
+</div>
+<h1 class="font-display-lg text-display-lg text-on-background mb-6 max-w-4xl accent-glow">
+                The Operating System for <br class="hidden md:block"/> <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Global Logistics</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mb-10">
+                Transform chaotic global supply chain data into a streamlined, executable interface. Achieve unprecedented technical precision, reduce operational bloat, and unlock massive cost-savings across your entire fleet ecosystem.
+            </p>
+<div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+<button class="bg-[#047857] text-white px-8 py-4 rounded-lg font-title-lg text-title-lg hover:bg-[#059669] transition-all duration-300 shadow-[0_4px_14px_0_rgba(4,120,87,0.39)] hover:shadow-[0_6px_20px_rgba(4,120,87,0.23)] hover:-translate-y-0.5 w-full sm:w-auto relative overflow-hidden group">
+<span class="relative z-10">Register Company</span>
+<div class="absolute inset-0 h-full w-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+</button>
+<button class="bg-transparent border border-secondary text-secondary px-8 py-4 rounded-lg font-title-lg text-title-lg hover:bg-secondary/10 transition-all duration-300 shadow-[0_0_0_0_rgba(76,215,246,0)] hover:shadow-[0_0_15px_rgba(76,215,246,0.3)] w-full sm:w-auto">
+                    Join as Driver
+                </button>
+</div>
+<!-- Hero Dashboard Preview (Abstracted) -->
+<div class="w-full max-w-5xl mt-20 relative perspective-1000">
+<div class="w-full h-64 md:h-96 glass-card rounded-xl overflow-hidden relative shadow-2xl transform rotate-x-12 translate-y-[-20px] transition-transform duration-500 hover:rotate-x-0 hover:translate-y-0 flex items-center justify-center border border-surface-bright/50">
+<div class="absolute inset-0 bg-gradient-to-b from-transparent to-background/90 z-10"></div>
+<!-- Mock UI Elements inside glass -->
+<div class="absolute top-4 left-4 right-4 flex justify-between z-0 opacity-40">
+<div class="h-8 w-32 bg-surface-variant rounded"></div>
+<div class="flex gap-2">
+<div class="h-8 w-8 bg-surface-variant rounded-full"></div>
+<div class="h-8 w-8 bg-surface-variant rounded-full"></div>
+</div>
+</div>
+<div class="w-full h-full p-8 pt-16 flex gap-4 z-0 opacity-30">
+<div class="w-1/3 flex flex-col gap-4">
+<div class="h-24 w-full bg-surface-variant rounded-lg"></div>
+<div class="h-48 w-full bg-surface-variant rounded-lg"></div>
+</div>
+<div class="w-2/3 flex flex-col gap-4">
+<div class="h-40 w-full bg-surface-variant rounded-lg"></div>
+<div class="h-32 w-full bg-surface-variant rounded-lg flex items-end p-2 gap-2">
+<!-- Fake Bar Chart -->
+<div class="h-[40%] w-8 bg-primary/50 rounded-t"></div>
+<div class="h-[70%] w-8 bg-primary/50 rounded-t"></div>
+<div class="h-[30%] w-8 bg-primary/50 rounded-t"></div>
+<div class="h-[90%] w-8 bg-primary/80 rounded-t"></div>
+<div class="h-[60%] w-8 bg-primary/50 rounded-t"></div>
+</div>
+</div>
+</div>
+<span class="absolute z-20 font-headline-lg text-headline-lg text-on-background/50 flex items-center gap-2">
+<span class="material-symbols-outlined text-[32px]">visibility</span>
+                        Logistics Engine Preview
+                     </span>
+</div>
+</div>
+</section>
+<!-- Social Proof -->
+<section class="py-8 border-y border-white/5 bg-surface/30 backdrop-blur-sm -mx-gutter md:-mx-xl px-gutter md:px-xl flex flex-col items-center justify-center">
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest mb-6">Trusted by 500+ global carriers</p>
+<div class="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+<!-- Abstract Logos -->
+<div class="flex items-center gap-2 font-headline-md text-headline-md text-on-background"><span class="material-symbols-outlined text-[28px]">flight_takeoff</span> AeroFreight</div>
+<div class="flex items-center gap-2 font-headline-md text-headline-md text-on-background"><span class="material-symbols-outlined text-[28px]">directions_boat</span> Oceanic Lines</div>
+<div class="flex items-center gap-2 font-headline-md text-headline-md text-on-background"><span class="material-symbols-outlined text-[28px]">local_shipping</span> TransGlobal</div>
+<div class="flex items-center gap-2 font-headline-md text-headline-md text-on-background"><span class="material-symbols-outlined text-[28px]">package_2</span> SwiftBox</div>
+<div class="flex items-center gap-2 font-headline-md text-headline-md text-on-background hidden md:flex"><span class="material-symbols-outlined text-[28px]">conveyor_belt</span> Apex Logistics</div>
+</div>
+</section>
+<!-- Value Propositions (Bento Grid) -->
+<section class="py-24">
+<div class="text-center mb-16">
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background mb-4">Engineered for Operational Clarity</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mx-auto">High-density data visualization without cognitive overload.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Card 1: Real-time Dispatch -->
+<div class="glass-card rounded-xl p-6 flex flex-col h-[320px] group hover:border-primary/30 transition-colors duration-300 relative overflow-hidden">
+<!-- Map Background Graphic -->
+<div class="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-surface-variant via-background to-background" style="background-image: radial-gradient(circle at 50% 50%, rgba(45, 52, 73, 0.4) 1px, transparent 1px); background-size: 20px 20px;"></div>
+<div class="absolute top-[40%] left-[30%] w-3 h-3 bg-secondary rounded-full animate-ping"></div>
+<div class="absolute top-[40%] left-[30%] w-3 h-3 bg-secondary rounded-full shadow-[0_0_10px_rgba(76,215,246,0.8)]"></div>
+<svg class="absolute inset-0 w-full h-full opacity-10" preserveaspectratio="none" viewbox="0 0 100 100">
+<path class="text-secondary stroke-dasharray-[5_5]" d="M10,90 Q30,40 50,60 T90,10" fill="none" stroke="currentColor" stroke-width="2"></path>
+</svg>
+<div class="relative z-10 flex flex-col h-full">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center mb-4 border border-outline-variant group-hover:border-primary/50 transition-colors">
+<span class="material-symbols-outlined text-primary text-[24px]">explore</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-on-background mb-2">Real-time Dispatch</h3>
+<p class="font-body-md text-body-md text-on-surface-variant flex-grow">Pinpoint asset tracking with predictive ETA modeling and live traffic overlay routing.</p>
+<div class="mt-auto flex items-center justify-between border-t border-white/5 pt-4">
+<span class="font-code-sm text-code-sm text-secondary">Latency &lt; 50ms</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px] group-hover:text-primary transition-colors transform group-hover:translate-x-1 duration-200">arrow_forward</span>
+</div>
+</div>
+</div>
+<!-- Card 2: Fleet Analytics (Span 2 cols on tablet/desktop if wanted, keeping it 1 for uniformity here) -->
+<div class="glass-card rounded-xl p-6 flex flex-col h-[320px] group hover:border-primary/30 transition-colors duration-300 relative overflow-hidden">
+<!-- Sparkline Graphic -->
+<div class="absolute bottom-16 left-0 right-0 h-32 opacity-30 flex items-end px-4 gap-1">
+<!-- Simulated Sparkline Bars -->
+<div class="w-full h-[20%] bg-gradient-to-t from-primary/10 to-primary/40 rounded-t-sm"></div>
+<div class="w-full h-[35%] bg-gradient-to-t from-primary/10 to-primary/40 rounded-t-sm"></div>
+<div class="w-full h-[25%] bg-gradient-to-t from-primary/10 to-primary/40 rounded-t-sm"></div>
+<div class="w-full h-[50%] bg-gradient-to-t from-primary/10 to-primary/40 rounded-t-sm"></div>
+<div class="w-full h-[40%] bg-gradient-to-t from-primary/10 to-primary/40 rounded-t-sm"></div>
+<div class="w-full h-[65%] bg-gradient-to-t from-primary/10 to-primary/40 rounded-t-sm"></div>
+<div class="w-full h-[55%] bg-gradient-to-t from-primary/10 to-primary/40 rounded-t-sm"></div>
+<div class="w-full h-[80%] bg-gradient-to-t from-primary/10 to-primary/60 rounded-t-sm"></div>
+<div class="w-full h-[70%] bg-gradient-to-t from-primary/10 to-primary/60 rounded-t-sm"></div>
+<div class="w-full h-[95%] bg-gradient-to-t from-primary/20 to-primary rounded-t-sm relative">
+<div class="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]"></div>
+</div>
+</div>
+<div class="relative z-10 flex flex-col h-full">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center mb-4 border border-outline-variant group-hover:border-primary/50 transition-colors">
+<span class="material-symbols-outlined text-primary text-[24px]">monitoring</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-on-background mb-2">Fleet Analytics</h3>
+<p class="font-body-md text-body-md text-on-surface-variant flex-grow">Deep-dive telemetry and fuel consumption metrics presented in high-contrast clarity.</p>
+<div class="mt-auto flex items-center justify-between border-t border-white/5 pt-4">
+<span class="font-code-sm text-code-sm text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">trending_up</span> +14.2% Efficiency</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px] group-hover:text-primary transition-colors transform group-hover:translate-x-1 duration-200">arrow_forward</span>
+</div>
+</div>
+</div>
+<!-- Card 3: Multi-tenant Security -->
+<div class="glass-card rounded-xl p-6 flex flex-col h-[320px] group hover:border-primary/30 transition-colors duration-300 relative overflow-hidden">
+<!-- Security Graphic (Concentric circles) -->
+<div class="absolute -right-10 -bottom-10 w-48 h-48 border border-surface-variant rounded-full opacity-50 flex items-center justify-center">
+<div class="w-32 h-32 border border-surface-variant rounded-full flex items-center justify-center">
+<div class="w-16 h-16 border border-primary/30 bg-primary/5 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(107,216,203,0.1)]">
+<span class="material-symbols-outlined text-primary/30 text-[32px]">lock</span>
+</div>
+</div>
+</div>
+<div class="relative z-10 flex flex-col h-full">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center mb-4 border border-outline-variant group-hover:border-primary/50 transition-colors">
+<span class="material-symbols-outlined text-primary text-[24px]">shield_person</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-on-background mb-2">Multi-tenant Security</h3>
+<p class="font-body-md text-body-md text-on-surface-variant flex-grow">Enterprise-grade RBAC and end-to-end encryption to isolate carrier data securely.</p>
+<div class="mt-auto flex items-center justify-between border-t border-white/5 pt-4">
+<span class="font-code-sm text-code-sm text-on-surface-variant">SOC2 Type II Certified</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px] group-hover:text-primary transition-colors transform group-hover:translate-x-1 duration-200">arrow_forward</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer (Minimal) -->
+<footer class="border-t border-white/5 py-8 mt-auto z-10 bg-surface/50">
+<div class="max-w-container-max mx-auto px-gutter flex flex-col md:flex-row justify-between items-center gap-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]" style="font-variation-settings: 'FILL' 1;">hub</span>
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">© 2024 Logistel Systems Inc.</span>
+</div>
+<div class="flex gap-6">
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Privacy</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Terms</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">API Status</a>
+</div>
+</div>
+</footer>
+<script>
+        // Simple rotation effect for hero section image based on mouse movement (Optional micro-interaction)
+        document.addEventListener('mousemove', (e) => {
+            const container = document.querySelector('.perspective-1000');
+            if(!container) return;
+            const card = container.querySelector('.glass-card');
+            if(!card) return;
+            
+            // Only apply on desktop
+            if(window.innerWidth < 768) return;
+
+            const rect = container.getBoundingClientRect();
+            // Check if mouse is near the element
+            if(e.clientY > rect.top - 200 && e.clientY < rect.bottom + 200) {
+                const xAxis = (window.innerWidth / 2 - e.pageX) / 50;
+                const yAxis = (window.innerHeight / 2 - e.pageY) / 50;
+                card.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+            } else {
+                 card.style.transform = `rotateX(12deg) translateY(-20px)`; // Reset to default tilted state
+            }
+        });
+    </script>
+</body></html>

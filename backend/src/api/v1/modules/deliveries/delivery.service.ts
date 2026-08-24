@@ -3,6 +3,7 @@ import { CreateDeliveryDTO, IDriverAssignmentStrategy } from './delivery.types';
 import { DeliveryStatus } from '@prisma/client';
 import crypto from 'crypto';
 import { deliveryQueue } from './delivery.queue';
+import { sendOtpEmail } from "../../../../utils/email.util";
 
 export class NearestDriverStrategy implements IDriverAssignmentStrategy {
     async findAndAssignDriver(
@@ -83,6 +84,21 @@ export class DeliveryService {
                 ...data, senderId, tenantId, deliveryOtp, status: DeliveryStatus.PENDING
             }
         });
+
+        // Real-life OTP Email Dispatch: send OTP email to recipient or sender
+        let targetEmail = (data as any).recipientEmail;
+        if (!targetEmail) {
+            const senderUser = await prisma.user.findUnique({ where: { id: senderId }, select: { email: true } });
+            if (senderUser?.email) {
+                targetEmail = senderUser.email;
+            }
+        }
+
+        if (targetEmail) {
+            sendOtpEmail(targetEmail, deliveryOtp, "DELIVERY_HANDOFF").catch((err) => {
+                console.error("Failed to send real-life delivery OTP email:", err?.message || err);
+            });
+        }
 
         // Queue the driver-matching job in Redis (resilient, persistent, and auto-retryable)
         await deliveryQueue.add('MATCH_DRIVER', {
@@ -196,6 +212,7 @@ export class DeliveryService {
             status?: DeliveryStatus;
             driverUserId?: string;
             senderId?: string;
+            customerEmail?: string;
             limit?: number;
             page?: number;
         }
@@ -225,7 +242,10 @@ export class DeliveryService {
         }
 
         if (filters.senderId) {
-            whereClause.senderId = filters.senderId;
+            whereClause.OR = [
+                { senderId: filters.senderId },
+                { recipientEmail: filters.customerEmail || "" }
+            ];
         }
 
         const [deliveries, total] = await Promise.all([

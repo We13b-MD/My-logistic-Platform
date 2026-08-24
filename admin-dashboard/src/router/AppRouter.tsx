@@ -18,9 +18,9 @@ import { CustomerDashboardPage } from '@/features/dashboard/pages/CustomerDashbo
 import { TenantStaffDashboardPage } from '@/features/dashboard/pages/TenantStaffDashboardPage';
 
 import { PublicTrackingPage } from '@/features/tracking/pages/PublicTrackingPage';
+import { LandingPage } from '@/features/landing/pages/LandingPage';
 
 // Role-based dashboard home redirect
-
 function DashboardRedirect() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
@@ -42,17 +42,25 @@ function DashboardRedirect() {
   }
 }
 
+// Renders LandingPage for guests, DashboardRedirect for signed in users
+function HomeRoute() {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? <DashboardRedirect /> : <LandingPage />;
+}
+
 export function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
+
+        {/* ─── Public Landing Route ─── */}
+        <Route path="/" element={<HomeRoute />} />
 
         {/* ─── Public Tracking Routes (No Auth Required) ─── */}
         <Route path="/track" element={<PublicTrackingPage />} />
         <Route path="/track/:code" element={<PublicTrackingPage />} />
 
         {/* ─── Public Auth Routes ─── */}
-
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/onboard" element={<TenantOnboardPage />} />
@@ -61,13 +69,12 @@ export function AppRouter() {
 
         {/* ─── Protected: Redirect to role dashboard ─── */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<DashboardRedirect />} />
+          <Route path="/dashboard" element={<DashboardRedirect />} />
 
           {/* Platform Admin Routes */}
           <Route element={<RoleRoute allowedRoles={['PLATFORM_SUPER_ADMIN', 'PLATFORM_SUB_ADMIN']} />}>
             <Route path="/platform/dashboard" element={<PlatformDashboardPage />} />
           </Route>
-
 
           {/* Tenant Super Admin Routes */}
           <Route element={<RoleRoute allowedRoles={['TENANT_SUPER_ADMIN']} />}>
@@ -79,7 +86,6 @@ export function AppRouter() {
             <Route path="/tenant-staff/dashboard" element={<TenantStaffDashboardPage />} />
           </Route>
 
-
           {/* Driver Routes */}
           <Route element={<RoleRoute allowedRoles={['DRIVER']} />}>
             <Route path="/driver/dashboard" element={<DriverDashboardPage />} />
@@ -90,7 +96,6 @@ export function AppRouter() {
             <Route path="/customer/dashboard" element={<CustomerDashboardPage />} />
           </Route>
         </Route>
-
 
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -42,7 +42,21 @@ const trackingRouter = Router()
         }
     );
 
+    // GPS Breadcrumb Trail — Admin investigation endpoint (Gap 1: cargo diversion audit)
+    // Returns the full ordered GPS history for a delivery so admins can replay
+    // the exact route the truck took and identify any unauthorized stops or diversions.
+    trackingRouter.get(
+        "/trail/:deliveryId",
+        authenticate,
+        authorize(["TENANT_SUPER_ADMIN", "TENANT_SUB_ADMIN"]),
+        generalApiLimiter,
+        (req, res) => {
+            controller.getBreadcrumbTrail(req, res);
+        }
+    );
+
     export {trackingRouter}
+
 
 
 

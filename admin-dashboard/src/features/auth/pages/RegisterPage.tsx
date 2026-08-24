@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { authApi } from "@/api/auth.api";
 import { tenantApi } from "@/api/tenant.api";
 import { toast } from "sonner";
+import { Icon } from "@iconify/react";
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -170,48 +171,35 @@ export function RegisterPage() {
   };
 
   return (
-    <div
-      className="min-h-screen w-full flex flex-col items-center justify-center p-gutter relative overflow-x-hidden selection:bg-primary selection:text-on-primary py-12"
-      style={{
-        backgroundColor: "#0b1326",
-        backgroundImage: `
-          radial-gradient(at 0% 0%, rgba(13, 148, 136, 0.15) 0px, transparent 50%),
-          radial-gradient(at 100% 100%, rgba(3, 181, 211, 0.1) 0px, transparent 50%)
-        `,
-      }}
-    >
-      <div className="fixed inset-0 z-0 pointer-events-none opacity-40"></div>
-
+    <div className="min-h-screen w-full flex flex-col items-center justify-center p-6 relative bg-[#080d1a] text-slate-100 py-12">
       {/* Main Container */}
-      <main className="relative z-10 w-full max-w-[480px] animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <main className="relative z-10 w-full max-w-[480px]">
         
         {/* Logo Header */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 bg-primary rounded-xl flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(107,216,203,0.3)]">
-            <span className="material-symbols-outlined text-on-primary text-[32px]">hub</span>
+          <div className="w-14 h-14 bg-[#29a195] rounded-2xl flex items-center justify-center mb-4 shadow-md">
+            <span className="material-symbols-outlined text-slate-950 text-[32px]">hub</span>
           </div>
-          <h1 className="font-headline-lg text-headline-lg text-on-surface tracking-tight">Logistel</h1>
-          <p className="font-body-md text-body-md text-on-surface-variant mt-1">
+          <h1 className="font-display text-2xl text-slate-100 font-bold tracking-tight">Logistel</h1>
+          <p className="text-xs text-slate-400 mt-1">
             Create your Driver or Customer Profile
           </p>
         </div>
 
         {/* Form Card */}
-        <div className="glass-panel rounded-xl p-6 md:p-8">
+        <div className="glass-panel rounded-2xl p-6 md:p-8 border border-slate-800">
           
           {/* General alert */}
           {generalError && (
             <div
               ref={errorAlertRef}
               tabIndex={-1}
-              className="flex items-center gap-2 text-error bg-error-container/20 p-3 mb-4 rounded-lg border border-error/30 focus:outline-none"
+              className="flex items-center gap-2.5 text-rose-300 bg-rose-500/10 p-3 mb-4 rounded-xl border border-rose-500/30 text-xs focus:outline-none"
               role="alert"
               aria-live="assertive"
             >
-              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
-                error
-              </span>
-              <p className="font-code-sm text-code-sm font-semibold">{generalError}</p>
+              <Icon icon="solar:danger-triangle-bold" className="text-rose-400 text-lg flex-shrink-0" />
+              <p className="font-semibold">{generalError}</p>
             </div>
           )}
 
@@ -219,15 +207,15 @@ export function RegisterPage() {
             
             {/* 1. Subdomain Input with Dynamic lookup feedback */}
             <div className="space-y-1">
-              <label className="font-label-md text-label-md text-on-surface-variant block ml-1" htmlFor="subdomain">
+              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block ml-1" htmlFor="subdomain">
                 COMPANY SUBDOMAIN
               </label>
               <div className="relative">
                 <input
-                  className={`w-full bg-surface-container-lowest border text-on-surface rounded-lg px-4 py-3 font-body-md focus:ring-1 transition-all outline-none ${
+                  className={`w-full bg-slate-900 border text-slate-100 rounded-xl pl-4 pr-10 py-3 text-sm focus:border-teal-400 transition-colors outline-none placeholder:text-slate-500 ${
                     fieldErrors.subdomain
-                      ? "border-error/50 focus:ring-error focus:border-error"
-                      : "border-outline-variant focus:ring-primary focus:border-primary"
+                      ? "border-rose-500/80"
+                      : "border-slate-700/80"
                   }`}
                   id="subdomain"
                   placeholder="e.g. swift"
@@ -245,32 +233,28 @@ export function RegisterPage() {
                 
                 {/* Searching Loader inside input */}
                 {checkingSubdomain && (
-                  <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-primary animate-spin text-[20px]">
-                    progress_activity
-                  </span>
+                  <Icon icon="lucide:loader-2" className="absolute right-3 top-1/2 -translate-y-1/2 text-teal-400 animate-spin text-lg" />
                 )}
 
                 {/* Subdomain validation badge checks */}
                 {!checkingSubdomain && resolvedTenant && (
-                  <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-[20px]">
-                    check_circle
-                  </span>
+                  <Icon icon="solar:check-circle-bold" className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-400 text-lg" />
                 )}
               </div>
 
               {/* Subdomain Verification Badges */}
               {!checkingSubdomain && resolvedTenant && (
-                <p className="text-[10px] text-green-500 font-bold uppercase tracking-wider mt-1 ml-1 flex items-center gap-1">
-                  Connected to {resolvedTenant.companyName}
+                <p className="text-[11px] text-emerald-400 font-semibold mt-1 ml-1 flex items-center gap-1">
+                  <span>Connected to {resolvedTenant.companyName}</span>
                 </p>
               )}
               {!checkingSubdomain && subdomainError && (
-                <p className="text-[10px] text-error font-bold uppercase tracking-wider mt-1 ml-1">
+                <p className="text-xs text-rose-400 font-semibold mt-1 ml-1">
                   {subdomainError}
                 </p>
               )}
               {fieldErrors.subdomain && (
-                <p className="font-code-sm text-code-sm text-error block mt-1 ml-1" id="subdomain-error" role="alert">
+                <p className="text-xs text-rose-400 block mt-1 ml-1" id="subdomain-error" role="alert">
                   {fieldErrors.subdomain}
                 </p>
               )}
@@ -278,25 +262,25 @@ export function RegisterPage() {
 
             {/* 2. Role Selector Cards */}
             <div className="space-y-1.5">
-              <label className="font-label-md text-label-md text-on-surface-variant block ml-1">
+              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block ml-1">
                 SELECT PROFILE TYPE
               </label>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 
                 {/* Driver Card */}
                 <button
                   type="button"
                   onClick={() => setRole("DRIVER")}
-                  className={`p-3 rounded-xl border flex flex-col items-center justify-center text-center gap-2 transition-all ${
+                  className={`p-3.5 rounded-xl border flex flex-col items-center justify-center text-center gap-2 transition-all cursor-pointer ${
                     role === "DRIVER"
-                      ? "bg-primary/10 border-primary text-primary font-bold shadow-[0_0_15px_rgba(107,216,203,0.15)]"
-                      : "bg-surface-container-lowest border-outline-variant hover:border-white/20 text-on-surface-variant"
+                      ? "bg-teal-500/10 border-teal-500/50 text-teal-300 font-bold"
+                      : "bg-slate-900 border-slate-700/80 hover:border-slate-600 text-slate-400"
                   }`}
                 >
-                  <span className="material-symbols-outlined text-[28px]">local_shipping</span>
+                  <Icon icon="solar:delivery-bold-duotone" className="text-2xl text-teal-400" />
                   <div>
-                    <span className="block font-semibold text-[13px] tracking-tight">Driver</span>
-                    <span className="block text-[9px] opacity-75 leading-tight mt-0.5">Fulfill cargo routes</span>
+                    <span className="block font-semibold text-xs tracking-tight">Driver</span>
+                    <span className="block text-[10px] opacity-75 leading-tight mt-0.5">Fulfill cargo routes</span>
                   </div>
                 </button>
 
@@ -304,16 +288,16 @@ export function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => setRole("CUSTOMER")}
-                  className={`p-3 rounded-xl border flex flex-col items-center justify-center text-center gap-2 transition-all ${
+                  className={`p-3.5 rounded-xl border flex flex-col items-center justify-center text-center gap-2 transition-all cursor-pointer ${
                     role === "CUSTOMER"
-                      ? "bg-primary/10 border-primary text-primary font-bold shadow-[0_0_15px_rgba(107,216,203,0.15)]"
-                      : "bg-surface-container-lowest border-outline-variant hover:border-white/20 text-on-surface-variant"
+                      ? "bg-teal-500/10 border-teal-500/50 text-teal-300 font-bold"
+                      : "bg-slate-900 border-slate-700/80 hover:border-slate-600 text-slate-400"
                   }`}
                 >
-                  <span className="material-symbols-outlined text-[28px]">shopping_bag</span>
+                  <Icon icon="solar:box-bold-duotone" className="text-2xl text-teal-400" />
                   <div>
-                    <span className="block font-semibold text-[13px] tracking-tight">Customer</span>
-                    <span className="block text-[9px] opacity-75 leading-tight mt-0.5">Order deliveries</span>
+                    <span className="block font-semibold text-xs tracking-tight">Customer</span>
+                    <span className="block text-[10px] opacity-75 leading-tight mt-0.5">Order deliveries</span>
                   </div>
                 </button>
               </div>
@@ -376,16 +360,16 @@ export function RegisterPage() {
                   }}
                 />
                 <button
-                  className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px] hover:text-on-surface transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? "visibility_off" : "visibility"}
+                  <Icon icon={showPassword ? "solar:eye-closed-bold-duotone" : "solar:eye-bold-duotone"} className="text-lg" />
                 </button>
               </div>
               {fieldErrors.password && (
-                <p className="font-code-sm text-code-sm text-error block mt-1 ml-1" id="password-error" role="alert">
+                <p className="text-xs text-rose-400 block mt-1 ml-1" id="password-error" role="alert">
                   {fieldErrors.password}
                 </p>
               )}
@@ -393,14 +377,14 @@ export function RegisterPage() {
 
             {/* 5. Confirm Password Input */}
             <div className="space-y-1">
-              <label className="font-label-md text-label-md text-on-surface-variant block ml-1" htmlFor="confirmPassword">
+              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block ml-1" htmlFor="confirmPassword">
                 CONFIRM PASSWORD
               </label>
               <input
-                className={`w-full bg-surface-container-lowest border text-on-surface rounded-lg px-4 py-3 font-body-md focus:ring-1 transition-all outline-none ${
+                className={`w-full bg-slate-900 border text-slate-100 rounded-xl px-4 py-3 text-sm focus:border-teal-400 transition-colors outline-none placeholder:text-slate-500 ${
                   fieldErrors.confirmPassword
-                    ? "border-error/50 focus:ring-error focus:border-error"
-                    : "border-outline-variant focus:ring-primary focus:border-primary"
+                    ? "border-rose-500/80"
+                    : "border-slate-700/80"
                 }`}
                 id="confirmPassword"
                 placeholder="Re-enter password"
@@ -416,7 +400,7 @@ export function RegisterPage() {
                 }}
               />
               {fieldErrors.confirmPassword && (
-                <p className="font-code-sm text-code-sm text-error block mt-1 ml-1" id="confirm-error" role="alert">
+                <p className="text-xs text-rose-400 block mt-1 ml-1" id="confirm-error" role="alert">
                   {fieldErrors.confirmPassword}
                 </p>
               )}
@@ -425,23 +409,21 @@ export function RegisterPage() {
             {/* Submit Button */}
             {isLoading ? (
               <button
-                className="w-full bg-[#0D9488] text-white font-headline-md text-[16px] py-3.5 rounded-lg flex items-center justify-center gap-3 transition-all opacity-80 pointer-events-none"
+                className="w-full bg-teal-500/80 text-slate-950 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 cursor-not-allowed opacity-80"
                 disabled
                 aria-busy="true"
                 type="submit"
               >
-                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+                <Icon icon="lucide:loader-2" className="animate-spin text-lg" />
                 <span>Creating Account...</span>
               </button>
             ) : (
               <button
-                className="w-full bg-[#0D9488] hover:bg-[#0F766E] text-white font-headline-md text-[16px] py-3.5 rounded-lg flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] glow-cyan shadow-lg focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-midnight"
+                className="w-full bg-[#29a195] hover:bg-[#22877d] text-slate-950 font-bold py-3.5 rounded-xl transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2"
                 type="submit"
               >
-                Create Account
+                <span>Create Account</span>
+                <Icon icon="lucide:arrow-right" className="text-base" />
               </button>
             )}
           </form>

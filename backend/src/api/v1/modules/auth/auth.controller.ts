@@ -86,5 +86,22 @@ export class AuthController {
     }
   }
 
+  async requestOtp(req: Request, res: Response): Promise<void> {
+    try {
+      const { email } = req.body;
+      const result = await authService.requestOtp(email);
+      res.status(200).json({
+        status: "success",
+        message: `OTP code sent to ${email}`,
+        data: result,
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        status: "error",
+        message: error.message || "Failed to send OTP email",
+      });
+    }
+  }
 }
+
 

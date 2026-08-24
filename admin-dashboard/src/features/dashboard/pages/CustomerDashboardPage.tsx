@@ -5,6 +5,8 @@ import { deliveryApi } from "@/api/delivery.api";
 import { trackingApi } from "@/api/tracking.api";
 import { toast } from "sonner";
 import { Delivery, DeliveryStatus } from "@/types";
+import { Icon } from "@iconify/react";
+import { useOsrmRoute } from "@/utils/useOsrmRoute";
 
 // Leaflet map imports
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
@@ -74,10 +76,24 @@ export function CustomerDashboardPage() {
     longitude: number;
   } | null>(null);
 
+  // OSRM real-road route — reacts to whichever delivery is selected
+  const {
+    routeCoords: osrmRouteCoords,
+    distanceKm: osrmDistanceKm,
+    durationMins: osrmDurationMins,
+    loading: osrmRouteLoading,
+  } = useOsrmRoute(
+    selectedDelivery?.pickupLatitude,
+    selectedDelivery?.pickupLongitude,
+    selectedDelivery?.dropoffLatitude,
+    selectedDelivery?.dropoffLongitude
+  );
+
   // Booking Form State
   const [bookingForm, setBookingForm] = useState({
     recipientName: "",
     recipientPhone: "",
+    recipientEmail: user?.email || "",
     senderPhone: "",
     pickupPreset: "0",
     dropoffPreset: "1",
@@ -176,6 +192,7 @@ export function CustomerDashboardPage() {
       const payload = {
         recipientName: bookingForm.recipientName,
         recipientPhone: bookingForm.recipientPhone,
+        recipientEmail: bookingForm.recipientEmail,
         senderPhone: bookingForm.senderPhone,
         pickupAddress: bookingForm.pickupAddress,
         pickupLatitude: parseFloat(bookingForm.pickupLat),
@@ -194,6 +211,7 @@ export function CustomerDashboardPage() {
         setBookingForm({
           recipientName: "",
           recipientPhone: "",
+          recipientEmail: "",
           senderPhone: "",
           pickupPreset: "0",
           dropoffPreset: "1",
@@ -204,14 +222,17 @@ export function CustomerDashboardPage() {
           dropoffLat: LAGOS_LOCATIONS[1].lat.toString(),
           dropoffLng: LAGOS_LOCATIONS[1].lng.toString(),
           expectedDeliveryTime: "",
-
         });
         await fetchDeliveries();
         setActiveTab("track");
       }
     } catch (error: any) {
       console.error("Failed to place delivery order:", error);
-      toast.error(error.response?.data?.message || "Failed to book delivery order.");
+      const backendErrors = error.response?.data?.errors;
+      const errorMsg = error.response?.data?.message || 
+                       (Array.isArray(backendErrors) ? backendErrors.map((e: any) => e.message).join(', ') : null) || 
+                       "Failed to book delivery order.";
+      toast.error(errorMsg);
     } finally {
       setBookingSubmitting(false);
     }
@@ -305,11 +326,11 @@ export function CustomerDashboardPage() {
       {/* ─── Top Header Navbar ─── */}
       <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-900/90 backdrop-blur-md px-6 py-4 flex items-center justify-between shadow-xl">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-teal-500/20 text-slate-950 font-black text-xl">
-            📦
+          <div className="w-10 h-10 rounded-xl bg-[#29a195] flex items-center justify-center text-slate-950 font-bold shadow-md">
+            <span className="material-symbols-outlined text-slate-950 text-[24px]">hub</span>
           </div>
           <div>
-            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-teal-300">
+            <h1 className="text-xl font-bold text-slate-100">
               Customer Portal & Tracking
             </h1>
             <p className="text-xs text-slate-400">Live Express Freight Tracking</p>
@@ -319,9 +340,10 @@ export function CustomerDashboardPage() {
         <div className="flex items-center space-x-4">
           <button
             onClick={() => setActiveTab("book")}
-            className="hidden sm:flex items-center space-x-2 px-4 py-2 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-slate-950 font-bold text-xs shadow-lg shadow-teal-500/20 transition-all"
+            className="hidden sm:flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-[#29a195] hover:bg-[#22877d] text-slate-950 font-bold text-xs transition-all cursor-pointer shadow-sm"
           >
-            <span>+ Book New Delivery</span>
+            <Icon icon="lucide:plus" className="text-base" />
+            <span>Book New Delivery</span>
           </button>
 
           {/* User info badge */}
@@ -506,6 +528,33 @@ export function CustomerDashboardPage() {
                             <span>Recipient: {selectedDelivery.recipientName}</span>
                             <span>Phone: {selectedDelivery.recipientPhone}</span>
                           </div>
+
+                          {/* OSRM Road Distance & ETA */}
+                          {(osrmDistanceKm !== null || osrmRouteLoading) && (
+                            <div className="bg-teal-500/10 border border-teal-500/20 rounded-xl p-3 space-y-1 mt-2">
+                              <span className="text-[10px] text-teal-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                                <Icon icon="solar:routing-bold-duotone" className="text-sm" />
+                                Road Route Info
+                              </span>
+                              {osrmRouteLoading ? (
+                                <p className="text-slate-400 text-xs flex items-center gap-1.5">
+                                  <Icon icon="lucide:loader-2" className="animate-spin text-sm" />
+                                  Calculating road route...
+                                </p>
+                              ) : (
+                                <div className="flex gap-4 text-xs">
+                                  <div>
+                                    <span className="text-[9px] text-slate-400 uppercase block">Road Distance</span>
+                                    <span className="font-mono font-bold text-slate-200">{osrmDistanceKm} km</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-[9px] text-slate-400 uppercase block">Drive Time</span>
+                                    <span className="font-mono font-bold text-teal-300">{osrmDurationMins} mins</span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </>
@@ -579,28 +628,39 @@ export function CustomerDashboardPage() {
                           </Marker>
                         )}
 
-                        {/* Routing Line */}
-                        <Polyline
-                          positions={[
-                            [
-                              selectedDelivery.pickupLatitude,
-                              selectedDelivery.pickupLongitude,
-                            ],
-                            liveDriverPos
-                              ? [liveDriverPos.latitude, liveDriverPos.longitude]
-                              : [
-                                  selectedDelivery.dropoffLatitude,
-                                  selectedDelivery.dropoffLongitude,
-                                ],
-                            [
-                              selectedDelivery.dropoffLatitude,
-                              selectedDelivery.dropoffLongitude,
-                            ],
-                          ]}
-                          color="#0D9488"
-                          weight={4}
-                          dashArray="8, 8"
-                        />
+                        {/* OSRM Real-Road Route Polyline */}
+                        {osrmRouteCoords.length > 1 ? (
+                          <Polyline
+                            positions={osrmRouteCoords}
+                            color="#0D9488"
+                            weight={4}
+                            opacity={0.85}
+                          />
+                        ) : (
+                          // Fallback straight-line while OSRM loads
+                          <Polyline
+                            positions={[
+                              [
+                                selectedDelivery.pickupLatitude,
+                                selectedDelivery.pickupLongitude,
+                              ],
+                              liveDriverPos
+                                ? [liveDriverPos.latitude, liveDriverPos.longitude]
+                                : [
+                                    selectedDelivery.dropoffLatitude,
+                                    selectedDelivery.dropoffLongitude,
+                                  ],
+                              [
+                                selectedDelivery.dropoffLatitude,
+                                selectedDelivery.dropoffLongitude,
+                              ],
+                            ]}
+                            color="#0D9488"
+                            weight={3}
+                            dashArray="8, 8"
+                            opacity={0.5}
+                          />
+                        )}
                       </MapContainer>
                     ) : (
                       <div className="h-full flex items-center justify-center text-slate-500">
@@ -660,6 +720,23 @@ export function CustomerDashboardPage() {
                     className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-sm focus:outline-none focus:border-teal-400"
                   />
                 </div>
+              </div>
+
+              {/* Recipient Email for OTP delivery */}
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">
+                  Recipient Email Address (for Delivery OTP Email)
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="e.g. recipient@gmail.com"
+                  value={bookingForm.recipientEmail}
+                  onChange={(e) =>
+                    setBookingForm({ ...bookingForm, recipientEmail: e.target.value })
+                  }
+                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-sm focus:outline-none focus:border-teal-400"
+                />
               </div>
 
               {/* Sender Phone */}
@@ -756,12 +833,18 @@ export function CustomerDashboardPage() {
               <button
                 type="submit"
                 disabled={bookingSubmitting}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-slate-950 font-black text-sm shadow-lg shadow-teal-500/20 transition-all flex items-center justify-center space-x-2"
+                className="w-full py-3.5 rounded-xl bg-[#29a195] hover:bg-[#22877d] text-slate-950 font-bold text-sm transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2"
               >
                 {bookingSubmitting ? (
-                  <span>Processing Shipment...</span>
+                  <>
+                    <Icon icon="lucide:loader-2" className="animate-spin text-lg" />
+                    <span>Processing Shipment...</span>
+                  </>
                 ) : (
-                  <span>Dispatch Delivery Order Now</span>
+                  <>
+                    <span>Dispatch Delivery Order Now</span>
+                    <Icon icon="lucide:arrow-right" className="text-base" />
+                  </>
                 )}
               </button>
             </form>

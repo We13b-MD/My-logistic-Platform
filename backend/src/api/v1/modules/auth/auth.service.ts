@@ -1,10 +1,21 @@
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import { prisma } from "../../../../config/prisma";
 import { generateToken } from "../../../../utils/jwt";
 import { RegisterDTO } from "./auth.types";
 import { Role } from "@prisma/client";
+import { sendOtpEmail } from "../../../../utils/email.util";
 
 export class AuthService {
+  async requestOtp(email: string) {
+    if (!email || !email.includes("@")) {
+      throw new Error("Please provide a valid email address.");
+    }
+    const otpCode = crypto.randomInt(100000, 999999).toString();
+    await sendOtpEmail(email, otpCode, "VERIFICATION");
+    return { email, otpCode };
+  }
+
   // Authentication methods will be implemented here
   async register(data: RegisterDTO) {
     const { email, password, role, tenantId } = data;

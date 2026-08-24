@@ -104,4 +104,58 @@ export class TrackingRepository{
             }
         })
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // GPS Breadcrumb Trail Methods (Gap 1 — Cargo Diversion Prevention)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * saveBreadcrumb
+     * Inserts a single, permanent GPS point for a driver+delivery pair.
+     * Called on EVERY driver_location_update socket event.
+     * Rows are NEVER overwritten — this is an append-only audit trail.
+     */
+    async saveBreadcrumb(
+        driverProfileId: string,
+        deliveryId: string,
+        latitude: number,
+        longitude: number
+    ) {
+        return prisma.locationBreadcrumb.create({
+            data: {
+                driverId:   driverProfileId,
+                deliveryId: deliveryId,
+                latitude,
+                longitude,
+                // recordedAt defaults to now() in the database
+            },
+        });
+    }
+
+    /**
+     * getBreadcrumbTrail
+     * Returns the complete ordered GPS history for a delivery.
+     * Used by admins to replay the exact route on a map and investigate
+     * cargo diversion or transloading fraud.
+     */
+    async getBreadcrumbTrail(deliveryId: string, tenantId: string) {
+        // First verify the delivery belongs to this tenant (security isolation)
+        const delivery = await prisma.delivery.findFirst({
+            where: { id: deliveryId, tenantId },
+            select: { id: true },
+        });
+
+        if (!delivery) return null;
+
+        return prisma.locationBreadcrumb.findMany({
+            where: { deliveryId },
+            orderBy: { recordedAt: 'asc' }, // oldest first → draws trail in correct direction
+            select: {
+                id:         true,
+                latitude:   true,
+                longitude:  true,
+                recordedAt: true,
+            },
+        });
+    }
 }

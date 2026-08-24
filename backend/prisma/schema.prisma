@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,75 +8,66 @@ datasource db {
 }
 
 model Tenant {
-  id              String     @id @default(uuid())
-  companyName     String
-  subdomain       String     @unique
-  logoUrl         String?
-  isActive        Boolean    @default(true)
-  industry        Industry   @default(OTHERS)
-  rolePermissions Json?      // Dynamic role permissions configured per tenant
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  users           User[]
-  deliveries      Delivery[]
-  vehicles        Vehicle[]
-}
-
-enum Industry {
-  FOOD
-  HEALTH
-  TRANSPORT
-  FASHION
-  SPORT
-  ENTERTAINMENT
-  BANKING
-  OTHERS
+  id                       String             @id @default(uuid())
+  companyName              String
+  subdomain                String             @unique
+  logoUrl                  String?
+  isActive                 Boolean            @default(true)
+  industry                 Industry           @default(OTHERS)
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
+  rolePermissions          Json?
+  paystackCustomerCode     String?
+  paystackSubscriptionCode String?
+  subscriptionStatus       SubscriptionStatus @default(TRIAL)
+  deliveries               Delivery[]
+  Invoice                  Invoice[]
+  PricingRule              PricingRule?
+  users                    User[]
+  vehicles                 Vehicle[]
 }
 
 model User {
   id            String         @id @default(uuid())
   email         String         @unique
   password      String
-  googleId      String?        @unique
-  avatarUrl     String?
   role          Role           @default(CUSTOMER)
-  tenantId      String
-  tenant        Tenant         @relation(fields: [tenantId], references: [id])
-  driverProfile DriverProfile?
-  deliveries    Delivery[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  tenantId      String
+  avatarUrl     String?
+  googleId      String?        @unique
+  deliveries    Delivery[]
+  driverProfile DriverProfile?
+  tenant        Tenant         @relation(fields: [tenantId], references: [id])
 
   @@index([email])
   @@index([googleId])
 }
 
-
 model DriverProfile {
-  id            String     @id @default(uuid())
-  userId        String     @unique
-  user          User       @relation(fields: [userId], references: [id])
-  vehicleType   String     // BIKE, VAN, TRUCK
+  id            String               @id @default(uuid())
+  userId        String               @unique
+  vehicleType   String
   licenseNumber String
-  isVerified    Boolean    @default(false)
-  isOnline      Boolean    @default(false)
-  lastLatitude  Float?     // last known latitude of the driver (updated dynamically)
-  lastLongitude Float?     // last known longitude of the driver (updated dynamically)
+  isVerified    Boolean              @default(false)
+  isOnline      Boolean              @default(false)
+  lastLatitude  Float?
+  lastLongitude Float?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
   deliveries    Delivery[]
+  user          User                 @relation(fields: [userId], references: [id])
   vehicle       Vehicle?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  breadcrumbs   LocationBreadcrumb[] // Full GPS history trail — never overwritten
 }
 
 model Delivery {
-  id                      String         @id @default(uuid())
+  id                      String               @id @default(uuid())
   tenantId                String
-  tenant                  Tenant         @relation(fields: [tenantId], references: [id])
   senderId                String
-  sender                  User           @relation(fields: [senderId], references: [id])
   driverId                String?
-  driver                  DriverProfile? @relation(fields: [driverId], references: [id])
-  status                  DeliveryStatus @default(PENDING)
+  status                  DeliveryStatus       @default(PENDING)
   pickupAddress           String
   pickupLatitude          Float
   pickupLongitude         Float
@@ -92,11 +80,75 @@ model Delivery {
   deliveryOtp             String
   proofOfDeliveryPhotoUrl String?
   signaturePhotoUrl       String?
-  actualDropoffLatitude   Float?         // actual latitude where OTP was verified
-  actualDropoffLongitude  Float?         // actual longitude where OTP was verified
-  expectedDeliveryTime    DateTime?      // promised delivery deadline
-  createdAt               DateTime       @default(now())
-  updatedAt               DateTime       @updatedAt
+  actualDropoffLatitude   Float?
+  actualDropoffLongitude  Float?
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
+  expectedDeliveryTime    DateTime?
+  recipientEmail          String?
+  distanceKm              Float?
+  estimatedPrice          Float?
+  driver                  DriverProfile?       @relation(fields: [driverId], references: [id])
+  sender                  User                 @relation(fields: [senderId], references: [id])
+  tenant                  Tenant               @relation(fields: [tenantId], references: [id])
+  Invoice                 Invoice?
+  breadcrumbs             LocationBreadcrumb[] // GPS audit trail for this delivery
+}
+
+model Vehicle {
+  id                 String         @id @default(uuid())
+  tenantId           String
+  plateNumber        String         @unique
+  vehicleType        VehicleType
+  status             VehicleStatus  @default(IDLE)
+  lastMaintenance    DateTime?
+  nextMaintenanceDue DateTime?
+  driverId           String?        @unique
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  driver             DriverProfile? @relation(fields: [driverId], references: [id])
+  tenant             Tenant         @relation(fields: [tenantId], references: [id])
+}
+
+model Invoice {
+  id                String        @id
+  tenantId          String
+  deliveryId        String        @unique
+  baseFare          Float
+  distanceKm        Float
+  distanceFare      Float
+  vehicleMultiplier Float
+  totalAmount       Float
+  status            InvoiceStatus @default(UNPAID)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime
+  Delivery          Delivery      @relation(fields: [deliveryId], references: [id])
+  Tenant            Tenant        @relation(fields: [tenantId], references: [id])
+}
+
+model PricingRule {
+  id              String   @id
+  tenantId        String   @unique
+  baseFare        Float    @default(1000)
+  perKmRate       Float    @default(100)
+  bikeMultiplier  Float    @default(1.0)
+  carMultiplier   Float    @default(1.2)
+  vanMultiplier   Float    @default(1.5)
+  truckMultiplier Float    @default(2.5)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime
+  Tenant          Tenant   @relation(fields: [tenantId], references: [id])
+}
+
+enum Industry {
+  FOOD
+  HEALTH
+  TRANSPORT
+  FASHION
+  SPORT
+  ENTERTAINMENT
+  BANKING
+  OTHERS
 }
 
 enum Role {
@@ -117,21 +169,6 @@ enum DeliveryStatus {
   CANCELLED
 }
 
-model Vehicle {
-  id                 String        @id @default(uuid())
-  tenantId           String
-  tenant             Tenant        @relation(fields: [tenantId], references: [id])
-  plateNumber        String        @unique
-  vehicleType        VehicleType
-  status             VehicleStatus @default(IDLE)
-  lastMaintenance    DateTime?
-  nextMaintenanceDue DateTime?
-  driverId           String?       @unique
-  driver             DriverProfile? @relation(fields: [driverId], references: [id])
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
-}
-
 enum VehicleStatus {
   IDLE
   IN_USE
@@ -145,5 +182,39 @@ enum VehicleType {
   CAR
 }
 
+enum InvoiceStatus {
+  UNPAID
+  PAID
+  VOIDED
+}
 
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+}
 
+// ─────────────────────────────────────────────────────────────────────────────
+// LocationBreadcrumb — GPS Cargo Diversion Audit Trail
+// ─────────────────────────────────────────────────────────────────────────────
+// Every time a driver broadcasts their GPS via Socket.io, one row is inserted
+// here. Rows are NEVER updated or deleted — they are an append-only permanent
+// record of every exact location the vehicle was at during a delivery.
+// Enables: cargo diversion investigation, suspicious-stop detection,
+// route deviation alerts (Gap 2), and late-delivery SLA proof.
+// ─────────────────────────────────────────────────────────────────────────────
+model LocationBreadcrumb {
+  id         String        @id @default(uuid())
+  driverId   String
+  driver     DriverProfile @relation(fields: [driverId], references: [id])
+  deliveryId String
+  delivery   Delivery      @relation(fields: [deliveryId], references: [id])
+  latitude   Float
+  longitude  Float
+  recordedAt DateTime      @default(now()) // Exact UTC timestamp of this GPS ping
+
+  @@index([deliveryId]) // Fast lookup: all breadcrumbs for a delivery
+  @@index([driverId])   // Fast lookup: all pings for a driver
+  @@index([recordedAt]) // Fast time-range queries for investigations
+}

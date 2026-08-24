@@ -11,6 +11,7 @@ declare global {
         id: string;
         role: string;
         tenantId: string;
+        email: string;
       };
     }
   }
@@ -40,13 +41,14 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): v
   try {
     // 3. Verify the token using the secret key
     // Note: The generateToken utility stores user.id as userId in the JWT payload
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; role: string; tenantId: string };
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; role: string; tenantId: string; email?: string };
 
     // 4. Attach user data to request object
     req.user = {
       id: decoded.userId,
       role: decoded.role,
       tenantId: decoded.tenantId,
+      email: decoded.email || "",
     };
 
     next();

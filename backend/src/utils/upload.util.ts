@@ -1,10 +1,11 @@
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
-import { cloudinary, isCloudinaryConfigured } from "../config/cloudinary";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { s3Client, isR2Configured, bucketName, publicDomain } from "../config/r2";
 
 /**
- * Uploads a base64 image (data URL or raw base64) to Cloudinary or falls back to local disk.
+ * Uploads a base64 image (data URL or raw base64) to Cloudflare R2 object storage or falls back to local disk.
  * @param base64Data Base64 encoded image string (e.g., 'data:image/png;base64,...')
  * @param subFolder Subfolder name (e.g., 'photos' or 'signatures')
  * @returns Public HTTP/HTTPS URL of the uploaded image
@@ -17,19 +18,45 @@ export async function uploadToCloudStorage(
     throw new Error("Invalid base64 image data provided");
   }
 
-  // 1. If Cloudinary is configured, upload directly to Cloudinary CDN
-  if (isCloudinaryConfigured) {
+  // Extract MIME type, extension, and buffer from base64 string
+  const matches = base64Data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+  let imageBuffer: Buffer;
+  let mimeType = "image/png";
+  let fileExt = "png";
+
+  if (matches && matches.length === 3) {
+    mimeType = matches[1];
+    fileExt = mimeType.split("/")[1] || "png";
+    imageBuffer = Buffer.from(matches[2], "base64");
+  } else {
+    imageBuffer = Buffer.from(base64Data, "base64");
+  }
+
+  const fileName = `${subFolder}_${crypto.randomBytes(8).toString("hex")}_${Date.now()}.${fileExt}`;
+  const objectKey = `pod/${subFolder}/${fileName}`;
+
+  // 1. If Cloudflare R2 is configured, upload directly to R2 Bucket via S3 protocol
+  if (isR2Configured && s3Client) {
     try {
-      const uploadResult = await cloudinary.uploader.upload(base64Data, {
-        folder: `logistel/pod/${subFolder}`,
-        resource_type: "image",
-        transformation: [
-          { quality: "auto:good", fetch_format: "auto" }
-        ],
+      const command = new PutObjectCommand({
+        Bucket: bucketName,
+        Key: objectKey,
+        Body: imageBuffer,
+        ContentType: mimeType,
       });
-      return uploadResult.secure_url;
+
+      await s3Client.send(command);
+
+      // Return public CDN/dev domain URL if configured, otherwise default R2 endpoint URL
+      if (publicDomain) {
+        const cleanDomain = publicDomain.endsWith("/") ? publicDomain.slice(0, -1) : publicDomain;
+        return `${cleanDomain}/${objectKey}`;
+      }
+
+      const accountId = process.env.R2_ACCOUNT_ID;
+      return `https://${accountId}.r2.cloudflarestorage.com/${bucketName}/${objectKey}`;
     } catch (error: any) {
-      console.error("Cloudinary upload failed, using local disk fallback:", error?.message || error);
+      console.error("Cloudflare R2 upload failed, using local disk fallback:", error?.message || error);
     }
   }
 
@@ -39,24 +66,9 @@ export async function uploadToCloudStorage(
     fs.mkdirSync(uploadsDir, { recursive: true });
   }
 
-  // Extract base64 payload
-  const matches = base64Data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-  let imageBuffer: Buffer;
-  let fileExt = "png";
-
-  if (matches && matches.length === 3) {
-    const mimeType = matches[1];
-    fileExt = mimeType.split("/")[1] || "png";
-    imageBuffer = Buffer.from(matches[2], "base64");
-  } else {
-    imageBuffer = Buffer.from(base64Data, "base64");
-  }
-
-  const fileName = `${subFolder}_${crypto.randomBytes(8).toString("hex")}_${Date.now()}.${fileExt}`;
   const filePath = path.join(uploadsDir, fileName);
-
   await fs.promises.writeFile(filePath, imageBuffer);
 
-  const serverPort = process.env.PORT || 5000;
+  const serverPort = process.env.PORT || 3000;
   return `http://localhost:${serverPort}/uploads/pod/${subFolder}/${fileName}`;
 }

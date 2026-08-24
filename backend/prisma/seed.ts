@@ -8,6 +8,7 @@ async function main() {
 
   // Clear existing data (in reverse order of dependencies)
   await prisma.delivery.deleteMany();
+  await prisma.vehicle.deleteMany();
   await prisma.driverProfile.deleteMany();
   await prisma.user.deleteMany();
   await prisma.tenant.deleteMany();

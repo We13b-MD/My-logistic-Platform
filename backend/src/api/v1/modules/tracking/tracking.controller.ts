@@ -23,8 +23,15 @@ export class TrackingController{
         res.status(200).json({
             status: 'success', data: trackingData
         })
-    }catch(error : any){
-        res.status(400).json({status:"error", message: error.message})
+    } catch (error: any) {
+        if (error.message?.includes('No driver has been assigned')) {
+            res.status(200).json({
+                status: 'success',
+                data: { deliveryId: req.params.deliveryId, driver: null, message: error.message }
+            });
+            return;
+        }
+        res.status(400).json({ status: "error", message: error.message });
     }
  }
 
@@ -74,4 +81,29 @@ export class TrackingController{
             });
         }
     }
-}
+
+    /**
+     * getBreadcrumbTrail
+     * GET /tracking/trail/:deliveryId
+     * Admin-only: Returns the full ordered GPS history for a delivery.
+     * Used to investigate cargo diversion, transloading fraud, or route deviation.
+     */
+    async getBreadcrumbTrail(req: Request, res: Response): Promise<void> {
+        try {
+            const { deliveryId } = req.params;
+            const tenantId = req.user?.tenantId;
+
+            if (!tenantId) {
+                res.status(401).json({ status: 'error', message: 'Unauthorized: Missing tenant ID' });
+                return;
+            }
+
+            const data = await this.service.getBreadcrumbTrail(deliveryId, tenantId);
+            res.status(200).json({ status: 'success', data });
+        } catch (error: any) {
+            const statusCode = error.message?.includes('not found') ? 404 : 400;
+            res.status(statusCode).json({ status: 'error', message: error.message });
+        }
+    }
+}
+
