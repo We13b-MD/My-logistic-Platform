@@ -111,7 +111,7 @@ model Vehicle {
 }
 
 model Invoice {
-  id                String        @id
+  id                String        @id @default(uuid())
   tenantId          String
   deliveryId        String        @unique
   baseFare          Float
@@ -121,13 +121,13 @@ model Invoice {
   totalAmount       Float
   status            InvoiceStatus @default(UNPAID)
   createdAt         DateTime      @default(now())
-  updatedAt         DateTime
+  updatedAt         DateTime      @updatedAt
   Delivery          Delivery      @relation(fields: [deliveryId], references: [id])
   Tenant            Tenant        @relation(fields: [tenantId], references: [id])
 }
 
 model PricingRule {
-  id              String   @id
+  id              String   @id @default(uuid())
   tenantId        String   @unique
   baseFare        Float    @default(1000)
   perKmRate       Float    @default(100)
@@ -136,7 +136,7 @@ model PricingRule {
   vanMultiplier   Float    @default(1.5)
   truckMultiplier Float    @default(2.5)
   createdAt       DateTime @default(now())
-  updatedAt       DateTime
+  updatedAt       DateTime @updatedAt
   Tenant          Tenant   @relation(fields: [tenantId], references: [id])
 }
 

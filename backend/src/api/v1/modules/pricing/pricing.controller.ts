@@ -129,7 +129,7 @@ export class PricingController {
         return res.status(401).json({ status: "error", message: "Missing tenant context" });
       }
 
-      const invoice = await pricingService.generateInvoiceForDelivery(deliveryId, tenantId);
+      const invoice = await pricingService.generateInvoiceForDelivery(deliveryId as string, tenantId);
       return res.status(200).json({
         status: "success",
         data: invoice,

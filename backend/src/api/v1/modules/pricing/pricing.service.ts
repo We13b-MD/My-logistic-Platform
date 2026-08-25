@@ -177,7 +177,7 @@ export class PricingService {
       where: { tenantId },
       orderBy: { createdAt: "desc" },
       include: {
-        delivery: {
+        Delivery: {
           select: {
             recipientName: true,
             status: true,

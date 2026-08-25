@@ -1,0 +1,41 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Render Infrastructure Blueprint Configuration (render.yaml)
+# ─────────────────────────────────────────────────────────────────────────────
+# This blueprint configures automated cloud Docker deployment for Logistel on Render.
+# Zero BIOS setup or Docker Desktop required on your local office computer.
+# Render's cloud servers build the Dockerfile and deploy the live app automatically.
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  # ─── 1. LOGISTEL BACKEND API (Docker Container Web Service) ─────────────────
+  - type: web
+    name: logistel-backend
+    env: docker
+    region: frankfurt # Low latency region matching Neon PostgreSQL
+    plan: free
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    healthCheckPath: /api/v1/tracking/public/ping
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false # Set manually in Render Dashboard from backend/.env
+      - key: JWT_SECRET
+        generateValue: true # Generates secure 256-bit secret automatically
+
+  # ─── 2. LOGISTEL ADMIN DASHBOARD & LANDING PAGE (Static Web App) ─────────────
+  - type: web
+    name: logistel-frontend
+    env: static
+    region: frankfurt
+    plan: free
+    buildCommand: cd admin-dashboard && npm install && npm run build
+    staticPublishPath: ./admin-dashboard/dist
+    routes:
+      # Single-Page Application (SPA) rewrite rule for React Router navigation
+      - type: rewrite
+        source: /*
+        destination: /index.html

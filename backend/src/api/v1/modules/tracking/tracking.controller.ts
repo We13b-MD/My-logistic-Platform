@@ -98,7 +98,7 @@ export class TrackingController{
                 return;
             }
 
-            const data = await this.service.getBreadcrumbTrail(deliveryId, tenantId);
+            const data = await this.service.getBreadcrumbTrail(deliveryId as string, tenantId);
             res.status(200).json({ status: 'success', data });
         } catch (error: any) {
             const statusCode = error.message?.includes('not found') ? 404 : 400;
