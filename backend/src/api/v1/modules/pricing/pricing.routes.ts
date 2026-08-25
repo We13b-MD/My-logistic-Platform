@@ -48,7 +48,21 @@ pricingRouter.get(
   (req, res) => pricingController.getInvoice(req, res)
 );
 
-// 6. Verify Subscription Payment reference (Tenant Super Admin only)
+// 6. Initialize Paystack Checkout link (Authenticated users)
+pricingRouter.post(
+  "/paystack/initialize",
+  authenticate,
+  (req, res) => pricingController.initializeCheckout(req, res)
+);
+
+// 7. Verify Delivery Invoice Payment
+pricingRouter.post(
+  "/paystack/verify-invoice",
+  authenticate,
+  (req, res) => pricingController.verifyInvoice(req, res)
+);
+
+// 8. Verify Subscription Payment reference (Tenant Super Admin only)
 pricingRouter.post(
   "/subscribe/verify",
   authenticate,
@@ -57,7 +71,7 @@ pricingRouter.post(
   (req, res) => pricingController.verifySubscription(req, res)
 );
 
-// 7. Paystack Real-Time Webhook (Public API Endpoint)
+// 9. Paystack Real-Time Webhook (Public API Endpoint)
 pricingRouter.post(
   "/webhook",
   (req, res) => pricingController.handleWebhook(req, res)

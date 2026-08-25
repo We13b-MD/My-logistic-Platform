@@ -23,4 +23,16 @@ export const pricingApi = {
   // Verify Paystack payment reference
   verifySubscription: (reference: string, planType: "MONTHLY" | "ANNUAL") =>
     apiClient.post("/pricing/subscribe/verify", { reference, planType }),
+
+  // Initialize Paystack checkout session
+  initializePaystackCheckout: (data: {
+    email?: string;
+    amountInNaira: number;
+    callbackUrl?: string;
+    metadata?: Record<string, any>;
+  }) => apiClient.post("/pricing/paystack/initialize", data),
+
+  // Verify delivery invoice payment
+  verifyInvoicePayment: (reference: string, deliveryId: string) =>
+    apiClient.post("/pricing/paystack/verify-invoice", { reference, deliveryId }),
 };

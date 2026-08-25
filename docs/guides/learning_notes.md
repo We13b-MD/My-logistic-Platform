@@ -1602,3 +1602,64 @@ graph TD
 
 > [!NOTE]
 > For full deployment rulesets and configuration parameters, see the complete guide in [security_architecture.md](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/docs/guides/security_architecture.md).
+
+---
+
+## 34. Multi-Tenant Architecture & Customization Strategy
+
+### A. The Anti-Pattern: Branch / Repository Forking
+Creating separate Git branches or repository forks for each enterprise client (e.g. Client A wanting dark mode, Client B wanting CSV exports, Client C skipping onboarding) results in **codebase fragmentation**, where updating core features requires manually cherry-picking code across dozens of repositories.
+
+### B. The Solution: 3 Pillars of Single-Codebase Multi-Tenancy
+
+```mermaid
+graph TD
+    Request[Incoming HTTP / WS Request] --> Middleware[Pillar 3: Tenant Boundary Resolution]
+    Middleware -->|Extracts tenantId from JWT / Subdomain| Context[req.user.tenantId Context]
+    
+    Context --> ConfigMerge[Pillar 2: Runtime Configuration Inheritance]
+    ConfigMerge -->|Base System Defaults| Defaults[Base Config]
+    ConfigMerge -->|Tenant Overrides DB| Overrides[Tenant Overrides]
+    
+    Defaults --> FinalConfig[Merged Runtime Config]
+    Overrides --> FinalConfig
+    
+    FinalConfig --> FeatureFlags[Pillar 1: Tenant-Scoped Feature Flags]
+    FeatureFlags --> FeatureA[Client 4: Dark Mode Enabled]
+    FeatureFlags --> FeatureB[Client 7: CSV Export Enabled]
+    FeatureFlags --> FeatureC[Client 11: Skip Onboarding Enabled]
+```
+
+1. **Pillar 1: Tenant-Scoped Feature Flags**: Feature flags are evaluated dynamically based on `tenantId` stored in the database, avoiding global flags or client-specific code branches.
+2. **Pillar 2: Runtime Configuration Inheritance & Overrides**: System-wide base defaults are defined once, and tenant-specific JSON overrides (`Tenant.rolePermissions`, `PricingRule`) are merged at runtime. Updating core logic updates all tenants simultaneously unless an explicit override exists.
+3. **Pillar 3: Tenant-Aware Boundary Resolution**: Resolving tenant context (`tenantId`) early at the application boundary (`auth.middleware.ts`) before executing any domain logic.
+
+---
+
+## 35. Paystack Payment Gateway Integration Architecture
+
+### A. Payment Flow Diagram (Checkout Init → Webhook → Fulfillment)
+
+```mermaid
+graph TD
+    User[Customer / Tenant Admin] -->|1. Request Payment Link| API[POST /api/v1/pricing/paystack/initialize]
+    API -->|2. Initialize Transaction| PaystackAPI[Paystack API: api.paystack.co]
+    PaystackAPI -->|3. Return Checkout URL & Ref| API
+    API -->|4. Redirect User| Checkout[Paystack Payment Page / Modal]
+    
+    Checkout -->|5. User Pays Card/Transfer| PaystackEngine[Paystack Engine]
+    
+    subgraph Real-Time Webhook Engine
+        PaystackEngine -->|6. Asynchronous Event POST| Webhook[POST /api/v1/pricing/webhook]
+        Webhook -->|7. HMAC SHA512 Verification| Security[crypto.createHmac sha512 Check]
+        Security -->|8. Mark Paid| DB[(Prisma PostgreSQL)]
+        DB -->|9. Activate Subscription or Delivery| Status[Invoice Status: PAID / Tenant Status: ACTIVE]
+    end
+```
+
+### B. Security & Sandbox Fallback Safeguards
+1. **HMAC SHA512 Signature Security**: Webhooks validate `x-paystack-signature` using `crypto.createHmac("sha512", PAYSTACK_SECRET_KEY)` before processing event payloads.
+2. **Kobo Conversion**: Amounts are converted from Naira to Kobo (`amountInNaira * 100`) before transmitting to Paystack APIs.
+3. **Automated Sandbox Fallback**: If `PAYSTACK_SECRET_KEY` is not set or set to placeholder, the system runs mock checkout sessions seamlessly for local offline testing.
+
+

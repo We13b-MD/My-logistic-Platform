@@ -161,6 +161,47 @@ export class PricingController {
     }
   }
 
+  // Initialize Paystack Checkout link
+  async initializeCheckout(req: Request, res: Response) {
+    try {
+      const email = req.user?.email || req.body.email;
+      const { amountInNaira, callbackUrl, metadata } = req.body;
+      if (!email || !amountInNaira) {
+        return res.status(400).json({ status: "error", message: "Email and amountInNaira are required" });
+      }
+
+      const result = await pricingService.initializePaystackCheckout({
+        email,
+        amountInNaira,
+        callbackUrl,
+        metadata: {
+          ...metadata,
+          tenantId: req.user?.tenantId,
+        },
+      });
+
+      return res.status(200).json({ status: "success", data: result });
+    } catch (err: any) {
+      return res.status(400).json({ status: "error", message: err.message });
+    }
+  }
+
+  // Verify delivery invoice payment
+  async verifyInvoice(req: Request, res: Response) {
+    try {
+      const tenantId = req.user?.tenantId;
+      const { reference, deliveryId } = req.body;
+      if (!tenantId || !reference || !deliveryId) {
+        return res.status(400).json({ status: "error", message: "Missing required parameters" });
+      }
+
+      const result = await pricingService.verifyInvoicePayment(tenantId, reference, deliveryId);
+      return res.status(200).json(result);
+    } catch (err: any) {
+      return res.status(400).json({ status: "error", message: err.message });
+    }
+  }
+
   // Paystack Webhook Handler
   async handleWebhook(req: Request, res: Response) {
     try {
