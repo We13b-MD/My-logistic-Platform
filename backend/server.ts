@@ -39,6 +39,20 @@ const io = new Server(server, {
 // Bootstrap tracking WebSocket logic
 initTrackingSocket(io);
 
+// Automated keep-alive heartbeat for Render Free Tier (pings public URL every 10 mins)
+const renderUrl = process.env.RENDER_EXTERNAL_URL;
+if (renderUrl) {
+  console.log(`[Heartbeat] Self-ping keep-alive enabled for Render URL: ${renderUrl}`);
+  setInterval(() => {
+    const pingEndpoint = `${renderUrl.replace(/\/$/, '')}/api/v1/tracking/public/ping`;
+    http.get(pingEndpoint, (res) => {
+      console.log(`[Heartbeat] Container keep-alive ping status: ${res.statusCode}`);
+    }).on('error', (err) => {
+      console.warn(`[Heartbeat] Keep-alive ping failed: ${err.message}`);
+    });
+  }, 10 * 60 * 1000); // 10 minutes interval
+}
+
 // Listen using the 'server' instance (not 'app')
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
