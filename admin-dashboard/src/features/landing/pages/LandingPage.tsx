@@ -108,17 +108,14 @@ export function LandingPage() {
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
             <button
               onClick={() => navigate("/onboard")}
-              className="glass-panel border border-teal-500/50 bg-teal-500/15 hover:bg-teal-500/25 text-teal-300 backdrop-blur-xl px-8 py-4 rounded-xl text-sm font-bold transition-all shadow-xl shadow-teal-500/10 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 hover:border-teal-400 group"
+              className="glass-panel border border-teal-500/50 bg-teal-500/15 hover:bg-teal-500/25 text-white backdrop-blur-xl px-8 py-4 rounded-xl text-sm font-bold transition-all shadow-xl shadow-teal-500/10 flex items-center justify-center cursor-pointer active:scale-95 hover:border-teal-400"
             >
-              <Icon icon="solar:city-bold-duotone" className="text-xl text-teal-400 group-hover:scale-110 transition-transform" />
               <span>Register Company</span>
-              <Icon icon="lucide:arrow-right" className="text-lg text-teal-400 group-hover:translate-x-1 transition-transform" />
             </button>
             <button
               onClick={() => navigate("/register")}
-              className="glass-panel border border-slate-700/80 bg-slate-900/60 hover:bg-slate-800/80 text-slate-200 backdrop-blur-xl px-8 py-4 rounded-xl text-sm font-bold transition-all cursor-pointer flex items-center justify-center gap-2.5 active:scale-95 hover:border-slate-500 group"
+              className="glass-panel border border-slate-700/80 bg-slate-900/60 hover:bg-slate-800/80 text-white backdrop-blur-xl px-8 py-4 rounded-xl text-sm font-bold transition-all cursor-pointer flex items-center justify-center active:scale-95 hover:border-slate-500"
             >
-              <Icon icon="solar:steering-wheel-bold-duotone" className="text-xl text-slate-400 group-hover:text-amber-400 transition-colors" />
               <span>Join as Driver</span>
             </button>
           </div>
