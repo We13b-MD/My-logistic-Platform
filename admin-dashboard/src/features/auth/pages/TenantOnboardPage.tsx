@@ -442,11 +442,11 @@ export function TenantOnboardPage() {
                 </button>
               ) : (
                 <button
-                  className="w-full bg-[#29a195] hover:bg-[#22877d] text-slate-950 font-bold py-3.5 rounded-xl transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2"
+                  className="w-full bg-teal-400 hover:bg-teal-300 text-white font-extrabold py-3.5 rounded-xl transition-all cursor-pointer shadow-lg shadow-teal-500/20 flex items-center justify-center gap-2"
                   type="submit"
                 >
                   <span>Register Logistics Company</span>
-                  <Icon icon="lucide:arrow-right" className="text-base" />
+                  <Icon icon="lucide:arrow-right" className="text-base text-white" />
                 </button>
               )}
             </form>
