@@ -59,10 +59,10 @@ export function LandingPage() {
           {isAuthenticated ? (
             <button
               onClick={() => navigate("/dashboard")}
-              className="bg-teal-400 hover:bg-teal-300 text-white px-5 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
+              className="bg-teal-400 hover:bg-teal-300 text-slate-950 px-5 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
             >
               <span>Go to Dashboard</span>
-              <Icon icon="lucide:arrow-right" className="text-sm text-white" />
+              <Icon icon="lucide:arrow-right" className="text-sm text-slate-950" />
             </button>
           ) : (
             <>
@@ -74,7 +74,7 @@ export function LandingPage() {
               </button>
               <button
                 onClick={() => navigate("/onboard")}
-                className="bg-teal-400 hover:bg-teal-300 text-white px-5 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-sm"
+                className="bg-teal-400 hover:bg-teal-300 text-slate-950 px-5 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-sm"
               >
                 Get Started
               </button>
@@ -108,10 +108,10 @@ export function LandingPage() {
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
             <button
               onClick={() => navigate("/onboard")}
-              className="bg-teal-400 hover:bg-teal-300 text-white px-8 py-4 rounded-xl text-sm font-extrabold transition-all shadow-lg shadow-teal-500/20 flex items-center justify-center gap-2 cursor-pointer"
+              className="bg-teal-400 hover:bg-teal-300 text-slate-950 px-8 py-4 rounded-xl text-sm font-extrabold transition-all shadow-lg shadow-teal-500/20 flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>Register Company</span>
-              <Icon icon="lucide:arrow-right" className="text-lg text-white" />
+              <Icon icon="lucide:arrow-right" className="text-lg text-slate-950" />
             </button>
             <button
               onClick={() => navigate("/register")}
