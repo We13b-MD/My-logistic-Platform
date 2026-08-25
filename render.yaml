@@ -15,7 +15,6 @@ services:
     plan: free
     dockerContext: ./backend
     dockerfilePath: ./backend/Dockerfile
-    healthCheckPath: /api/v1/tracking/public/ping
     envVars:
       - key: PORT
         value: 3000
