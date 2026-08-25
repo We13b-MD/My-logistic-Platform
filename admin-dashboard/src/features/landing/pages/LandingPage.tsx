@@ -435,20 +435,86 @@ export function LandingPage() {
       {/* ─── SMOOTH SCROLL LOCAL STYLE ─── */}
       <style>{`html { scroll-behavior: smooth; }`}</style>
 
-      {/* ─── FOOTER BAR ─── */}
-      <footer className="border-t border-slate-800/80 py-8 mt-auto z-10 bg-slate-950/40">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Icon icon="solar:shipping-truck-bold-duotone" className="text-teal-400 text-lg" />
-            <span className="text-xs text-slate-500 font-mono">
-              © {new Date().getFullYear()} Logistel Systems Inc.
-            </span>
+      {/* ─── RICH ENTERPRISE FOOTER ─── */}
+      <footer className="border-t border-slate-800/80 mt-20 pt-16 pb-12 bg-slate-950/80 backdrop-blur-2xl relative z-10">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          
+          {/* Top Grid Section */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-10 pb-12 border-b border-slate-800/80">
+            
+            {/* Column 1: Brand & Bio */}
+            <div className="md:col-span-1 flex flex-col gap-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400 font-bold text-sm">
+                  L
+                </div>
+                <span className="font-display font-bold text-base text-slate-100 tracking-tight">
+                  LOGISTEL <span className="text-teal-400 font-normal">SYSTEMS</span>
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Next-generation multi-tenant logistics & dispatch management platform engineered for real-road routing, telemetry audits, and automated pricing.
+              </p>
+              <div className="flex items-center gap-3 text-xs text-slate-400 mt-2">
+                <Icon icon="solar:letter-bold-duotone" className="text-teal-400 text-sm" />
+                <span>support@logistel.com</span>
+              </div>
+            </div>
+
+            {/* Column 2: Platform Capabilities */}
+            <div className="flex flex-col gap-3">
+              <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">Capabilities</h4>
+              <ul className="space-y-2.5 text-xs text-slate-400">
+                <li><a href="#features" className="hover:text-teal-400 transition-colors">OSRM Real-Road Engine</a></li>
+                <li><a href="#features" className="hover:text-teal-400 transition-colors">GPS Breadcrumb Audit</a></li>
+                <li><a href="#features" className="hover:text-teal-400 transition-colors">Dynamic Fare Calculator</a></li>
+                <li><a href="#features" className="hover:text-teal-400 transition-colors">Proof of Delivery (POD)</a></li>
+                <li><a href="#features" className="hover:text-teal-400 transition-colors">Live Socket Telemetry</a></li>
+              </ul>
+            </div>
+
+            {/* Column 3: Ecosystem Portals */}
+            <div className="flex flex-col gap-3">
+              <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">Ecosystem</h4>
+              <ul className="space-y-2.5 text-xs text-slate-400">
+                <li><button onClick={() => navigate("/onboard")} className="hover:text-teal-400 transition-colors text-left cursor-pointer">Fleet Admin Portal</button></li>
+                <li><button onClick={() => navigate("/register")} className="hover:text-teal-400 transition-colors text-left cursor-pointer">Driver Onboarding</button></li>
+                <li><button onClick={() => navigate("/login")} className="hover:text-teal-400 transition-colors text-left cursor-pointer">Customer Dashboard</button></li>
+                <li><button onClick={() => navigate("/track")} className="hover:text-teal-400 transition-colors text-left cursor-pointer">Public Shipment Tracker</button></li>
+              </ul>
+            </div>
+
+            {/* Column 4: Legal & Paystack Compliance */}
+            <div className="flex flex-col gap-3">
+              <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">Legal & Security</h4>
+              <ul className="space-y-2.5 text-xs text-slate-400">
+                <li><a href="#" className="hover:text-teal-400 transition-colors">Privacy Policy</a></li>
+                <li><a href="#" className="hover:text-teal-400 transition-colors">Terms of Service</a></li>
+                <li><a href="#" className="hover:text-teal-400 transition-colors">Refund & Return Policy</a></li>
+                <li><a href="#" className="hover:text-teal-400 transition-colors">Security Architecture</a></li>
+              </ul>
+            </div>
+
           </div>
-          <div className="flex gap-6">
-            <a href="#" className="text-xs text-slate-400 hover:text-teal-400 transition-colors">Privacy Policy</a>
-            <a href="#" className="text-xs text-slate-400 hover:text-teal-400 transition-colors">Terms of Service</a>
-            <a href="#" className="text-xs text-slate-400 hover:text-teal-400 transition-colors">API Status</a>
+
+          {/* Bottom Bar */}
+          <div className="pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="font-mono text-[11px]">All Systems Operational (99.98% Uptime)</span>
+            </div>
+
+            <div className="font-mono text-[11px]">
+              © {new Date().getFullYear()} Logistel Systems Inc. All rights reserved.
+            </div>
+
+            <div className="flex items-center gap-4 text-slate-400">
+              <a href="#" className="hover:text-teal-400 transition-colors"><Icon icon="solar:shield-check-bold-duotone" className="text-lg" /></a>
+              <a href="#" className="hover:text-teal-400 transition-colors"><Icon icon="solar:lock-bold-duotone" className="text-lg" /></a>
+              <a href="#" className="hover:text-teal-400 transition-colors"><Icon icon="solar:server-bold-duotone" className="text-lg" /></a>
+            </div>
           </div>
+
         </div>
       </footer>
 
