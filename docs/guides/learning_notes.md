@@ -1572,5 +1572,33 @@ The dispatch manager pre-registers allowed transload locations
 If the driver stops at an unregistered location, they must submit a photo + reason before the delivery can continue
 The system logs every checkpoint as a formal record: "Goods transferred at Lagos Island Warehouse, 14:32, supervised by [name]"
 
+---
 
+## 33. Production Security & Edge WAF Architecture (Cloudflare + Express)
 
+### A. The 2-Tier Security Concept
+Security is divided into **Tier 1 (Cloudflare Edge Security)** and **Tier 2 (Application Code Security)**:
+
+```mermaid
+graph TD
+    Client[Incoming Internet Traffic] --> Edge[Tier 1: Cloudflare Edge Security]
+    Edge -->|1. WAF Rule| OWASP[Block OWASP Attacks: SQLi, XSS]
+    Edge -->|2. Rate Limit| AuthLimit[Block Auth Bots: >5 req/min]
+    Edge -->|3. Bot Shield| ScrapingShield[Challenge Scrapers with Turnstile]
+    
+    Edge -->|Clean Traffic Only| App[Tier 2: Express Node.js Server]
+    App --> ExpressLimiter[Express rateLimiter.middleware.ts]
+    App --> JwtAuth[JWT Authentication & Tenant Isolation]
+    App --> ZodVal[Zod Input Sanitization]
+    App --> PrismaORM[Prisma Parameterized SQL]
+    PrismaORM --> NeonDB[(Neon PostgreSQL Serverless)]
+```
+
+### B. Key Security Safeguards Summary
+
+1. **Edge Rate Limiting**: Drops credential stuffing bots at the Cloudflare Edge before they touch Node.js or consume Neon database compute connections.
+2. **Bot Management**: Identifies automated web scrapers harvesting pricing data or tracking endpoints, issuing interactive challenges before requests touch the server.
+3. **Application Defense**: Multi-tenant data isolation (`tenantId`), JWT authentication, Zod input validation schemas, and Prisma parameterized queries to eliminate SQL injection risks.
+
+> [!NOTE]
+> For full deployment rulesets and configuration parameters, see the complete guide in [security_architecture.md](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/docs/guides/security_architecture.md).
