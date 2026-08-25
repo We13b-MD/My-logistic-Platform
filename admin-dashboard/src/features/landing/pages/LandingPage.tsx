@@ -104,88 +104,141 @@ export function LandingPage() {
             Transform chaotic global supply chain data into a streamlined, executable interface. Achieve unprecedented technical precision, reduce operational bloat, and unlock massive cost-savings across your entire fleet ecosystem.
           </p>
 
-          {/* Action Buttons */}
+          {/* Action Buttons with Glassmorphic Design */}
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
             <button
               onClick={() => navigate("/onboard")}
-              className="bg-teal-400 hover:bg-teal-300 text-slate-950 px-8 py-4 rounded-xl text-sm font-extrabold transition-all shadow-lg shadow-teal-500/20 flex items-center justify-center gap-2 cursor-pointer"
+              className="glass-panel border border-teal-500/50 bg-teal-500/15 hover:bg-teal-500/25 text-teal-300 backdrop-blur-xl px-8 py-4 rounded-xl text-sm font-bold transition-all shadow-xl shadow-teal-500/10 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 hover:border-teal-400 group"
             >
+              <Icon icon="solar:city-bold-duotone" className="text-xl text-teal-400 group-hover:scale-110 transition-transform" />
               <span>Register Company</span>
-              <Icon icon="lucide:arrow-right" className="text-lg text-slate-950" />
+              <Icon icon="lucide:arrow-right" className="text-lg text-teal-400 group-hover:translate-x-1 transition-transform" />
             </button>
             <button
               onClick={() => navigate("/register")}
-              className="bg-transparent border border-slate-700 hover:border-slate-500 text-slate-200 px-8 py-4 rounded-xl text-sm font-bold hover:bg-slate-800/40 transition-all cursor-pointer"
+              className="glass-panel border border-slate-700/80 bg-slate-900/60 hover:bg-slate-800/80 text-slate-200 backdrop-blur-xl px-8 py-4 rounded-xl text-sm font-bold transition-all cursor-pointer flex items-center justify-center gap-2.5 active:scale-95 hover:border-slate-500 group"
             >
-              Join as Driver
+              <Icon icon="solar:steering-wheel-bold-duotone" className="text-xl text-slate-400 group-hover:text-amber-400 transition-colors" />
+              <span>Join as Driver</span>
             </button>
           </div>
         </section>
 
-        {/* ─── VALUE PROPOSITIONS BENTO GRID ─── */}
+        {/* ─── VALUE PROPOSITIONS BENTO GRID (6 Feature Cards) ─── */}
         <section id="features" className="py-8 scroll-mt-20">
           <div className="text-center mb-16">
-            <h2 className="font-display text-2xl md:text-3xl text-slate-100 font-bold mb-4">
-              Engineered for Operational Clarity
+            <span className="text-[10px] font-bold text-teal-400 uppercase tracking-widest bg-slate-900/90 px-3.5 py-1.5 rounded-full border border-slate-800 shadow-sm">
+              Full Logistics Platform Capabilities
+            </span>
+            <h2 className="font-display text-2xl md:text-4xl text-slate-100 font-bold mt-4 mb-4">
+              Engineered for Operational Excellence
             </h2>
-            <p className="text-xs text-slate-400 max-w-lg mx-auto leading-relaxed">
-              High-density fleet visualization and dispatcher coordination without cognitive overload.
+            <p className="text-xs md:text-sm text-slate-400 max-w-xl mx-auto leading-relaxed">
+              Real-road routing, tamper-proof GPS telemetry audits, and automated dynamic pricing built for modern carrier fleets.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-            {/* Bento Card 1 */}
-            <div className="glass-panel rounded-2xl p-6 flex flex-col h-[320px] group hover:border-teal-500/30 transition-all border border-slate-800 relative overflow-hidden">
+            {/* Bento Card 1: OSRM Real-Road Engine */}
+            <div className="glass-panel rounded-2xl p-6 flex flex-col h-[320px] group hover:border-teal-500/40 transition-all border border-slate-800 relative overflow-hidden">
               <div className="absolute inset-0 opacity-5 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(45,52,73,0.4)_1px,transparent_1px)] bg-[size:16px_16px]"></div>
               <div className="relative z-10 flex flex-col h-full">
-                <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center mb-5 border border-slate-800 group-hover:border-teal-500/40 transition-colors">
+                <div className="w-12 h-12 rounded-xl bg-teal-500/10 flex items-center justify-center mb-5 border border-teal-500/20 group-hover:border-teal-500/50 transition-colors">
                   <Icon icon="solar:routing-bold-duotone" className="text-teal-400 text-2xl" />
                 </div>
-                <h3 className="text-base font-bold text-slate-100 mb-2">Real-time Dispatch</h3>
+                <h3 className="text-base font-bold text-slate-100 mb-2">OSRM Real-Road Engine</h3>
                 <p className="text-xs text-slate-400 leading-relaxed flex-grow">
-                  Pinpoint cargo tracking with active telemetry, predictive ETA modeling, and live Leaflet route overlays.
+                  Turn-by-turn road geometry, accurate drive-time ETAs, and interactive polyline maps snapped directly to actual transport highways.
                 </p>
                 <div className="mt-auto flex items-center justify-between border-t border-slate-800/80 pt-4">
-                  <span className="text-[10px] font-mono text-teal-400">Latency &lt; 50ms</span>
+                  <span className="text-[10px] font-mono text-teal-400">OpenSource Routing Engine</span>
                   <Icon icon="lucide:arrow-right" className="text-slate-400 group-hover:text-teal-400 group-hover:translate-x-1 transition-all" />
                 </div>
               </div>
             </div>
 
-            {/* Bento Card 2 */}
-            <div className="glass-panel rounded-2xl p-6 flex flex-col h-[320px] group hover:border-teal-500/30 transition-all border border-slate-800 relative overflow-hidden">
+            {/* Bento Card 2: GPS Breadcrumb Audit Trail */}
+            <div className="glass-panel rounded-2xl p-6 flex flex-col h-[320px] group hover:border-orange-500/40 transition-all border border-slate-800 relative overflow-hidden">
               <div className="relative z-10 flex flex-col h-full">
-                <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center mb-5 border border-slate-800 group-hover:border-teal-500/40 transition-colors">
-                  <Icon icon="solar:graph-bold-duotone" className="text-teal-400 text-2xl" />
+                <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center mb-5 border border-orange-500/20 group-hover:border-orange-500/50 transition-colors">
+                  <Icon icon="solar:map-point-wave-bold-duotone" className="text-orange-400 text-2xl" />
                 </div>
-                <h3 className="text-base font-bold text-slate-100 mb-2">Fleet Analytics</h3>
+                <h3 className="text-base font-bold text-slate-100 mb-2">GPS Breadcrumb Audit</h3>
                 <p className="text-xs text-slate-400 leading-relaxed flex-grow">
-                  Deep-dive telemetry analysis, driver status sentinels, and fuel consumption metrics structured with high contrast.
+                  Anti-cargo diversion & transloading fraud prevention. Every driver location update is permanently logged for complete map replay.
                 </p>
                 <div className="mt-auto flex items-center justify-between border-t border-slate-800/80 pt-4">
-                  <span className="text-[10px] font-mono text-teal-400 flex items-center gap-1">
-                    <Icon icon="solar:trending-up-bold-duotone" />
-                    <span>+14.2% Fuel Efficiency</span>
-                  </span>
-                  <Icon icon="lucide:arrow-right" className="text-slate-400 group-hover:text-teal-400 group-hover:translate-x-1 transition-all" />
+                  <span className="text-[10px] font-mono text-orange-400">Append-Only Audit Ledger</span>
+                  <Icon icon="lucide:arrow-right" className="text-slate-400 group-hover:text-orange-400 group-hover:translate-x-1 transition-all" />
                 </div>
               </div>
             </div>
 
-            {/* Bento Card 3 */}
-            <div className="glass-panel rounded-2xl p-6 flex flex-col h-[320px] group hover:border-teal-500/30 transition-all border border-slate-800 relative overflow-hidden">
+            {/* Bento Card 3: Dynamic Distance Pricing */}
+            <div className="glass-panel rounded-2xl p-6 flex flex-col h-[320px] group hover:border-emerald-500/40 transition-all border border-slate-800 relative overflow-hidden">
               <div className="relative z-10 flex flex-col h-full">
-                <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center mb-5 border border-slate-800 group-hover:border-teal-500/40 transition-colors">
-                  <Icon icon="solar:shield-check-bold-duotone" className="text-teal-400 text-2xl" />
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-5 border border-emerald-500/20 group-hover:border-emerald-500/50 transition-colors">
+                  <Icon icon="solar:calculator-minimalistic-bold-duotone" className="text-emerald-400 text-2xl" />
                 </div>
-                <h3 className="text-base font-bold text-slate-100 mb-2">Multi-tenant Security</h3>
+                <h3 className="text-base font-bold text-slate-100 mb-2">Dynamic Fare Engine</h3>
                 <p className="text-xs text-slate-400 leading-relaxed flex-grow">
-                  Enterprise-grade tenant data isolation, encrypted delivery verification PIN codes, and robust role-based access control.
+                  Automated pricing rules based on road distance (km), base fares, and vehicle type multipliers (Bike, Car, Van, Truck).
                 </p>
                 <div className="mt-auto flex items-center justify-between border-t border-slate-800/80 pt-4">
-                  <span className="text-[10px] font-mono text-teal-400">E2E Delivery Encryption</span>
-                  <Icon icon="lucide:arrow-right" className="text-slate-400 group-hover:text-teal-400 group-hover:translate-x-1 transition-all" />
+                  <span className="text-[10px] font-mono text-emerald-400">Real-time Rate Calculator</span>
+                  <Icon icon="lucide:arrow-right" className="text-slate-400 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" />
+                </div>
+              </div>
+            </div>
+
+            {/* Bento Card 4: Digital Proof of Delivery */}
+            <div className="glass-panel rounded-2xl p-6 flex flex-col h-[320px] group hover:border-sky-500/40 transition-all border border-slate-800 relative overflow-hidden">
+              <div className="relative z-10 flex flex-col h-full">
+                <div className="w-12 h-12 rounded-xl bg-sky-500/10 flex items-center justify-center mb-5 border border-sky-500/20 group-hover:border-sky-500/50 transition-colors">
+                  <Icon icon="solar:verified-check-bold-duotone" className="text-sky-400 text-2xl" />
+                </div>
+                <h3 className="text-base font-bold text-slate-100 mb-2">Proof of Delivery (POD)</h3>
+                <p className="text-xs text-slate-400 leading-relaxed flex-grow">
+                  Digital signature canvas capture, photo proof uploads, and secure OTP handoff codes to guarantee delivery fulfillment.
+                </p>
+                <div className="mt-auto flex items-center justify-between border-t border-slate-800/80 pt-4">
+                  <span className="text-[10px] font-mono text-sky-400">OTP & Signature Verification</span>
+                  <Icon icon="lucide:arrow-right" className="text-slate-400 group-hover:text-sky-400 group-hover:translate-x-1 transition-all" />
+                </div>
+              </div>
+            </div>
+
+            {/* Bento Card 5: Real-time Socket Dispatch */}
+            <div className="glass-panel rounded-2xl p-6 flex flex-col h-[320px] group hover:border-indigo-500/40 transition-all border border-slate-800 relative overflow-hidden">
+              <div className="relative z-10 flex flex-col h-full">
+                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center mb-5 border border-indigo-500/20 group-hover:border-indigo-500/50 transition-colors">
+                  <Icon icon="solar:transmission-bold-duotone" className="text-indigo-400 text-2xl" />
+                </div>
+                <h3 className="text-base font-bold text-slate-100 mb-2">Live Socket Dispatch</h3>
+                <p className="text-xs text-slate-400 leading-relaxed flex-grow">
+                  Bi-directional Socket.io telemetry streaming driver coordinates live to dispatchers and end customers with sub-50ms latency.
+                </p>
+                <div className="mt-auto flex items-center justify-between border-t border-slate-800/80 pt-4">
+                  <span className="text-[10px] font-mono text-indigo-400">WebSocket Live Telemetry</span>
+                  <Icon icon="lucide:arrow-right" className="text-slate-400 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
+                </div>
+              </div>
+            </div>
+
+            {/* Bento Card 6: Multi-tenant Security */}
+            <div className="glass-panel rounded-2xl p-6 flex flex-col h-[320px] group hover:border-purple-500/40 transition-all border border-slate-800 relative overflow-hidden">
+              <div className="relative z-10 flex flex-col h-full">
+                <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center mb-5 border border-purple-500/20 group-hover:border-purple-500/50 transition-colors">
+                  <Icon icon="solar:shield-check-bold-duotone" className="text-purple-400 text-2xl" />
+                </div>
+                <h3 className="text-base font-bold text-slate-100 mb-2">Multi-Tenant Security</h3>
+                <p className="text-xs text-slate-400 leading-relaxed flex-grow">
+                  Enterprise tenant data isolation, role-based access control (RBAC), and Edge WAF rate-limiting protection.
+                </p>
+                <div className="mt-auto flex items-center justify-between border-t border-slate-800/80 pt-4">
+                  <span className="text-[10px] font-mono text-purple-400">Enterprise Tenant Isolation</span>
+                  <Icon icon="lucide:arrow-right" className="text-slate-400 group-hover:text-purple-400 group-hover:translate-x-1 transition-all" />
                 </div>
               </div>
             </div>
