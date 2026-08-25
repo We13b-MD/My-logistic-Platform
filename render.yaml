@@ -30,7 +30,6 @@ services:
   - type: web
     name: logistel-frontend
     env: static
-    plan: free
     buildCommand: cd admin-dashboard && npm install && npm run build
     staticPublishPath: ./admin-dashboard/dist
     routes:
