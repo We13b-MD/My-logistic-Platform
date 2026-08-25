@@ -38,7 +38,7 @@ git push origin main
 Under the **`logistel-backend`** service parameters:
 1. Copy your **`DATABASE_URL`** from `backend/.env`:
    ```env
-   DATABASE_URL="postgresql://neondb_owner:npg_75cmTCgJIMXl@ep-mute-tree-a2cg6a1a-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require&connect_timeout=30&pool_timeout=30"
+   DATABASE_URL="postgresql://<username>:<password>@<neon-hostname>/<dbname>?sslmode=require&connect_timeout=30&pool_timeout=30"
    ```
 2. Paste it into the `DATABASE_URL` field in Render.
 3. Click **Apply / Deploy**.
