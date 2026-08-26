@@ -1662,4 +1662,8 @@ graph TD
 2. **Kobo Conversion**: Amounts are converted from Naira to Kobo (`amountInNaira * 100`) before transmitting to Paystack APIs.
 3. **Automated Sandbox Fallback**: If `PAYSTACK_SECRET_KEY` is not set or set to placeholder, the system runs mock checkout sessions seamlessly for local offline testing.
 
+> [!NOTE]
+> For the complete mathematical equations, Haversine formula, dynamic fare calculator breakdown, and UPR strategy, see the full guide in [pricing_and_payments.md](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/docs/guides/pricing_and_payments.md).
+
+
 
