@@ -112,6 +112,7 @@ model Vehicle {
 
 model Invoice {
   id                String        @id @default(uuid())
+  paymentReference  String?       @unique // e.g. LOG-APEX-2608-D78F29
   tenantId          String
   deliveryId        String        @unique
   baseFare          Float

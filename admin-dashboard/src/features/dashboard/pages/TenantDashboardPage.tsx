@@ -2109,23 +2109,28 @@ export function TenantDashboardPage() {
                       <table className="w-full text-left border-collapse">
                         <thead>
                           <tr className="border-b border-white/5 text-[9px] uppercase font-bold text-on-surface-variant">
-                            <th className="pb-3">INVOICE ID</th>
-                            <th className="pb-3">RECIPIENT</th>
-                            <th className="pb-3">DISTANCE</th>
-                            <th className="pb-3">TOTAL AMOUNT</th>
-                            <th className="pb-3">STATUS</th>
+                            <th className="pb-3 text-left">UPR REFERENCE CODE</th>
+                            <th className="pb-3 text-left">RECIPIENT</th>
+                            <th className="pb-3 text-left">DISTANCE</th>
+                            <th className="pb-3 text-left">TOTAL AMOUNT</th>
+                            <th className="pb-3 text-left">STATUS</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5 text-[11px]">
                           {billingInvoices.map((inv) => (
                             <tr key={inv.id} className="hover:bg-white/5 transition-all">
-                              <td className="py-3.5 font-mono text-primary select-all">{inv.id.substring(0, 8)}...</td>
+                              <td className="py-3.5 font-mono text-primary font-bold select-all">
+                                <span className="bg-teal-500/10 text-teal-300 border border-teal-500/30 px-2 py-1 rounded font-mono text-[10px] tracking-wider inline-flex items-center gap-1">
+                                  <Icon icon="solar:ticket-star-bold-duotone" className="text-teal-400 text-xs" />
+                                  <span>{inv.paymentReference || `LOG-REF-${inv.id.substring(0, 6).toUpperCase()}`}</span>
+                                </span>
+                              </td>
                               <td className="py-3.5 text-on-surface">{inv.delivery?.recipientName || "N/A"}</td>
                               <td className="py-3.5 font-mono">{inv.distanceKm} km</td>
                               <td className="py-3.5 text-on-surface font-semibold">₦{inv.totalAmount.toLocaleString()}</td>
                               <td className="py-3.5">
-                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                                  inv.status === "PAID" ? "bg-emerald-500/10 text-emerald-400" : "bg-amber-500/10 text-amber-400"
+                                <span className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                                  inv.status === "PAID" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
                                 }`}>
                                   {inv.status}
                                 </span>

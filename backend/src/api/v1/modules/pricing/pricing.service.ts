@@ -1,6 +1,7 @@
 import { prisma } from "../../../../config/prisma";
 import { DeliveryStatus, InvoiceStatus, VehicleType, SubscriptionStatus } from "@prisma/client";
 import crypto from "crypto";
+import { generateUPR } from "../../utils/upr.utils";
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || "sk_test_placeholder";
 
@@ -113,17 +114,25 @@ export class PricingService {
     };
   }
 
-  // Generates / retrieves invoice for a delivery
+  // Generates / retrieves invoice for a delivery with unique UPR reference
   async generateInvoiceForDelivery(deliveryId: string, tenantId: string) {
     const existing = await prisma.invoice.findUnique({
       where: { deliveryId },
     });
 
     if (existing) {
+      if (!existing.paymentReference) {
+        const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+        const paymentReference = generateUPR(tenant?.subdomain || tenant?.companyName || "LOG");
+        return await prisma.invoice.update({
+          where: { id: existing.id },
+          data: { paymentReference },
+        });
+      }
       return existing;
     }
 
-    // Fetch delivery details to calculate
+    // Fetch delivery & tenant details to calculate
     const delivery = await prisma.delivery.findFirst({
       where: { id: deliveryId, tenantId },
       include: { driver: true },
@@ -132,6 +141,9 @@ export class PricingService {
     if (!delivery) {
       throw new Error("Delivery record not found");
     }
+
+    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+    const paymentReference = generateUPR(tenant?.subdomain || tenant?.companyName || "LOG");
 
     const rule = await this.getOrInitPricingRule(tenantId);
     const distanceKm = this.calculateHaversineDistance(
@@ -155,6 +167,7 @@ export class PricingService {
       data: {
         tenantId,
         deliveryId,
+        paymentReference,
         baseFare,
         distanceKm,
         distanceFare,
@@ -181,18 +194,19 @@ export class PricingService {
     });
   }
 
-  // Initializes a Paystack transaction checkout URL (Subscription or Delivery Invoice)
+  // Initializes a Paystack transaction checkout URL using UPR custom reference
   async initializePaystackCheckout(params: {
     email: string;
     amountInNaira: number;
     callbackUrl?: string;
     metadata?: Record<string, any>;
+    reference?: string;
   }) {
     const amountKobo = Math.round(params.amountInNaira * 100);
+    const ref = params.reference || params.metadata?.paymentReference || `test_ref_${Date.now()}`;
 
     // Sandbox fallback if placeholder key is present
     if (PAYSTACK_SECRET_KEY === "sk_test_placeholder" || PAYSTACK_SECRET_KEY.includes("placeholder")) {
-      const ref = `test_ref_${Date.now()}`;
       return {
         authorization_url: `https://checkout.paystack.com/sandbox-mock-checkout?ref=${ref}`,
         access_code: `test_access_${Date.now()}`,
@@ -210,6 +224,7 @@ export class PricingService {
         body: JSON.stringify({
           email: params.email,
           amount: amountKobo,
+          reference: ref,
           callback_url: params.callbackUrl,
           metadata: params.metadata || {},
         }),
