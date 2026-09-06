@@ -6,6 +6,7 @@ import { trackingApi } from "@/api/tracking.api";
 import { toast } from "sonner";
 import { Delivery, DeliveryStatus } from "@/types";
 import { Icon } from "@iconify/react";
+import { LogistelLogo } from "@/components/LogistelLogo";
 import { useOsrmRoute } from "@/utils/useOsrmRoute";
 
 // Leaflet map imports
@@ -69,6 +70,27 @@ export function CustomerDashboardPage() {
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Account Deletion Compliance State
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteReason, setDeleteReason] = useState("");
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    setIsDeletingAccount(true);
+    try {
+      const { authApi } = await import("@/api/auth.api");
+      await authApi.deleteAccount(deleteReason);
+      toast.success("Account and personal data successfully deleted.");
+      logout();
+      navigate("/login");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to delete account");
+    } finally {
+      setIsDeletingAccount(false);
+      setShowDeleteModal(false);
+    }
+  };
 
   // Live driver location tracking state
   const [liveDriverPos, setLiveDriverPos] = useState<{
@@ -325,24 +347,17 @@ export function CustomerDashboardPage() {
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
       {/* ─── Top Header Navbar ─── */}
       <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-900/90 backdrop-blur-md px-6 py-4 flex items-center justify-between shadow-xl">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-[#29a195] flex items-center justify-center text-slate-950 font-bold shadow-md">
-            <span className="material-symbols-outlined text-slate-950 text-[24px]">hub</span>
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-slate-100">
-              Customer Portal & Tracking
-            </h1>
-            <p className="text-xs text-slate-400">Live Express Freight Tracking</p>
-          </div>
-        </div>
+        <LogistelLogo
+          size="md"
+          subtext="Customer Portal & Tracking"
+        />
 
         <div className="flex items-center space-x-4">
           <button
             onClick={() => setActiveTab("book")}
-            className="hidden sm:flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-[#29a195] hover:bg-[#22877d] text-slate-950 font-bold text-xs transition-all cursor-pointer shadow-sm"
+            className="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-xl bg-transparent border border-slate-700 hover:border-teal-400 hover:bg-white/5 text-white font-semibold text-xs transition-all cursor-pointer active:scale-[0.98]"
           >
-            <Icon icon="lucide:plus" className="text-base" />
+            <Icon icon="solar:add-circle-bold" className="text-base text-teal-400" />
             <span>Book New Delivery</span>
           </button>
 
@@ -361,18 +376,78 @@ export function CustomerDashboardPage() {
             </div>
           </div>
 
+          {/* Delete Account Button (NDPR/GDPR & App Store Compliance) */}
+          <button
+            onClick={() => setShowDeleteModal(true)}
+            className="px-3 py-2 rounded-lg bg-slate-900 hover:bg-rose-950/40 text-slate-400 hover:text-rose-300 border border-slate-800 hover:border-rose-800/50 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
+            title="Request Account & Data Deletion"
+          >
+            <Icon icon="solar:trash-bin-trash-bold" className="text-xs" />
+            <span className="hidden md:inline">Delete Account</span>
+          </button>
+
           {/* Logout Button */}
           <button
             onClick={() => {
               logout();
               navigate("/login");
             }}
-            className="px-3 py-2 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/50 text-xs font-semibold transition-all"
+            className="px-3 py-2 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/50 text-xs font-semibold transition-all cursor-pointer"
           >
             Logout
           </button>
         </div>
       </header>
+
+      {/* Account Deletion Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-[9999] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-rose-500/30 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-xl shrink-0">
+                <Icon icon="solar:danger-triangle-bold" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-100">Delete Account & Erasure Request</h3>
+                <p className="text-[11px] text-slate-400">NDPR / GDPR Privacy Right to Erasure</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Are you sure you want to delete your account? Your email, saved credentials, and push notification tokens will be permanently scrubbed.
+            </p>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                Reason for leaving (Optional):
+              </label>
+              <input
+                type="text"
+                value={deleteReason}
+                onChange={(e) => setDeleteReason(e.target.value)}
+                placeholder="e.g. No longer using logistics service"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 outline-none focus:border-rose-500"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={isDeletingAccount}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+              >
+                {isDeletingAccount ? "Erasing Data..." : "Confirm Deletion"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ─── Main Content ─── */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -380,35 +455,38 @@ export function CustomerDashboardPage() {
         <div className="flex border-b border-slate-800 space-x-6 text-sm font-medium">
           <button
             onClick={() => setActiveTab("track")}
-            className={`pb-3 transition-colors border-b-2 flex items-center space-x-2 ${
+            className={`pb-3 transition-colors border-b-2 flex items-center space-x-2 cursor-pointer ${
               activeTab === "track"
                 ? "border-teal-400 text-teal-400 font-bold"
                 : "border-transparent text-slate-400 hover:text-slate-200"
             }`}
           >
-            <span>📍 Live Package Tracker</span>
+            <Icon icon="solar:map-point-wave-bold-duotone" className="text-base" />
+            <span>Live Package Tracker</span>
           </button>
 
           <button
             onClick={() => setActiveTab("book")}
-            className={`pb-3 transition-colors border-b-2 flex items-center space-x-2 ${
+            className={`pb-3 transition-colors border-b-2 flex items-center space-x-2 cursor-pointer ${
               activeTab === "book"
                 ? "border-teal-400 text-teal-400 font-bold"
                 : "border-transparent text-slate-400 hover:text-slate-200"
             }`}
           >
-            <span>📝 Book New Delivery</span>
+            <Icon icon="solar:box-minimalistic-bold-duotone" className="text-base" />
+            <span>Book New Delivery</span>
           </button>
 
           <button
             onClick={() => setActiveTab("history")}
-            className={`pb-3 transition-colors border-b-2 flex items-center space-x-2 ${
+            className={`pb-3 transition-colors border-b-2 flex items-center space-x-2 cursor-pointer ${
               activeTab === "history"
                 ? "border-teal-400 text-teal-400 font-bold"
                 : "border-transparent text-slate-400 hover:text-slate-200"
             }`}
           >
-            <span>📦 Order History ({deliveries.length})</span>
+            <Icon icon="solar:history-bold-duotone" className="text-base" />
+            <span>Order History</span>
           </button>
         </div>
 
@@ -417,8 +495,8 @@ export function CustomerDashboardPage() {
           <div className="space-y-6">
             {deliveries.length === 0 ? (
               <div className="bg-slate-900 p-12 rounded-2xl border border-slate-800 text-center space-y-4">
-                <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto text-2xl">
-                  📦
+                <div className="w-16 h-16 bg-teal-500/10 border border-teal-500/20 rounded-2xl flex items-center justify-center mx-auto text-teal-400 shadow-inner">
+                  <Icon icon="solar:box-minimalistic-bold-duotone" className="text-3xl" />
                 </div>
                 <h3 className="text-lg font-bold text-white">No Active Shipments Found</h3>
                 <p className="text-xs text-slate-400 max-w-sm mx-auto">
@@ -426,9 +504,10 @@ export function CustomerDashboardPage() {
                 </p>
                 <button
                   onClick={() => setActiveTab("book")}
-                  className="px-5 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs shadow-lg shadow-teal-500/20 transition-all"
+                  className="px-5 py-2.5 rounded-xl bg-transparent border border-slate-700 hover:border-teal-400 hover:bg-white/5 text-white font-semibold text-xs transition-all cursor-pointer inline-flex items-center gap-2 active:scale-[0.98]"
                 >
-                  Book Your First Delivery
+                  <Icon icon="solar:add-circle-bold" className="text-base text-teal-400" />
+                  <span>Book Your First Delivery</span>
                 </button>
               </div>
             ) : (
@@ -677,13 +756,18 @@ export function CustomerDashboardPage() {
         {/* ─── TAB 2: BOOK NEW DELIVERY ─── */}
         {activeTab === "book" && (
           <div className="max-w-3xl mx-auto bg-slate-900 p-8 rounded-2xl border border-slate-800 shadow-xl space-y-6">
-            <div>
-              <h2 className="text-xl font-bold text-white flex items-center space-x-2">
-                <span>📝 Schedule Express Delivery</span>
-              </h2>
-              <p className="text-xs text-slate-400">
-                Enter shipment addresses and recipient details to book instant courier dispatch.
-              </p>
+            <div className="flex items-center space-x-3 border-b border-slate-800/80 pb-4">
+              <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 shrink-0">
+                <Icon icon="solar:box-minimalistic-bold-duotone" className="text-2xl" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-white">
+                  Book Express Cargo Delivery
+                </h2>
+                <p className="text-xs text-slate-400">
+                  Enter pickup/dropoff addresses and recipient details for instant courier dispatch.
+                </p>
+              </div>
             </div>
 
             <form onSubmit={handleBookingSubmit} className="space-y-6">
@@ -833,17 +917,18 @@ export function CustomerDashboardPage() {
               <button
                 type="submit"
                 disabled={bookingSubmitting}
-                className="w-full py-3.5 rounded-xl bg-[#29a195] hover:bg-[#22877d] text-slate-950 font-bold text-sm transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2"
+                className="w-full bg-transparent border border-teal-500/50 hover:bg-teal-500/10 hover:border-teal-400 text-white font-semibold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 transition-all cursor-pointer text-sm active:scale-[0.99] disabled:opacity-50"
               >
                 {bookingSubmitting ? (
                   <>
-                    <Icon icon="lucide:loader-2" className="animate-spin text-lg" />
-                    <span>Processing Shipment...</span>
+                    <Icon icon="lucide:loader-2" className="animate-spin text-lg text-teal-400" />
+                    <span>Processing Shipment Order...</span>
                   </>
                 ) : (
                   <>
+                    <Icon icon="solar:send-square-bold" className="text-lg text-teal-400" />
                     <span>Dispatch Delivery Order Now</span>
-                    <Icon icon="lucide:arrow-right" className="text-base" />
+                    <Icon icon="lucide:arrow-right" className="text-base text-slate-400" />
                   </>
                 )}
               </button>
@@ -908,11 +993,13 @@ export function CustomerDashboardPage() {
                               <div className="text-xs text-slate-400">{del.recipientPhone}</div>
                             </td>
                             <td className="px-6 py-4 text-xs space-y-1">
-                              <div className="text-slate-300 truncate max-w-xs">
-                                📍 {del.pickupAddress}
+                              <div className="text-slate-300 truncate max-w-xs flex items-center gap-1.5">
+                                <Icon icon="solar:map-point-wave-bold-duotone" className="text-teal-400 text-sm shrink-0" />
+                                <span>{del.pickupAddress}</span>
                               </div>
-                              <div className="text-slate-400 truncate max-w-xs">
-                                🏁 {del.dropoffAddress}
+                              <div className="text-slate-400 truncate max-w-xs flex items-center gap-1.5">
+                                <Icon icon="solar:flag-bold-duotone" className="text-emerald-400 text-sm shrink-0" />
+                                <span>{del.dropoffAddress}</span>
                               </div>
                             </td>
                             <td className="px-6 py-4 text-center font-mono font-bold text-emerald-400">

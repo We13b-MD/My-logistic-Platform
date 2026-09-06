@@ -5,6 +5,7 @@ import { authApi } from "@/api/auth.api";
 import { tenantApi } from "@/api/tenant.api";
 import { toast } from "sonner";
 import { Icon } from "@iconify/react";
+import { LogistelLogo } from "@/components/LogistelLogo";
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -176,15 +177,7 @@ export function RegisterPage() {
       <main className="relative z-10 w-full max-w-[480px]">
         
         {/* Logo Header */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 bg-[#29a195] rounded-2xl flex items-center justify-center mb-4 shadow-md">
-            <span className="material-symbols-outlined text-slate-950 text-[32px]">hub</span>
-          </div>
-          <h1 className="font-display text-2xl text-slate-100 font-bold tracking-tight">Logistel</h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Create your Driver or Customer Profile
-          </p>
-        </div>
+        <LogistelLogo size="xl" layout="stacked" subtext="Create your Driver or Customer Profile" className="mb-8" />
 
         {/* Form Card */}
         <div className="glass-panel rounded-2xl p-6 md:p-8 border border-slate-800">

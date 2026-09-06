@@ -9,6 +9,7 @@ import { trackingApi } from "@/api/tracking.api";
 import { toast } from "sonner";
 import { Delivery, DriverProfile, DashboardMetricsData, Vehicle, VehicleStatus, VehicleType } from "@/types";
 import { Icon } from "@iconify/react";
+import { LogistelLogo } from "@/components/LogistelLogo";
 
 
 
@@ -486,18 +487,31 @@ export function TenantDashboardPage() {
     <div className="min-h-screen w-full bg-[#080d1a] text-slate-100 flex flex-col relative overflow-x-hidden selection:bg-teal-500 selection:text-slate-950">
       {/* Top Navigation Bar */}
       <header className="glass-panel border-b border-slate-800 px-6 py-4 flex items-center justify-between z-20">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#29a195] rounded-xl flex items-center justify-center shadow-md">
-            <span className="material-symbols-outlined text-slate-950 text-[24px]">hub</span>
-          </div>
-          <div>
-            <h1 className="font-display text-xl text-slate-100 font-bold tracking-tight leading-none">
-              Logistel
-            </h1>
-            <span className="text-[10px] text-slate-400 uppercase tracking-widest font-mono">
-              Dispatcher Console
-            </span>
-          </div>
+        <div className="flex items-center gap-2.5">
+          {user?.tenant?.logoUrl ? (
+            <div className="flex items-center gap-2.5">
+              <img
+                src={user.tenant.logoUrl}
+                alt={user.tenant.companyName}
+                className="w-10 h-10 rounded-xl object-cover border border-[#6bd8cb]/40 shadow-md shrink-0 bg-slate-900"
+              />
+              <div>
+                <h1 className="font-display text-xl text-[#6bd8cb] font-bold tracking-tight leading-none">
+                  {user.tenant.companyName}
+                </h1>
+                <span className="text-[10px] text-slate-400 uppercase tracking-widest font-mono">
+                  Dispatcher Console
+                </span>
+              </div>
+            </div>
+          ) : (
+            <LogistelLogo
+              size="md"
+              title={user?.tenant?.companyName || "Logistel"}
+              subtext="Dispatcher Console"
+              titleClassName="text-[#6bd8cb]"
+            />
+          )}
         </div>
 
         <div className="flex items-center gap-6">
@@ -519,8 +533,44 @@ export function TenantDashboardPage() {
         </div>
       </header>
 
+      {/* Onboarding Quick-Start Progress Tracker (Time-To-Value < 60s) */}
+      <div className="max-w-[1400px] w-full mx-auto px-6 pt-6 z-10">
+        <div className="glass-panel border border-teal-500/30 bg-teal-950/20 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-teal-500/20 text-teal-300 flex items-center justify-center font-bold text-sm border border-teal-500/40 shrink-0">
+              🚀
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-100 uppercase tracking-wider">
+                Logistics Hub Setup (1 of 3 Steps Completed)
+              </h4>
+              <p className="text-[11px] text-slate-400">
+                Complete quick setup to activate live fleet dispatch & tracking.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-semibold flex items-center gap-1">
+              ✓ Hub Created
+            </span>
+            <button
+              onClick={() => setActiveTab("drivers")}
+              className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 hover:border-teal-400 text-slate-300 text-[11px] font-semibold transition-all cursor-pointer"
+            >
+              + Driver Roster
+            </button>
+            <button
+              onClick={() => setActiveTab("billing")}
+              className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 hover:border-teal-400 text-slate-300 text-[11px] font-semibold transition-all cursor-pointer"
+            >
+              ⚙️ Set Base Rates
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Main Panel Layout */}
-      <div className="flex-grow max-w-[1400px] w-full mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-4 gap-8 z-10">
+      <div className="flex-grow max-w-[1400px] w-full mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-4 gap-8 z-10">
         
         {/* Navigation Tabs List */}
         <aside className="lg:col-span-1 flex flex-col gap-2">
@@ -629,38 +679,38 @@ export function TenantDashboardPage() {
           {/* Dashboard Summary Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="glass-panel border-white/5 p-4 rounded-xl flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-primary/15 border border-primary/20 flex items-center justify-center text-primary">
-                <span className="material-symbols-outlined text-[24px]">inventory_2</span>
+              <div className="w-10 h-10 rounded-lg bg-primary/15 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                <Icon icon="solar:box-minimalistic-bold-duotone" className="text-[24px]" />
               </div>
-              <div>
-                <span className="block text-xs text-on-surface-variant font-bold uppercase tracking-wider">Total Orders</span>
+              <div className="min-w-0">
+                <span className="block text-xs text-on-surface-variant font-bold uppercase tracking-wider truncate">Total Orders</span>
                 <span className="text-xl font-bold text-on-surface">{stats.totalShipments}</span>
               </div>
             </div>
             <div className="glass-panel border-white/5 p-4 rounded-xl flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-amber-500/15 border border-amber-500/20 flex items-center justify-center text-amber-500">
-                <span className="material-symbols-outlined text-[24px]">pending_actions</span>
+              <div className="w-10 h-10 rounded-lg bg-amber-500/15 border border-amber-500/20 flex items-center justify-center text-amber-500 shrink-0">
+                <Icon icon="solar:clock-circle-bold-duotone" className="text-[24px]" />
               </div>
-              <div>
-                <span className="block text-xs text-on-surface-variant font-bold uppercase tracking-wider">Pending</span>
+              <div className="min-w-0">
+                <span className="block text-xs text-on-surface-variant font-bold uppercase tracking-wider truncate">Pending</span>
                 <span className="text-xl font-bold text-on-surface">{stats.pendingDispatch}</span>
               </div>
             </div>
             <div className="glass-panel border-white/5 p-4 rounded-xl flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-secondary/15 border border-secondary/20 flex items-center justify-center text-secondary">
-                <span className="material-symbols-outlined text-[24px]">route</span>
+              <div className="w-10 h-10 rounded-lg bg-secondary/15 border border-secondary/20 flex items-center justify-center text-secondary shrink-0">
+                <Icon icon="solar:routing-bold-duotone" className="text-[24px]" />
               </div>
-              <div>
-                <span className="block text-xs text-on-surface-variant font-bold uppercase tracking-wider">In Transit</span>
+              <div className="min-w-0">
+                <span className="block text-xs text-on-surface-variant font-bold uppercase tracking-wider truncate">In Transit</span>
                 <span className="text-xl font-bold text-on-surface">{stats.activeRoutes}</span>
               </div>
             </div>
             <div className="glass-panel border-white/5 p-4 rounded-xl flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-green-500/15 border border-green-500/20 flex items-center justify-center text-green-500">
-                <span className="material-symbols-outlined text-[24px]">verified_user</span>
+              <div className="w-10 h-10 rounded-lg bg-green-500/15 border border-green-500/20 flex items-center justify-center text-green-500 shrink-0">
+                <Icon icon="solar:shield-check-bold-duotone" className="text-[24px]" />
               </div>
-              <div>
-                <span className="block text-xs text-on-surface-variant font-bold uppercase tracking-wider">Verified Drivers</span>
+              <div className="min-w-0">
+                <span className="block text-xs text-on-surface-variant font-bold uppercase tracking-wider truncate">Verified Drivers</span>
                 <span className="text-xl font-bold text-on-surface">
                   {drivers.filter((d) => d.isVerified).length}
                 </span>
@@ -837,7 +887,7 @@ export function TenantDashboardPage() {
               <div className="glass-panel border-white/5 p-4 rounded-2xl space-y-3">
                 <div className="flex items-center justify-between px-2">
                   <h2 className="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
-                    <span className="material-symbols-outlined text-primary">map</span>
+                    <Icon icon="solar:map-bold-duotone" className="text-primary text-[20px]" />
                     Live Dispatch Map
                   </h2>
                   <div className="flex gap-4 text-xs font-bold uppercase tracking-wider">
@@ -854,8 +904,8 @@ export function TenantDashboardPage() {
                     style={{ height: "100%", width: "100%" }}
                   >
                     <TileLayer
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                      url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
 
                     {/* Online Driver Markers */}
@@ -962,9 +1012,7 @@ export function TenantDashboardPage() {
                               <td className="py-3">
                                 {delivery.driver?.user?.email ? (
                                   <div className="flex items-center gap-1.5">
-                                    <span className="material-symbols-outlined text-[14px] text-secondary">
-                                      account_circle
-                                    </span>
+                                    <Icon icon="solar:user-circle-bold" className="text-[14px] text-secondary" />
                                     <span>{delivery.driver.user.email}</span>
                                   </div>
                                 ) : (
@@ -998,7 +1046,7 @@ export function TenantDashboardPage() {
           {activeTab === "deliveries" && (
             <div className="glass-panel border-white/5 p-6 rounded-2xl space-y-6">
               <h2 className="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary">package</span>
+                <Icon icon="solar:box-bold-duotone" className="text-primary text-[20px]" />
                 Deliveries Management
               </h2>
 
@@ -1033,9 +1081,7 @@ export function TenantDashboardPage() {
                           <td className="py-4">
                             {delivery.driver?.user?.email ? (
                               <div className="flex items-center gap-1.5">
-                                <span className="material-symbols-outlined text-[14px] text-secondary">
-                                  account_circle
-                                </span>
+                                <Icon icon="solar:user-circle-bold" className="text-[14px] text-secondary" />
                                 <span>{delivery.driver.user.email}</span>
                               </div>
                             ) : (
@@ -1069,7 +1115,7 @@ export function TenantDashboardPage() {
                                   onClick={() => setSelectedPodDelivery(delivery)}
                                   className="text-[10px] font-bold text-primary hover:underline bg-primary/10 border border-primary/20 px-2 py-0.5 rounded flex items-center gap-1"
                                 >
-                                  <span className="material-symbols-outlined text-[12px]">verified</span>
+                                  <Icon icon="solar:verified-check-bold" className="text-[12px]" />
                                   POD Proof
                                 </button>
                               )}
@@ -1131,8 +1177,8 @@ export function TenantDashboardPage() {
                       style={{ height: "100%", width: "100%" }}
                     >
                       <TileLayer
-                        attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-                        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                       />
 
                       {/* Pickup Pin */}
@@ -1239,7 +1285,7 @@ export function TenantDashboardPage() {
           {activeTab === "drivers" && (
             <div className="glass-panel border-white/5 p-6 rounded-2xl space-y-6">
               <h2 className="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary">local_shipping</span>
+                <Icon icon="solar:delivery-bold-duotone" className="text-primary text-[20px]" />
                 Fleet Management
               </h2>
 
@@ -1319,7 +1365,7 @@ export function TenantDashboardPage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
                 <div>
                   <h2 className="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
-                    <span className="material-symbols-outlined text-primary">directions_car</span>
+                    <Icon icon="solar:bus-bold-duotone" className="text-primary text-[20px]" />
                     Fleet Assets & Servicing
                     <span className="text-[10px] bg-primary/10 text-primary border border-primary/20 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                       Super Admin Control
@@ -1334,7 +1380,7 @@ export function TenantDashboardPage() {
                   onClick={() => setShowVehicleModal(true)}
                   className="bg-primary text-on-primary font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 hover:brightness-110 transition-all text-xs shadow-md shadow-primary/15"
                 >
-                  <span className="material-symbols-outlined text-[18px]">add_circle</span>
+                  <Icon icon="solar:add-circle-bold" className="text-[18px]" />
                   Register Vehicle Asset
                 </button>
               </div>
@@ -1374,9 +1420,7 @@ export function TenantDashboardPage() {
               {/* Filters Bar */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-surface-container-lowest p-3 rounded-xl border border-white/5">
                 <div className="relative w-full sm:w-72">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">
-                    search
-                  </span>
+                  <Icon icon="solar:magnifer-linear" className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]" />
                   <input
                     type="text"
                     placeholder="Search plate number..."
@@ -1432,15 +1476,18 @@ export function TenantDashboardPage() {
                             <td className="py-3.5 pl-3">
                               <div className="flex items-center gap-2.5">
                                 <div className="p-2 rounded-lg bg-surface-container-high border border-white/10 text-primary">
-                                  <span className="material-symbols-outlined text-[20px]">
-                                    {vehicle.vehicleType === "BIKE"
-                                      ? "two_wheeler"
-                                      : vehicle.vehicleType === "VAN"
-                                      ? "airport_shuttle"
-                                      : vehicle.vehicleType === "TRUCK"
-                                      ? "local_shipping"
-                                      : "directions_car"}
-                                  </span>
+                                  <Icon
+                                    icon={
+                                      vehicle.vehicleType === "BIKE"
+                                        ? "solar:wheel-bold-duotone"
+                                        : vehicle.vehicleType === "VAN"
+                                        ? "solar:bus-bold-duotone"
+                                        : vehicle.vehicleType === "TRUCK"
+                                        ? "solar:delivery-bold-duotone"
+                                        : "solar:automotor-bold-duotone"
+                                    }
+                                    className="text-[20px]"
+                                  />
                                 </div>
                                 <div>
                                   <div className="font-mono font-bold text-on-surface text-sm">{vehicle.plateNumber}</div>
@@ -1489,7 +1536,7 @@ export function TenantDashboardPage() {
                                 </div>
                                 {vehicle.isMaintenanceOverdue ? (
                                   <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase text-error bg-error/15 border border-error/30 px-1.5 py-0.5 rounded">
-                                    <span className="material-symbols-outlined text-[12px]">warning</span> OVERDUE
+                                    <Icon icon="solar:danger-triangle-bold" className="text-[12px]" /> OVERDUE
                                   </span>
                                 ) : (
                                   <div className="text-[9px] text-on-surface-variant">
@@ -1511,14 +1558,14 @@ export function TenantDashboardPage() {
                                   title="Toggle Maintenance Status"
                                   className="p-1.5 rounded-lg bg-surface-container-high border border-outline-variant hover:bg-amber-500/20 hover:text-amber-400 text-on-surface-variant transition-all"
                                 >
-                                  <span className="material-symbols-outlined text-[16px]">build</span>
+                                  <Icon icon="solar:wrench-bold" className="text-[16px]" />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteVehicle(vehicle.id, vehicle.plateNumber)}
                                   title="Delete Vehicle Asset"
                                   className="p-1.5 rounded-lg bg-surface-container-high border border-outline-variant hover:bg-error/20 hover:text-error text-on-surface-variant transition-all"
                                 >
-                                  <span className="material-symbols-outlined text-[16px]">delete</span>
+                                  <Icon icon="solar:trash-bin-trash-bold" className="text-[16px]" />
                                 </button>
                               </div>
                             </td>
@@ -1533,18 +1580,18 @@ export function TenantDashboardPage() {
 
           {/* REGISTER VEHICLE MODAL */}
           {showVehicleModal && (
-            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
               <div className="glass-panel border border-white/10 bg-[#0B1326] p-6 rounded-2xl w-full max-w-lg space-y-6 shadow-2xl">
                 <div className="flex items-center justify-between border-b border-white/10 pb-4">
                   <h3 className="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
-                    <span className="material-symbols-outlined text-primary">directions_car</span>
+                    <Icon icon="solar:bus-bold-duotone" className="text-primary text-[20px]" />
                     Register New Fleet Asset
                   </h3>
                   <button
                     onClick={() => setShowVehicleModal(false)}
                     className="text-on-surface-variant hover:text-on-surface"
                   >
-                    <span className="material-symbols-outlined">close</span>
+                    <Icon icon="solar:close-circle-bold" className="text-[20px]" />
                   </button>
                 </div>
 
@@ -1666,7 +1713,7 @@ export function TenantDashboardPage() {
             <div className="glass-panel border-white/5 p-6 rounded-2xl space-y-6">
               <div>
                 <h2 className="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary">add_location</span>
+                  <Icon icon="solar:map-point-add-bold-duotone" className="text-primary text-[20px]" />
                   Quick Shipment Dispatcher
                 </h2>
                 <p className="text-xs text-on-surface-variant mt-1">
@@ -1884,7 +1931,7 @@ export function TenantDashboardPage() {
                 
                 <div className="md:col-span-2 space-y-4">
                   <div className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-3xl text-primary">payments</span>
+                    <Icon icon="solar:card-transfer-bold-duotone" className="text-3xl text-primary" />
                     <div>
                       <h2 className="font-headline-md text-headline-md text-on-surface">
                         Billing & Subscription Console
@@ -1942,7 +1989,7 @@ export function TenantDashboardPage() {
                 <div className="bg-surface-container-lowest border border-white/5 p-5 rounded-xl flex flex-col justify-between gap-4">
                   <div>
                     <h3 className="font-bold text-xs uppercase tracking-wider text-on-surface flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-[16px] text-primary">verified_user</span>
+                      <Icon icon="solar:shield-check-bold" className="text-[16px] text-primary" />
                       Paystack Secure Gateway
                     </h3>
                     <p className="text-[11px] text-on-surface-variant mt-1.5">
@@ -1953,7 +2000,7 @@ export function TenantDashboardPage() {
                   <div className="space-y-2">
                     {subscribing ? (
                       <button className="w-full bg-primary/20 text-primary border border-primary/30 py-2.5 rounded-lg flex items-center justify-center gap-2 pointer-events-none opacity-80" disabled>
-                        <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
+                        <Icon icon="lucide:loader-2" className="animate-spin text-[16px]" />
                         Initializing Checkout...
                       </button>
                     ) : (
@@ -1962,14 +2009,14 @@ export function TenantDashboardPage() {
                           onClick={() => handlePaystackCheckout("MONTHLY")}
                           className="w-full bg-primary-container text-on-primary-container font-headline-md py-2.5 rounded-lg hover:brightness-110 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 shadow-lg shadow-primary/10"
                         >
-                          <span className="material-symbols-outlined text-[16px]">credit_card</span>
+                          <Icon icon="solar:card-bold-duotone" className="text-[16px]" />
                           Subscribe Monthly (₦50k)
                         </button>
                         <button
                           onClick={() => handlePaystackCheckout("ANNUAL")}
                           className="w-full bg-surface-container-high border border-outline-variant text-on-surface font-headline-md py-2.5 rounded-lg hover:bg-white/5 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2"
                         >
-                          <span className="material-symbols-outlined text-[16px]">loyalty</span>
+                          <Icon icon="solar:tag-price-bold-duotone" className="text-[16px]" />
                           Subscribe Annual (₦500k)
                         </button>
                       </>
@@ -1985,7 +2032,7 @@ export function TenantDashboardPage() {
                 <div className="lg:col-span-1 glass-panel border-white/5 p-6 rounded-2xl space-y-6">
                   <div>
                     <h3 className="font-headline-md text-headline-md text-on-surface flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-primary">settings_applications</span>
+                      <Icon icon="solar:settings-minimalistic-bold-duotone" className="text-primary text-[20px]" />
                       Pricing Formula Engine
                     </h3>
                     <p className="text-[10px] text-on-surface-variant mt-0.5">
@@ -2086,7 +2133,7 @@ export function TenantDashboardPage() {
                 <div className="lg:col-span-2 glass-panel border-white/5 p-6 rounded-2xl space-y-6">
                   <div>
                     <h3 className="font-headline-md text-headline-md text-on-surface flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-primary">receipt_long</span>
+                      <Icon icon="solar:document-text-bold-duotone" className="text-primary text-[20px]" />
                       Past Invoices & Statements
                     </h3>
                     <p className="text-[10px] text-on-surface-variant mt-0.5">
@@ -2096,12 +2143,12 @@ export function TenantDashboardPage() {
 
                   {loadingBilling ? (
                     <div className="py-12 flex flex-col items-center justify-center gap-2">
-                      <span className="material-symbols-outlined animate-spin text-3xl text-primary">progress_activity</span>
+                      <Icon icon="lucide:loader-2" className="animate-spin text-3xl text-primary" />
                       <span className="text-xs text-on-surface-variant">Loading invoices history...</span>
                     </div>
                   ) : billingInvoices.length === 0 ? (
                     <div className="py-12 flex flex-col items-center justify-center gap-2 text-on-surface-variant">
-                      <span className="material-symbols-outlined text-4xl opacity-40">receipt</span>
+                      <Icon icon="solar:document-text-bold-duotone" className="text-4xl opacity-40" />
                       <span className="text-xs">No invoices generated yet. Complete shipments to see statements.</span>
                     </div>
                   ) : (
@@ -2148,12 +2195,12 @@ export function TenantDashboardPage() {
           )}
           {/* POD INSPECTION CERTIFICATE MODAL */}
           {selectedPodDelivery && (
-            <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
               <div className="glass-panel border border-white/10 bg-[#0B1326] p-6 rounded-2xl w-full max-w-xl space-y-6 shadow-2xl overflow-y-auto max-h-[90vh]">
                 <div className="flex items-center justify-between border-b border-white/10 pb-4">
                   <div>
                     <h3 className="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
-                      <span className="material-symbols-outlined text-primary">verified</span>
+                      <Icon icon="solar:verified-check-bold" className="text-primary text-[20px]" />
                       Proof of Delivery Certificate
                     </h3>
                     <span className="text-[10px] text-primary font-mono uppercase tracking-widest font-bold">
@@ -2164,7 +2211,7 @@ export function TenantDashboardPage() {
                     onClick={() => setSelectedPodDelivery(null)}
                     className="text-on-surface-variant hover:text-on-surface"
                   >
-                    <span className="material-symbols-outlined">close</span>
+                    <Icon icon="solar:close-circle-bold" className="text-[20px]" />
                   </button>
                 </div>
 
@@ -2179,7 +2226,7 @@ export function TenantDashboardPage() {
                     <span className="text-[10px] font-bold text-on-surface-variant uppercase block">Handoff Verification</span>
                     <div className="font-mono font-bold text-primary text-sm mt-0.5">OTP: {selectedPodDelivery.deliveryOtp}</div>
                     <div className="text-emerald-400 font-bold uppercase text-[10px] flex items-center gap-1 mt-0.5">
-                      <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                      <Icon icon="solar:verified-check-bold" className="text-[14px]" />
                       Verified Handoff
                     </div>
                   </div>
@@ -2188,7 +2235,7 @@ export function TenantDashboardPage() {
                 {/* Recipient Digital Signature Image Preview */}
                 <div className="space-y-2">
                   <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider block flex items-center gap-1">
-                    <span className="material-symbols-outlined text-primary text-[16px]">draw</span>
+                    <Icon icon="solar:pen-bold" className="text-primary text-[16px]" />
                     Recipient Digital Signature Canvas
                   </span>
                   {selectedPodDelivery.signaturePhotoUrl ? (
@@ -2209,7 +2256,7 @@ export function TenantDashboardPage() {
                 {/* Cargo Delivery Photo Preview */}
                 <div className="space-y-2">
                   <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider block flex items-center gap-1">
-                    <span className="material-symbols-outlined text-primary text-[16px]">photo_camera</span>
+                    <Icon icon="solar:camera-bold" className="text-primary text-[16px]" />
                     Cargo Delivery Photo Proof
                   </span>
                   {selectedPodDelivery.proofOfDeliveryPhotoUrl ? (

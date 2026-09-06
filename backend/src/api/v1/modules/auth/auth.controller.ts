@@ -102,6 +102,29 @@ export class AuthController {
       });
     }
   }
+
+  async deleteAccount(req: Request, res: Response): Promise<void> {
+    try {
+      const user = (req as any).user;
+      const { reason } = req.body;
+
+      if (!user || !user.userId) {
+        res.status(401).json({ status: "error", message: "Unauthorized" });
+        return;
+      }
+
+      const result = await authService.deleteAccount(user.userId, user.tenantId, reason);
+      res.status(200).json({
+        status: "success",
+        data: result,
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        status: "error",
+        message: error.message || "Failed to delete account",
+      });
+    }
+  }
 }
 
 

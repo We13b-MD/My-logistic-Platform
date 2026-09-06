@@ -1,0 +1,59 @@
+{
+  "expo": {
+    "name": "Logistel Driver",
+    "slug": "logistel-driver",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#080d1a"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.logistel.driver",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Logistel Driver collects location data to display navigation and route maps to active pickup and drop-off points.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Logistel Driver collects location data in the background to transmit package movement updates to dispatchers and customers even when the app is minimized.",
+        "NSLocationAlwaysUsageDescription": "Logistel Driver requires background location access to transmit continuous package tracking telemetry to dispatchers.",
+        "NSCameraUsageDescription": "Logistel Driver requires camera access to capture proof-of-delivery photos and scan package bar codes."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#080d1a"
+      },
+      "package": "com.logistel.driver",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
+        "CAMERA"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Logistel Driver collects background location data to send package telemetry to dispatchers even when minimized.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Logistel Driver requires camera access for proof-of-delivery photos."
+        }
+      ]
+    ]
+  }
+}

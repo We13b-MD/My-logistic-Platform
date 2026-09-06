@@ -4,6 +4,8 @@ import { Icon } from "@iconify/react";
 import { useAuth } from "@/context/AuthContext";
 import homePageGif from "@/assets/homePagegif.gif";
 
+import { LogistelLogo } from "@/components/LogistelLogo";
+
 export function LandingPage() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -14,18 +16,15 @@ export function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen w-full text-slate-100 flex flex-col relative overflow-x-hidden selection:bg-teal-500 selection:text-slate-950">
+    <div className="min-h-screen w-full bg-[#080d1a] text-slate-100 font-sans relative overflow-x-hidden selection:bg-teal-500 selection:text-slate-950">
 
-      {/* Solid background color under everything */}
-      <div className="absolute inset-0 -z-20 bg-[#080d1a]"></div>
-
-      {/* ─── HERO SECTION BACKGROUND GIF (Strictly confined to top Hero region) ─── */}
-      <div className="absolute top-0 left-0 w-full h-[650px] md:h-[750px] -z-10 overflow-hidden pointer-events-none select-none">
+      {/* ─── Dynamic Visual Canvas ─── */}
+      <div className="absolute top-0 left-0 w-full h-[640px] z-0 overflow-hidden pointer-events-none opacity-40">
+        {/* Real Dynamic Logistics Grid Animated Canvas (GIF) */}
         <img
           src={homePageGif}
-          className="w-full h-full object-cover opacity-85 scale-105"
           alt="Logistel Hero Background"
-          aria-hidden="true"
+          className="w-full h-full object-cover object-center filter saturate-[1.2] brightness-75 contrast-125"
         />
         {/* Subtle, crisp gradient overlay that keeps GIF clear in Hero while fading cleanly into dark theme below */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#080d1a]/30 via-[#080d1a]/40 to-[#080d1a]"></div>
@@ -37,15 +36,7 @@ export function LandingPage() {
 
       {/* ─── TOP APP BAR NAVIGATION ─── */}
       <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 md:px-12 h-16 bg-[#080d1a]/85 backdrop-blur-xl border-b border-slate-800/80">
-        <div
-          onClick={() => navigate("/")}
-          className="flex items-center gap-2 cursor-pointer active:scale-95 transition-transform"
-        >
-          <div className="w-10 h-10 bg-[#29a195] rounded-xl flex items-center justify-center shadow-md">
-            <span className="material-symbols-outlined text-slate-950 text-[24px]">hub</span>
-          </div>
-          <span className="font-display text-lg font-bold text-teal-400 tracking-tight">Logistel</span>
-        </div>
+        <LogistelLogo size="md" onClick={() => navigate("/")} titleClassName="text-teal-400" />
 
         {/* Navigation Links */}
         <div className="hidden md:flex items-center gap-8">

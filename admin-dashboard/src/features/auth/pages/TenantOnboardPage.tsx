@@ -5,6 +5,7 @@ import { tenantApi } from "@/api/tenant.api";
 import { toast } from "sonner";
 import { Industry } from "@/types";
 import { Icon } from "@iconify/react";
+import { LogistelLogo } from "@/components/LogistelLogo";
 
 export function TenantOnboardPage() {
   const navigate = useNavigate();
@@ -181,12 +182,7 @@ export function TenantOnboardPage() {
       <main className="w-full max-w-[1100px] grid lg:grid-cols-2 gap-12 px-4 py-8 items-center z-10">
         {/* Branding Section (Visible on Desktop) */}
         <div className="hidden lg:flex flex-col space-y-6 pr-8">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-[#29a195] rounded-2xl flex items-center justify-center shadow-md">
-              <span className="material-symbols-outlined text-slate-950 text-[28px]">hub</span>
-            </div>
-            <h1 className="font-display text-2xl text-slate-100 font-bold tracking-tight">Logistel</h1>
-          </div>
+          <LogistelLogo size="lg" />
           <div className="space-y-4">
             <h2 className="font-display text-3xl text-slate-100 font-bold leading-tight">Master your global supply chain.</h2>
             <p className="text-sm text-slate-400 max-w-md leading-relaxed">
@@ -212,10 +208,7 @@ export function TenantOnboardPage() {
         <div className="flex flex-col w-full max-w-md mx-auto">
           {/* Mobile Logo */}
           <div className="lg:hidden flex items-center justify-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-teal-500 rounded-xl flex items-center justify-center">
-              <Icon icon="solar:shipping-truck-bold-duotone" className="text-slate-950 text-2xl" />
-            </div>
-            <span className="font-display text-xl text-slate-100 font-bold">Logistel</span>
+            <LogistelLogo size="md" />
           </div>
 
           <div className="glass-panel p-6 md:p-8 rounded-2xl shadow-xl space-y-5 border border-slate-800">

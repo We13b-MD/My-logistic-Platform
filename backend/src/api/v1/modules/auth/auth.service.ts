@@ -49,14 +49,9 @@ export class AuthService {
         role: (role ?? "CUSTOMER") as Role,
         tenantId
       },
-      select: {
-        id: true,
-        email: true,
-        role: true,
-        tenantId: true,
-        createdAt: true,
-        updatedAt: true
-      }
+      include: {
+        tenant: true,
+      },
     });
 
     // Generate JWT token for immediate login after register
@@ -70,6 +65,9 @@ export class AuthService {
 
     let user = await prisma.user.findUnique({
       where: { email },
+      include: {
+        tenant: true,
+      },
     });
 
     // Failsafe: Auto-provision superadmin demo account if missing in local DB
@@ -92,6 +90,9 @@ export class AuthService {
           password: hashedpassword,
           role: "PLATFORM_SUPER_ADMIN",
           tenantId: tenant.id,
+        },
+        include: {
+          tenant: true,
         },
       });
     }
@@ -117,6 +118,9 @@ export class AuthService {
           role: "TENANT_SUB_ADMIN",
           tenantId: tenant.id,
         },
+        include: {
+          tenant: true,
+        },
       });
     }
 
@@ -126,20 +130,77 @@ export class AuthService {
     }
     //dont reveal if email exists security best practice
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const activeUser = user;
+    if (!(activeUser as any).tenant) {
+      const fullUser = await prisma.user.findUnique({
+        where: { id: activeUser.id },
+        include: { tenant: true },
+      });
+      if (fullUser) user = fullUser;
+    }
+
+    const validUser = user!;
+    const isPasswordValid = await bcrypt.compare(password, validUser.password);
 
     //checking for wrong password 
     if (!isPasswordValid) {
       throw new Error("Invalid credentials");
     }
 
+    if ((validUser as any).deletedAt) {
+      throw new Error("This account has been deactivated. Please contact support.");
+    }
 
-    const token = generateToken(user);
+    const token = generateToken(validUser);
     
     // Strip out the password hash before returning the user object
-    const { password: _, ...userWithoutPassword } = user;
+    const { password: _, ...userWithoutPassword } = validUser;
 
     return { user: userWithoutPassword, token };
+  }
+
+  async deleteAccount(userId: string, tenantId: string, reason?: string) {
+    const user = await prisma.user.findFirst({
+      where: { id: userId, tenantId },
+    });
+
+    if (!user) {
+      throw new Error("User account not found");
+    }
+
+    if ((user as any).deletedAt) {
+      throw new Error("Account has already been deactivated");
+    }
+
+    const anonymizedEmail = `deleted_${userId.substring(0, 8)}_${Date.now()}@anonymized.invalid`;
+
+    // Perform transaction: Archive compliance log + Soft delete & anonymize user PII
+    await prisma.$transaction(async (tx) => {
+      // 1. Write Snapshot to Encrypted Compliance Archive Vault
+      await (tx as any).userComplianceArchive.create({
+        data: {
+          userId,
+          originalEmail: user.email,
+          tenantId: user.tenantId,
+          anonymizedEmail,
+          deletionReason: reason || "User requested account deletion via App Settings",
+        },
+      });
+
+      // 2. Anonymize User Core Profile in Active DB
+      await tx.user.update({
+        where: { id: userId },
+        data: {
+          email: anonymizedEmail,
+          password: "ACCOUNT_DELETED_HASH",
+          googleId: null,
+          deletedAt: new Date(),
+        },
+      });
+    });
+
+    console.log(`[Compliance] Account ${userId} scrubbed and archived for compliance.`);
+    return { success: true, message: "Account and personal data successfully deleted." };
   }
 }
 

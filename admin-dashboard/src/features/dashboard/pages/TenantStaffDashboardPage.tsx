@@ -5,6 +5,7 @@ import { deliveryApi } from "@/api/delivery.api";
 import { driverApi } from "@/api/driver.api";
 import { toast } from "sonner";
 import { Delivery, DriverProfile, DeliveryStatus } from "@/types";
+import { LogistelLogo } from "@/components/LogistelLogo";
 
 // Leaflet map imports
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
@@ -201,17 +202,11 @@ export function TenantStaffDashboardPage() {
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
       {/* ─── Top Header Navbar ─── */}
       <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-900/90 backdrop-blur-md px-6 py-4 flex flex-wrap items-center justify-between gap-4 shadow-xl">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-400 flex items-center justify-center shadow-lg shadow-amber-500/20 text-slate-950 font-black text-xl">
-            🎧
-          </div>
-          <div>
-            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-amber-300">
-              Dispatcher Mission Control
-            </h1>
-            <p className="text-xs text-slate-400">Operational Fleet & Order Dispatch Desk</p>
-          </div>
-        </div>
+        <LogistelLogo
+          size="md"
+          title="Dispatcher Mission Control"
+          subtext="Operational Fleet & Order Dispatch Desk"
+        />
 
         <div className="flex items-center space-x-4">
           <button

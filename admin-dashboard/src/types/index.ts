@@ -35,6 +35,7 @@ export interface AuthUser {
   tenantId: string;
   createdAt: string;
   updatedAt: string;
+  tenant?: Tenant;
 }
 
 export interface Tenant {

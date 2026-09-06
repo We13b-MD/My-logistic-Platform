@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { useGoogleLogin } from "@react-oauth/google";
 import { Icon } from "@iconify/react";
 
+import { LogistelLogo } from "@/components/LogistelLogo";
+
 export function LoginPage() {
 
   const navigate = useNavigate();
@@ -161,15 +163,7 @@ export function LoginPage() {
       <main className="relative z-10 w-full max-w-[440px] animate-in fade-in slide-in-from-bottom-4 duration-700">
 
         {/* Logo Area */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 bg-[#29a195] rounded-2xl flex items-center justify-center mb-4 shadow-md">
-            <span className="material-symbols-outlined text-slate-950 text-[32px]">hub</span>
-          </div>
-          <h1 className="font-display text-2xl text-slate-100 font-bold tracking-tight">Logistel</h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Global Freight Intelligence Engine
-          </p>
-        </div>
+        <LogistelLogo size="xl" layout="stacked" subtext="Global Freight Intelligence Engine" className="mb-8" />
 
         {/* Login Card */}
         <div className="glass-panel rounded-2xl p-6 md:p-8 border border-slate-800">

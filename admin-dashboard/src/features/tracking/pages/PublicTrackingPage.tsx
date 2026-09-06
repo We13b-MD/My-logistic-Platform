@@ -4,6 +4,7 @@ import { trackingApi } from "@/api/tracking.api";
 import { toast } from "sonner";
 import { DeliveryStatus } from "@/types";
 import { Icon } from "@iconify/react";
+import { LogistelLogo } from "@/components/LogistelLogo";
 import { useOsrmRoute } from "@/utils/useOsrmRoute";
 
 // Leaflet map imports
@@ -136,19 +137,11 @@ export function PublicTrackingPage() {
     <div className="min-h-screen w-full bg-[#080D1A] text-slate-100 flex flex-col font-body-md relative overflow-x-hidden">
       {/* Top Enterprise Header */}
       <header className="glass-panel border-b border-slate-800 px-6 py-4 flex items-center justify-between z-20 sticky top-0">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#29a195] flex items-center justify-center shadow-md">
-            <span className="material-symbols-outlined text-slate-950 text-[24px]">hub</span>
-          </div>
-          <div>
-            <h1 className="font-display text-lg text-slate-100 font-bold tracking-tight leading-none">
-              Logistel
-            </h1>
-            <span className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">
-              Live Package Tracking Portal
-            </span>
-          </div>
-        </div>
+        <LogistelLogo
+          size="md"
+          subtext="Live Package Tracking Portal"
+          onClick={() => navigate("/")}
+        />
 
         <button
           onClick={() => navigate("/login")}
@@ -295,8 +288,8 @@ export function PublicTrackingPage() {
                   className="w-full h-full rounded-xl z-0"
                 >
                   <TileLayer
-                    url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                    attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   />
 
                   {/* Pickup Marker */}

@@ -33,3 +33,6 @@ Thumbs.db
 
 # Internal logs
 .gemini/
+
+# Test reports
+report.html

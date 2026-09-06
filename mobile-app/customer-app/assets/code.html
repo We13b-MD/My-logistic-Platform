@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Logistel Customer Express App</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Outfit:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-fixed": "#89f5e7",
+                    "inverse-primary": "#006a61",
+                    "surface-dim": "#0b1326",
+                    "error": "#ffb4ab",
+                    "inverse-on-surface": "#283044",
+                    "on-secondary-fixed": "#001f26",
+                    "surface": "#0b1326",
+                    "secondary-container": "#03b5d3",
+                    "tertiary-container": "#8083ff",
+                    "secondary-fixed-dim": "#4cd7f6",
+                    "on-primary-container": "#00302b",
+                    "background": "#0b1326",
+                    "primary-fixed-dim": "#6bd8cb",
+                    "on-background": "#dae2fd",
+                    "outline": "#879391",
+                    "on-tertiary-container": "#0d0096",
+                    "surface-container-lowest": "#060e20",
+                    "on-error": "#690005",
+                    "on-tertiary-fixed": "#07006c",
+                    "on-surface-variant": "#bcc9c6",
+                    "on-primary": "#003732",
+                    "on-primary-fixed": "#00201d",
+                    "tertiary-fixed-dim": "#c0c1ff",
+                    "secondary": "#4cd7f6",
+                    "surface-container": "#171f33",
+                    "surface-container-high": "#222a3d",
+                    "surface-bright": "#31394d",
+                    "on-error-container": "#ffdad6",
+                    "error-container": "#93000a",
+                    "on-tertiary-fixed-variant": "#2f2ebe",
+                    "outline-variant": "#3d4947",
+                    "primary-container": "#29a195",
+                    "surface-variant": "#2d3449",
+                    "on-secondary-container": "#00424e",
+                    "on-tertiary": "#1000a9",
+                    "primary": "#6bd8cb",
+                    "surface-container-low": "#131b2e",
+                    "inverse-surface": "#dae2fd",
+                    "secondary-fixed": "#acedff",
+                    "on-primary-fixed-variant": "#005049",
+                    "surface-tint": "#6bd8cb",
+                    "on-secondary-fixed-variant": "#004e5c",
+                    "on-surface": "#dae2fd",
+                    "tertiary-fixed": "#e1e0ff",
+                    "on-secondary": "#003640",
+                    "surface-container-highest": "#2d3449",
+                    "tertiary": "#c0c1ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "lg": "24px",
+                    "xs": "4px",
+                    "gutter": "24px",
+                    "sm": "8px",
+                    "base": "4px",
+                    "xl": "48px",
+                    "container-max": "1440px",
+                    "md": "16px",
+                    "margin-mobile": "16px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Outfit"],
+                    "headline-md": ["Outfit"],
+                    "body-md": ["Inter"],
+                    "headline-lg-mobile": ["Outfit"],
+                    "code-sm": ["Inter"],
+                    "headline-lg": ["Outfit"],
+                    "title-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "body-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "code-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        body { -webkit-font-smoothing: antialiased; }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col mx-auto w-full max-w-[390px] relative pb-24">
+<!-- TopAppBar (from JSON) -->
+<header class="bg-surface dark:bg-surface docked full-width top-0 shadow-sm flex justify-between items-center w-full px-margin-mobile py-sm z-40 sticky">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant">
+<img alt="User Profile Photo" class="w-full h-full object-cover" data-alt="Close up professional headshot of a logistics director in a modern dark mode office, subtle neon cyan ambient lighting, high tech atmosphere, sharp focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDb_Gh3eec3NgPoXJTbRINydlPm2bKXpmGgzUyXbdUOwkvMXpBvIgluDTk9I3h5K5ihg6R23OVxZX6cXGgbLuDq-UM4ClObSYalNRWGBHJK3iMObIcMmgmHqZKzTDCQZ-0kRFDYm0-jPcBYns3ekiDxUHuaZAneh3TAmtXhl1NkMKOPQ0nqGit872lUZLh7vSt3njpRkNzVER5bo8QOU48rrABDnpDJhB5ut3rl_FeaE4jcVtwp_9ar"/>
+</div>
+<h1 class="font-headline-md text-headline-md text-on-surface">Hi, Logistics Pro</h1>
+</div>
+<button class="w-10 h-10 rounded-full flex items-center justify-center bg-surface-container-low text-on-surface hover:opacity-80 transition-opacity scale-95 active:transition-all">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</header>
+<main class="flex-1 flex flex-col gap-6 px-margin-mobile py-4">
+<!-- Wallet Balance Card -->
+<section class="glass-panel rounded-xl p-md flex justify-between items-center relative overflow-hidden">
+<div class="absolute -right-4 -top-4 w-24 h-24 bg-primary/20 rounded-full blur-2xl pointer-events-none"></div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Wallet Balance</p>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mt-1">₦24,500</h2>
+</div>
+<button class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+</section>
+<!-- Active Tracking Card Preview -->
+<section class="bg-surface-container-high border border-outline-variant/30 rounded-xl p-md flex flex-col gap-4 relative overflow-hidden">
+<div class="absolute left-0 top-0 w-1 h-full bg-secondary"></div>
+<div class="flex justify-between items-center">
+<h3 class="font-title-lg text-title-lg text-on-surface">Current Delivery</h3>
+<span class="px-2 py-1 bg-secondary/10 text-secondary font-label-md text-label-md rounded-full border border-secondary/20 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse shadow-[0_0_4px_#4cd7f6]"></span> In Transit
+                </span>
+</div>
+<!-- Driver Info -->
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-full overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="Portrait of a friendly delivery driver wearing a dark uniform, sitting on a modern motorcycle, urban night background with blurred city lights, high cinematic quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKcfStuwkbZJUzh1P8vLEMX4zkLoFGS5wrJvF5cpUeYBdyNNqgX-5DxXycDdygpzq_oOG1xgsvJOUb4V8oU5l3lbS6_3O4QhPN8E3UyoJbfHR0__uyy4XBUV8hVeDdhhkNGtcvic8-cuGqiYxwdEsDl3V34wyCA2rXH0AIVYu-iEQEPEwTzv2jCc2bHE-Nrxp0_8xwSyIDS3Kny3P2MvtCwr42ibFlGfHXt_2BVYt_t_Ly3OPro8f2"/>
+</div>
+<div>
+<p class="font-body-lg text-body-lg font-medium text-on-surface">Driver: Ibrahim K.</p>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">two_wheeler</span> Bajaj Pulsar • ABC-123-XY
+                    </p>
+</div>
+<button class="ml-auto w-10 h-10 rounded-full border border-outline-variant text-on-surface flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="call">call</span>
+</button>
+</div>
+<!-- OTP Box -->
+<div class="bg-secondary-container text-on-secondary-container rounded-lg p-3 flex items-center justify-center gap-2 mt-2">
+<span class="material-symbols-outlined" data-icon="lock">lock</span>
+<span class="font-body-lg text-body-lg font-bold">Your Handoff OTP: 542 381</span>
+</div>
+</section>
+<!-- Book Express Cargo Form -->
+<section class="glass-panel rounded-xl p-md flex flex-col gap-5">
+<h2 class="font-title-lg text-title-lg text-on-surface">Book Express Cargo</h2>
+<!-- Locations -->
+<div class="flex flex-col gap-3 relative">
+<div class="absolute left-[19px] top-8 bottom-8 w-[2px] bg-outline-variant border-dashed border-l-2 border-outline-variant z-0"></div>
+<div class="flex items-center gap-3 z-10">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center border border-outline-variant shrink-0">
+<span class="material-symbols-outlined text-[#4ade80]" data-icon="location_on">location_on</span>
+</div>
+<div class="flex-1 bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-2 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+<label class="font-label-md text-label-md text-on-surface-variant block mb-1">Pickup Location</label>
+<input class="w-full bg-transparent border-none p-0 text-on-surface font-body-md focus:ring-0" placeholder="Enter pickup" type="text" value="Gbagada Phase 1, Lagos"/>
+</div>
+</div>
+<div class="flex items-center gap-3 z-10">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center border border-outline-variant shrink-0">
+<span class="material-symbols-outlined text-error" data-icon="pin_drop">pin_drop</span>
+</div>
+<div class="flex-1 bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-2 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+<label class="font-label-md text-label-md text-on-surface-variant block mb-1">Dropoff Location</label>
+<input class="w-full bg-transparent border-none p-0 text-on-surface font-body-md focus:ring-0" placeholder="Enter dropoff" type="text" value="Ikeja City Mall, Alausa"/>
+</div>
+</div>
+</div>
+<!-- Vehicle Selector -->
+<div class="mt-2">
+<p class="font-label-md text-label-md text-on-surface-variant mb-3">Select Vehicle</p>
+<div class="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+<div class="min-w-[100px] bg-primary/10 border border-primary rounded-lg p-3 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors shrink-0">
+<span class="material-symbols-outlined text-primary text-3xl">two_wheeler</span>
+<span class="font-label-md text-label-md text-primary text-center">Express Bike</span>
+</div>
+<div class="min-w-[100px] bg-surface-container border border-outline-variant rounded-lg p-3 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-surface-bright transition-colors shrink-0">
+<span class="material-symbols-outlined text-on-surface-variant text-3xl">directions_car</span>
+<span class="font-label-md text-label-md text-on-surface-variant text-center">Delivery Car</span>
+</div>
+<div class="min-w-[100px] bg-surface-container border border-outline-variant rounded-lg p-3 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-surface-bright transition-colors shrink-0">
+<span class="material-symbols-outlined text-on-surface-variant text-3xl">local_shipping</span>
+<span class="font-label-md text-label-md text-on-surface-variant text-center">Cargo Van</span>
+</div>
+<div class="min-w-[100px] bg-surface-container border border-outline-variant rounded-lg p-3 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-surface-bright transition-colors shrink-0">
+<span class="material-symbols-outlined text-on-surface-variant text-3xl">fire_truck</span>
+<span class="font-label-md text-label-md text-on-surface-variant text-center">Heavy Truck</span>
+</div>
+</div>
+</div>
+<!-- Fare Estimator -->
+<div class="bg-surface-container-high rounded-lg p-3 border border-outline-variant flex items-center justify-between">
+<div>
+<p class="font-body-md text-body-md text-on-surface">Estimated Fare</p>
+<p class="font-headline-md text-headline-md text-primary">₦3,200</p>
+</div>
+<div class="text-right">
+<p class="font-label-md text-label-md text-on-surface-variant">Distance</p>
+<p class="font-body-md text-body-md text-on-surface">~6.2 km</p>
+</div>
+</div>
+<!-- Submit Button -->
+<button class="w-full mt-2 py-4 rounded-[16px] bg-transparent border border-primary text-on-background font-title-lg text-title-lg hover:bg-primary/10 transition-colors">
+                Dispatch Delivery Order Now
+            </button>
+</section>
+</main>
+<!-- BottomNavBar (from JSON) -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center py-sm bg-surface-container/80 backdrop-blur-lg rounded-t-xl shadow-lg border-t-0 pb-6 pt-3">
+<!-- Active Tab: Home -->
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 hover:opacity-80 transition-opacity active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-md text-label-md mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+<span class="font-label-md text-label-md mt-1">Orders</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-label-md text-label-md mt-1">Wallet</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-md text-label-md mt-1">Account</span>
+</a>
+</nav>
+</body></html>

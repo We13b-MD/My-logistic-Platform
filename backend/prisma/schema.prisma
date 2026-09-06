@@ -28,21 +28,36 @@ model Tenant {
 }
 
 model User {
-  id            String         @id @default(uuid())
-  email         String         @unique
+  id            String                 @id @default(uuid())
+  email         String                 @unique
   password      String
-  role          Role           @default(CUSTOMER)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  role          Role                   @default(CUSTOMER)
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
   tenantId      String
   avatarUrl     String?
-  googleId      String?        @unique
+  googleId      String?                @unique
+  deletedAt     DateTime?
   deliveries    Delivery[]
   driverProfile DriverProfile?
-  tenant        Tenant         @relation(fields: [tenantId], references: [id])
+  tenant        Tenant                 @relation(fields: [tenantId], references: [id])
 
   @@index([email])
   @@index([googleId])
+  @@index([deletedAt])
+}
+
+model UserComplianceArchive {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  originalEmail   String
+  tenantId        String
+  anonymizedEmail String
+  deletionReason  String?
+  archivedAt      DateTime @default(now())
+
+  @@index([userId])
+  @@index([tenantId])
 }
 
 model DriverProfile {

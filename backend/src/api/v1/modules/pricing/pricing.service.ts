@@ -15,9 +15,9 @@ export class PricingService {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distance = R * c;
@@ -226,6 +226,7 @@ export class PricingService {
           amount: amountKobo,
           reference: ref,
           callback_url: params.callbackUrl,
+          channels: ["card", "bank", "ussd", "qr", "mobile_money", "bank_transfer"],
           metadata: params.metadata || {},
         }),
       });

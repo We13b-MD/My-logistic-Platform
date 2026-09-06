@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Delivery, DriverProfile } from "@/types";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
 import { Icon } from "@iconify/react";
+import { LogistelLogo } from "@/components/LogistelLogo";
 
 // Leaflet imports
 
@@ -357,7 +358,7 @@ export function DriverDashboardPage() {
   if (!isProfileLoaded) {
     return (
       <div className="min-h-screen bg-[#0B1326] flex items-center justify-center text-primary font-bold">
-        <span className="material-symbols-outlined animate-spin text-[32px]">progress_activity</span>
+        <Icon icon="lucide:loader-2" className="animate-spin text-[32px]" />
       </div>
     );
   }
@@ -374,7 +375,7 @@ export function DriverDashboardPage() {
       >
         <main className="w-full max-w-[440px] glass-panel rounded-2xl p-6 md:p-8 space-y-6 z-10">
           <div className="text-center">
-            <span className="material-symbols-outlined text-[48px] text-primary">local_shipping</span>
+            <Icon icon="solar:delivery-bold-duotone" className="text-[48px] text-primary mx-auto" />
             <h1 className="font-headline-md text-headline-md text-on-surface mt-2">Driver Onboarding</h1>
             <p className="text-xs text-on-surface-variant mt-1">
               Complete your fleet registry details to unlock the dispatch queue.
@@ -443,7 +444,7 @@ export function DriverDashboardPage() {
         }}
       >
         <main className="w-full max-w-[440px] glass-panel rounded-2xl p-6 md:p-8 text-center space-y-6 z-10">
-          <span className="material-symbols-outlined text-[64px] text-amber-500 animate-pulse">lock_person</span>
+          <Icon icon="solar:lock-password-unlocked-bold-duotone" className="text-[64px] text-amber-500 animate-pulse mx-auto" />
           <div className="space-y-2">
             <h1 className="font-headline-md text-headline-md text-on-surface">Registration Pending</h1>
             <p className="text-xs text-on-surface-variant">
@@ -479,23 +480,18 @@ export function DriverDashboardPage() {
     >
       {/* Driver Header */}
       <header className="glass-panel border-b border-white/10 px-6 py-4 flex items-center justify-between z-20">
-        <div className="flex items-center gap-3">
-          <span className="material-symbols-outlined text-primary text-[28px]">local_shipping</span>
-          <div>
-            <h1 className="font-headline-md text-[18px] text-primary font-bold tracking-tight leading-none">
-              Logistel Mobile
-            </h1>
-            <span className="text-[9px] text-on-surface-variant uppercase tracking-widest font-semibold">
-              Driver Portal
-            </span>
-          </div>
-        </div>
+        <LogistelLogo
+          size="md"
+          title="Logistel Express"
+          subtext="Driver Portal"
+          titleClassName="text-primary"
+        />
 
         <button
           onClick={handleLogout}
           className="flex items-center gap-1.5 hover:bg-error/20 text-on-surface-variant hover:text-error transition-all py-1.5 px-3 rounded-lg text-xs font-semibold"
         >
-          <span className="material-symbols-outlined text-[16px]">logout</span>
+          <Icon icon="solar:logout-2-bold" className="text-[16px]" />
           Logout
         </button>
       </header>
@@ -527,7 +523,7 @@ export function DriverDashboardPage() {
               }`}
           >
             {togglingOnline ? (
-              <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
+              <Icon icon="lucide:loader-2" className="animate-spin text-[16px]" />
             ) : isOnline ? (
               "Go Offline"
             ) : (
@@ -651,7 +647,7 @@ export function DriverDashboardPage() {
         {/* ACTIVE TASK PANEL */}
         {loadingJob ? (
           <div className="glass-panel border-white/5 p-8 rounded-2xl flex justify-center text-primary">
-            <span className="material-symbols-outlined animate-spin text-[24px]">progress_activity</span>
+            <Icon icon="lucide:loader-2" className="animate-spin text-[24px]" />
           </div>
         ) : activeDelivery ? (
           <div className="space-y-4">
@@ -702,8 +698,8 @@ export function DriverDashboardPage() {
                   zoomControl={false}
                 >
                   <TileLayer
-                    attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
-                    url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                   />
 
                   {/* Pickup Pin */}
@@ -737,7 +733,7 @@ export function DriverDashboardPage() {
                     onClick={() => handleStatusChange("PICKED_UP")}
                     className="w-full bg-[#0D9488] hover:bg-[#0F766E] text-white font-headline-md py-3 rounded-xl flex items-center justify-center gap-2 transition-all font-semibold"
                   >
-                    {updatingStatus && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
+                    {updatingStatus && <Icon icon="lucide:loader-2" className="animate-spin text-[16px]" />}
                     Confirm Package Pickup
                   </button>
                 )}
@@ -748,7 +744,7 @@ export function DriverDashboardPage() {
                     onClick={() => handleStatusChange("IN_TRANSIT")}
                     className="w-full bg-[#0D9488] hover:bg-[#0F766E] text-white font-headline-md py-3 rounded-xl flex items-center justify-center gap-2 transition-all font-semibold"
                   >
-                    {updatingStatus && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
+                    {updatingStatus && <Icon icon="lucide:loader-2" className="animate-spin text-[16px]" />}
                     Depart to Route (In Transit)
                   </button>
                 )}
@@ -779,7 +775,7 @@ export function DriverDashboardPage() {
                       onClick={() => handleStatusChange("DELIVERED")}
                       className="w-full bg-[#0D9488] hover:bg-[#0F766E] text-white font-headline-md py-3 rounded-xl flex items-center justify-center gap-2 transition-all font-semibold"
                     >
-                      {updatingStatus && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
+                      {updatingStatus && <Icon icon="lucide:loader-2" className="animate-spin text-[16px]" />}
                       Submit OTP & Complete Delivery
                     </button>
                   </div>
@@ -790,9 +786,7 @@ export function DriverDashboardPage() {
         ) : (
           /* NO JOBS ASSIGNED VIEW */
           <div className="glass-panel border-white/5 p-12 text-center rounded-2xl space-y-3">
-            <span className="material-symbols-outlined text-[48px] text-on-surface-variant/40 animate-pulse">
-              notifications_active
-            </span>
+            <Icon icon="solar:bell-bing-bold-duotone" className="text-[48px] text-on-surface-variant/40 animate-pulse mx-auto" />
             <div className="space-y-1">
               <h2 className="font-headline-md text-headline-md text-on-surface">Queue Empty</h2>
               <p className="text-xs text-on-surface-variant max-w-[320px] mx-auto">
@@ -842,7 +836,7 @@ export function DriverDashboardPage() {
               <div className="flex items-center justify-between border-b border-white/10 pb-3">
                 <div>
                   <h3 className="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
-                    <span className="material-symbols-outlined text-primary">draw</span>
+                    <Icon icon="solar:pen-bold" className="text-primary text-[20px]" />
                     Proof of Delivery (POD)
                   </h3>
                   <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">
@@ -854,7 +848,7 @@ export function DriverDashboardPage() {
                   onClick={() => setShowPodModal(false)}
                   className="text-on-surface-variant hover:text-on-surface"
                 >
-                  <span className="material-symbols-outlined">close</span>
+                  <Icon icon="solar:close-circle-bold" className="text-[20px]" />
                 </button>
               </div>
 
@@ -881,7 +875,7 @@ export function DriverDashboardPage() {
                         onClick={() => setPhotoBase64(null)}
                         className="absolute top-1 right-1 bg-error text-white p-0.5 rounded-full text-[10px]"
                       >
-                        <span className="material-symbols-outlined text-[12px]">close</span>
+                        <Icon icon="solar:close-circle-bold" className="text-[12px]" />
                       </button>
                     </div>
                   )}
@@ -918,12 +912,12 @@ export function DriverDashboardPage() {
                   >
                     {uploadingPod ? (
                       <>
-                        <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
+                        <Icon icon="lucide:loader-2" className="animate-spin text-[16px]" />
                         Uploading POD to Cloud...
                       </>
                     ) : (
                       <>
-                        <span className="material-symbols-outlined text-[16px]">verified</span>
+                        <Icon icon="solar:verified-check-bold" className="text-[16px]" />
                         Verify & Complete Delivery
                       </>
                     )}

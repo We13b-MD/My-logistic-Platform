@@ -21,5 +21,13 @@ export const authApi = {
     avatarUrl?: string;
     requestedRole?: string;
   }) => apiClient.post('/auth/google', payload),
+
+  // Request Password Reset OTP / Recovery Email
+  requestPasswordReset: (email: string) =>
+    apiClient.post('/auth/request-otp', { email }),
+
+  // Request Account & Data Deletion (NDPR/GDPR & App Store Compliance)
+  deleteAccount: (reason?: string) =>
+    apiClient.delete('/auth/delete-account', { data: { reason } }),
 };
 

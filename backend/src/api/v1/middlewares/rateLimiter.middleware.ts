@@ -7,9 +7,12 @@ const userKeyGenerator = (req: Request) => {
 
 //   1: LOGIN LIMITER (5 reuests per minute per IP/account)
 
+const shouldSkipRateLimit = () => process.env.SKIP_RATE_LIMIT === "true" || process.env.NODE_ENV === "test";
+
 export const loginLimiter = rateLimit({
     windowMs: 60 * 1000, // 1 minute
-    max:5,
+    max: 5,
+    skip: shouldSkipRateLimit,
     message:{
         status:'error',
         message:'Too many login attemps. Please try again in a minute'
@@ -23,6 +26,7 @@ export const loginLimiter = rateLimit({
 export const registerLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
     max: 5,
+    skip: shouldSkipRateLimit,
     message:{
         status:'error',
         message:'Too many accounts created from this IP. please try again in an hour'
@@ -36,6 +40,7 @@ export const registerLimiter = rateLimit({
 export const passwordResetLimiter = rateLimit({
     windowMs:60 * 60 * 1000,  //1 hour
     max:3,
+    skip: shouldSkipRateLimit,
     message:{
         status:'error',
         message:'Too many password reset requests.Please try again in an hour',
@@ -49,6 +54,7 @@ export const passwordResetLimiter = rateLimit({
 export const generalApiLimiter = rateLimit({
     windowMs:60 * 1000,
     max:100,
+    skip: shouldSkipRateLimit,
     keyGenerator :userKeyGenerator,
     //Limits by user Id, not just Ip
     message:{
