@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { trackingApi } from "@/api/tracking.api";
 import { toast } from "sonner";
@@ -8,7 +8,7 @@ import { LogistelLogo } from "@/components/LogistelLogo";
 import { useOsrmRoute } from "@/utils/useOsrmRoute";
 
 // Leaflet map imports
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -42,14 +42,32 @@ const dropoffIcon = new L.Icon({
   shadowSize: [41, 41],
 });
 
-const driverIcon = new L.Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
-  shadowUrl: markerShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
+// Custom pulsating animated courier marker for live motion
+const liveCourierIcon = new L.DivIcon({
+  className: "live-courier-marker",
+  html: `
+    <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 46px; height: 46px;">
+      <div style="position: absolute; width: 42px; height: 42px; border-radius: 9999px; background: rgba(6, 182, 212, 0.45); animation: ping 1.4s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+      <div style="position: relative; width: 36px; height: 36px; border-radius: 9999px; background: linear-gradient(135deg, #06b6d4, #0284c7); border: 2.5px solid #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; font-size: 17px; cursor: pointer;">
+        🛵
+      </div>
+    </div>
+  `,
+  iconSize: [46, 46],
+  iconAnchor: [23, 23],
+  popupAnchor: [0, -23],
 });
+
+// Smooth map recenter watcher component
+function MapFollower({ center, enabled }: { center: [number, number] | null; enabled: boolean }) {
+  const map = useMap();
+  useEffect(() => {
+    if (center && enabled) {
+      map.panTo(center, { animate: true, duration: 0.3 });
+    }
+  }, [center, enabled, map]);
+  return null;
+}
 
 export function PublicTrackingPage() {
   const { code: urlCode } = useParams<{ code?: string }>();
@@ -59,6 +77,13 @@ export function PublicTrackingPage() {
   const [loading, setLoading] = useState(false);
   const [trackingData, setTrackingData] = useState<any | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Live Driver Simulation States
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [simIndex, setSimIndex] = useState(0);
+  const [simSpeed, setSimSpeed] = useState<1 | 2 | 4>(1);
+  const [simulatedStatus, setSimulatedStatus] = useState<DeliveryStatus | null>(null);
+  const [followVehicle, setFollowVehicle] = useState(true);
 
   // OSRM real-road route between pickup and dropoff
   const {
@@ -73,10 +98,107 @@ export function PublicTrackingPage() {
     trackingData?.dropoffLongitude
   );
 
+  // Active path for courier movement (real road path or interpolated line)
+  const activePath: [number, number][] = useMemo(() => {
+    if (routeCoords && routeCoords.length > 1) {
+      return routeCoords;
+    }
+    if (
+      trackingData?.pickupLatitude &&
+      trackingData?.pickupLongitude &&
+      trackingData?.dropoffLatitude &&
+      trackingData?.dropoffLongitude
+    ) {
+      const p1: [number, number] = [trackingData.pickupLatitude, trackingData.pickupLongitude];
+      const p2: [number, number] = [trackingData.dropoffLatitude, trackingData.dropoffLongitude];
+      const points: [number, number][] = [];
+      const steps = 70;
+      for (let i = 0; i <= steps; i++) {
+        const ratio = i / steps;
+        points.push([
+          p1[0] + (p2[0] - p1[0]) * ratio,
+          p1[1] + (p2[1] - p1[1]) * ratio,
+        ]);
+      }
+      return points;
+    }
+    return [];
+  }, [routeCoords, trackingData]);
+
+  // Current position of courier vehicle
+  const currentCourierPos: [number, number] | null = useMemo(() => {
+    if ((isSimulating || simIndex > 0) && activePath.length > 0) {
+      return activePath[Math.min(simIndex, activePath.length - 1)];
+    }
+    if (trackingData?.driver?.latitude && trackingData?.driver?.longitude) {
+      return [trackingData.driver.latitude, trackingData.driver.longitude];
+    }
+    return null;
+  }, [isSimulating, simIndex, activePath, trackingData]);
+
+  const simProgressPercent = activePath.length > 1
+    ? Math.round((simIndex / (activePath.length - 1)) * 100)
+    : 0;
+
+  // Active status considering live simulation
+  const effectiveStatus: DeliveryStatus = simulatedStatus || trackingData?.status || "PENDING";
+
+  // Simulation tick loop
+  useEffect(() => {
+    if (!isSimulating || activePath.length === 0) return;
+
+    const intervalMs = Math.max(30, Math.floor(130 / simSpeed));
+    const timer = setInterval(() => {
+      setSimIndex((prev) => {
+        if (prev >= activePath.length - 1) {
+          setIsSimulating(false);
+          setSimulatedStatus("DELIVERED");
+          toast.success("🎉 Courier has arrived at destination! Delivery successfully completed.");
+          return prev;
+        }
+        const next = prev + 1;
+        const progress = next / (activePath.length - 1);
+        if (progress < 0.15) setSimulatedStatus("ASSIGNED");
+        else if (progress < 0.35) setSimulatedStatus("PICKED_UP");
+        else if (progress < 0.98) setSimulatedStatus("IN_TRANSIT");
+        else setSimulatedStatus("DELIVERED");
+        return next;
+      });
+    }, intervalMs);
+
+    return () => clearInterval(timer);
+  }, [isSimulating, activePath, simSpeed]);
+
+  const toggleSimulation = () => {
+    if (activePath.length === 0) {
+      toast.error("Waiting for route coordinates to calculate...");
+      return;
+    }
+    if (simIndex >= activePath.length - 1) {
+      setSimIndex(0);
+      setSimulatedStatus("ASSIGNED");
+      setIsSimulating(true);
+      toast.info("Restarting live courier drive simulation...");
+      return;
+    }
+    setIsSimulating((prev) => {
+      const next = !prev;
+      if (next) toast.success("Live courier simulation started! Watch the vehicle navigate the roads.");
+      return next;
+    });
+  };
+
+  const resetSimulation = () => {
+    setIsSimulating(false);
+    setSimIndex(0);
+    setSimulatedStatus(null);
+  };
+
   const fetchTracking = async (codeToFetch: string) => {
     if (!codeToFetch.trim()) return;
     setLoading(true);
     setErrorMsg(null);
+    resetSimulation();
 
     try {
       const res = await trackingApi.getPublicTrackingInfo(codeToFetch.trim());
@@ -236,15 +358,15 @@ export function PublicTrackingPage() {
                 <div className="text-right">
                   <span className="text-[10px] text-slate-400 uppercase font-bold block">Status</span>
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-bold uppercase border ${
-                      trackingData.status === "DELIVERED"
+                    className={`px-3 py-1 rounded-full text-xs font-bold uppercase border transition-all ${
+                      effectiveStatus === "DELIVERED"
                         ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/25"
-                        : trackingData.status === "CANCELLED"
+                        : effectiveStatus === "CANCELLED"
                         ? "bg-rose-500/15 text-rose-400 border-rose-500/25"
                         : "bg-teal-500/15 text-teal-300 border-teal-500/25"
                     }`}
                   >
-                    {trackingData.status}
+                    {effectiveStatus}
                   </span>
                 </div>
               </div>
@@ -252,7 +374,7 @@ export function PublicTrackingPage() {
               {/* 5-Step Stepper Line */}
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3 relative">
                 {steps.map((step) => {
-                  const state = getStepStatus(step.key, trackingData.status);
+                  const state = getStepStatus(step.key, effectiveStatus);
                   return (
                     <div
                       key={step.key}
@@ -260,7 +382,7 @@ export function PublicTrackingPage() {
                         state === "COMPLETED"
                           ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
                           : state === "ACTIVE"
-                          ? "bg-teal-500/15 border-teal-500/40 text-teal-300 font-bold"
+                          ? "bg-teal-500/15 border-teal-500/40 text-teal-300 font-bold shadow-lg shadow-teal-500/10"
                           : "bg-slate-900/40 border-slate-800 text-slate-500"
                       }`}
                     >
@@ -280,81 +402,168 @@ export function PublicTrackingPage() {
             {/* Live Leaflet Map & Info Panel */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Map Canvas (2 columns) */}
-              <div className="lg:col-span-2 glass-panel border-slate-800 p-4 rounded-2xl h-[420px] relative overflow-hidden">
-                <MapContainer
-                  center={[trackingData.pickupLatitude, trackingData.pickupLongitude]}
-                  zoom={12}
-                  scrollWheelZoom={true}
-                  className="w-full h-full rounded-xl z-0"
-                >
-                  <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  />
+              <div className="lg:col-span-2 glass-panel border-slate-800 p-4 rounded-2xl h-[460px] relative overflow-hidden flex flex-col">
+                
+                {/* Interactive Live Simulation Control Header */}
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-900/90 border border-slate-700/60 shadow-lg">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={toggleSimulation}
+                      type="button"
+                      className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-md cursor-pointer ${
+                        isSimulating
+                          ? "bg-amber-500 hover:bg-amber-400 text-slate-950 animate-pulse"
+                          : "bg-cyan-500 hover:bg-cyan-400 text-slate-950"
+                      }`}
+                    >
+                      <Icon icon={isSimulating ? "solar:pause-bold" : "solar:play-bold"} className="text-sm" />
+                      <span>{isSimulating ? "Pause Courier" : simIndex > 0 ? "Resume Drive" : "▶ Simulate Live Drive"}</span>
+                    </button>
 
-                  {/* Pickup Marker */}
-                  <Marker
-                    position={[trackingData.pickupLatitude, trackingData.pickupLongitude]}
-                    icon={pickupIcon}
+                    <button
+                      onClick={resetSimulation}
+                      type="button"
+                      className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all flex items-center gap-1 cursor-pointer"
+                      title="Reset Route to Start"
+                    >
+                      <Icon icon="solar:restart-bold" className="text-xs" />
+                      <span>Reset</span>
+                    </button>
+                  </div>
+
+                  {/* Speed Selector */}
+                  <div className="flex items-center gap-1 bg-slate-950/70 p-1 rounded-lg border border-slate-800 text-xs">
+                    <span className="text-[10px] text-slate-400 font-bold px-1 uppercase">Speed:</span>
+                    {([1, 2, 4] as const).map((spd) => (
+                      <button
+                        key={spd}
+                        type="button"
+                        onClick={() => setSimSpeed(spd)}
+                        className={`px-2 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer ${
+                          simSpeed === spd
+                            ? "bg-cyan-500 text-slate-950 shadow"
+                            : "text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        {spd}x
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Live Telemetry Pill */}
+                  <div className="flex items-center gap-2 text-xs">
+                    <div className="flex items-center gap-1.5 text-cyan-300 font-mono font-bold bg-cyan-950/60 border border-cyan-500/30 px-2.5 py-1 rounded-lg">
+                      <span className={`inline-block w-2 h-2 rounded-full ${isSimulating ? "bg-cyan-400 animate-ping" : "bg-slate-500"}`}></span>
+                      <span>{isSimulating ? "Moving • 42 km/h" : simIndex > 0 ? "Paused" : "Ready"}</span>
+                      <span className="text-slate-500">|</span>
+                      <span>{simProgressPercent}%</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setFollowVehicle(!followVehicle)}
+                      className={`px-2 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                        followVehicle
+                          ? "bg-teal-500/20 text-teal-300 border-teal-500/40"
+                          : "bg-slate-800 text-slate-400 border-slate-700"
+                      }`}
+                      title="Camera follows moving courier"
+                    >
+                      Follow 🎯
+                    </button>
+                  </div>
+                </div>
+
+                {/* Map Container */}
+                <div className="flex-1 w-full relative rounded-xl overflow-hidden">
+                  <MapContainer
+                    center={[trackingData.pickupLatitude, trackingData.pickupLongitude]}
+                    zoom={12}
+                    scrollWheelZoom={true}
+                    className="w-full h-full rounded-xl z-0"
                   >
-                    <Popup>
-                      <div className="text-xs">
-                        <strong>Pickup Address:</strong>
-                        <p>{trackingData.pickupAddress}</p>
-                      </div>
-                    </Popup>
-                  </Marker>
+                    <TileLayer
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    />
 
-                  {/* Dropoff Marker */}
-                  <Marker
-                    position={[trackingData.dropoffLatitude, trackingData.dropoffLongitude]}
-                    icon={dropoffIcon}
-                  >
-                    <Popup>
-                      <div className="text-xs">
-                        <strong>Destination Address:</strong>
-                        <p>{trackingData.dropoffAddress}</p>
-                      </div>
-                    </Popup>
-                  </Marker>
+                    {/* Smooth Camera Recenter Follower */}
+                    <MapFollower center={currentCourierPos} enabled={isSimulating && followVehicle} />
 
-                  {/* Driver Marker (If active) */}
-                  {trackingData.driver?.latitude && trackingData.driver?.longitude && (
+                    {/* Pickup Marker */}
                     <Marker
-                      position={[trackingData.driver.latitude, trackingData.driver.longitude]}
-                      icon={driverIcon}
+                      position={[trackingData.pickupLatitude, trackingData.pickupLongitude]}
+                      icon={pickupIcon}
                     >
                       <Popup>
                         <div className="text-xs">
-                          <strong>Active Courier Vehicle</strong>
-                          <p>Type: {trackingData.driver.vehicleType}</p>
+                          <strong>Pickup Address:</strong>
+                          <p>{trackingData.pickupAddress}</p>
                         </div>
                       </Popup>
                     </Marker>
-                  )}
 
-                  {/* OSRM Real-Road Route Polyline */}
-                  {routeCoords.length > 1 ? (
-                    <Polyline
-                      positions={routeCoords}
-                      color="#00F2FE"
-                      weight={4}
-                      opacity={0.85}
-                    />
-                  ) : (
-                    // Fallback straight-line while route loads or if OSRM unavailable
-                    <Polyline
-                      positions={[
-                        [trackingData.pickupLatitude, trackingData.pickupLongitude],
-                        [trackingData.dropoffLatitude, trackingData.dropoffLongitude],
-                      ]}
-                      color="#00F2FE"
-                      weight={3}
-                      dashArray="5, 10"
-                      opacity={0.5}
-                    />
-                  )}
-                </MapContainer>
+                    {/* Dropoff Marker */}
+                    <Marker
+                      position={[trackingData.dropoffLatitude, trackingData.dropoffLongitude]}
+                      icon={dropoffIcon}
+                    >
+                      <Popup>
+                        <div className="text-xs">
+                          <strong>Destination Address:</strong>
+                          <p>{trackingData.dropoffAddress}</p>
+                        </div>
+                      </Popup>
+                    </Marker>
+
+                    {/* Live Moving Courier Marker */}
+                    {currentCourierPos && (
+                      <Marker
+                        position={currentCourierPos}
+                        icon={liveCourierIcon}
+                      >
+                        <Popup>
+                          <div className="text-xs space-y-1">
+                            <strong className="text-cyan-400 font-bold block flex items-center gap-1">
+                              <span>🛵</span> Active Dispatch Courier
+                            </strong>
+                            <p className="font-semibold text-slate-200">
+                              Vehicle: {trackingData.driver?.vehicleType || "BIKE"} ({trackingData.driver?.licenseNumber || "DL-SWIFT-99123"})
+                            </p>
+                            <p className="text-slate-400">
+                              Motion Status: <span className="text-cyan-300 font-bold">{isSimulating ? "En Route (42 km/h)" : simIndex > 0 ? "Stationary (Paused)" : "Ready at Station"}</span>
+                            </p>
+                            <p className="text-slate-400 font-mono">
+                              Trip Progress: <span className="text-teal-300 font-bold">{simProgressPercent}% complete</span>
+                            </p>
+                          </div>
+                        </Popup>
+                      </Marker>
+                    )}
+
+                    {/* OSRM Real-Road Route Polyline */}
+                    {routeCoords.length > 1 ? (
+                      <Polyline
+                        positions={routeCoords}
+                        color="#00F2FE"
+                        weight={4}
+                        opacity={0.85}
+                      />
+                    ) : (
+                      // Fallback straight-line while route loads or if OSRM unavailable
+                      <Polyline
+                        positions={[
+                          [trackingData.pickupLatitude, trackingData.pickupLongitude],
+                          [trackingData.dropoffLatitude, trackingData.dropoffLongitude],
+                        ]}
+                        color="#00F2FE"
+                        weight={3}
+                        dashArray="5, 10"
+                        opacity={0.5}
+                      />
+                    )}
+                  </MapContainer>
+                </div>
               </div>
 
               {/* Delivery Details Side Panel */}
