@@ -22,6 +22,18 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Api versioning 
 app.use('/api/v1', v1Router);
+
+// Root endpoint — friendly healthcheck & API greeting
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'online',
+    service: 'Logistel Logistics Platform API',
+    version: '1.0.0',
+    documentation: '/api/v1',
+    ping: '/api/v1/tracking/public/ping'
+  });
+});
+
 app.use(errorHandler);
 
 
