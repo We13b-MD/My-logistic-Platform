@@ -105,13 +105,69 @@ export function DriverDashboardPage() {
   const [otpInput, setOtpInput] = useState("");
   const [jobHistory, setJobHistory] = useState<Delivery[]>([]);
 
-  // OSRM road route geometry for driver navigation
-  const { routeCoords } = useOsrmRoute(
-    activeDelivery?.pickupLatitude,
-    activeDelivery?.pickupLongitude,
-    activeDelivery?.dropoffLatitude,
-    activeDelivery?.dropoffLongitude
+  // OSRM road route geometry for driver navigation with live distance & ETA
+  const { routeCoords, distanceKm, durationMins } = useOsrmRoute(
+    activeDelivery?.status === "ASSIGNED"
+      ? (driverProfile?.lastLatitude || activeDelivery?.pickupLatitude)
+      : activeDelivery?.pickupLatitude,
+    activeDelivery?.status === "ASSIGNED"
+      ? (driverProfile?.lastLongitude || activeDelivery?.pickupLongitude)
+      : activeDelivery?.pickupLongitude,
+    activeDelivery?.status === "ASSIGNED"
+      ? activeDelivery?.pickupLatitude
+      : activeDelivery?.dropoffLatitude,
+    activeDelivery?.status === "ASSIGNED"
+      ? activeDelivery?.pickupLongitude
+      : activeDelivery?.dropoffLongitude
   );
+
+  // Approach A: Smart Default Navigation Launcher (Detects iOS, Android, or Desktop)
+  const launchSmartNavigation = (provider?: "smart" | "google" | "waze" | "apple") => {
+    if (!activeDelivery) return;
+
+    // Determine current target destination (Pickup warehouse if not yet picked up, Dropoff if in transit)
+    const isPickupTarget = activeDelivery.status === "ASSIGNED";
+    const targetLat = isPickupTarget ? activeDelivery.pickupLatitude : activeDelivery.dropoffLatitude;
+    const targetLng = isPickupTarget ? activeDelivery.pickupLongitude : activeDelivery.dropoffLongitude;
+    const targetLabel = encodeURIComponent(isPickupTarget ? activeDelivery.pickupAddress : activeDelivery.dropoffAddress);
+
+    // Device detection
+    const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera || "";
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
+    const isAndroid = /android/i.test(userAgent);
+
+    let chosen = provider || "smart";
+    if (chosen === "smart") {
+      chosen = isIOS ? "apple" : "google";
+    }
+
+    if (chosen === "waze") {
+      // Waze deep link
+      window.open(`https://waze.com/ul?ll=${targetLat},${targetLng}&navigate=yes`, "_blank");
+      toast.success("Launching Waze Navigation...");
+      return;
+    }
+
+    if (chosen === "apple") {
+      // Apple Maps navigation intent (native on iOS, falls back gracefully)
+      if (isIOS) {
+        window.location.href = `maps://maps.apple.com/?daddr=${targetLat},${targetLng}&q=${targetLabel}&dirflg=d`;
+      } else {
+        window.open(`https://maps.apple.com/?daddr=${targetLat},${targetLng}&q=${targetLabel}&dirflg=d`, "_blank");
+      }
+      toast.success("Launching Apple Maps Navigation...");
+      return;
+    }
+
+    // Google Maps navigation intent (Native Google Maps app on Android/iOS, Web on desktop)
+    if (isAndroid) {
+      // Direct intent for Google Maps App in turn-by-turn driving mode
+      window.location.href = `google.navigation:q=${targetLat},${targetLng}&mode=d`;
+    } else {
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${targetLat},${targetLng}&travelmode=driving`, "_blank");
+    }
+    toast.success("Launching Turn-by-Turn Driving Navigation...");
+  };
 
   // Proof of Delivery (POD) Canvas & Photo States
   const [showPodModal, setShowPodModal] = useState(false);
@@ -763,8 +819,67 @@ export function DriverDashboardPage() {
                 </div>
               </div>
 
-              {/* Navigation Map */}
-              <div className="h-[260px] rounded-xl overflow-hidden border border-white/10 relative z-0">
+              {/* Uber/Glovo Style Driver Navigation Cockpit HUD */}
+              <div className="bg-gradient-to-r from-slate-900 via-slate-900/90 to-teal-950/40 border border-teal-500/30 rounded-2xl p-4 shadow-xl flex flex-wrap items-center justify-between gap-4 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-teal-500/5 rounded-full blur-2xl pointer-events-none" />
+
+                <div className="flex items-center gap-3.5 z-10">
+                  <div className="w-12 h-12 rounded-xl bg-teal-500/20 text-teal-300 border border-teal-500/40 flex items-center justify-center text-2xl shadow-inner shrink-0">
+                    <Icon icon={activeDelivery.status === "ASSIGNED" ? "solar:box-minimalistic-bold-duotone" : "solar:routing-2-bold-duotone"} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] uppercase tracking-widest font-extrabold px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 border border-teal-500/30">
+                        {activeDelivery.status === "ASSIGNED" ? "Target: Pickup Hub" : "Target: Dropoff Client"}
+                      </span>
+                      <span className="text-xs text-slate-400 font-mono">
+                        {distanceKm ? `${distanceKm} km` : "Routing..."} • {durationMins ? `~${durationMins} mins` : "Calculating ETA..."}
+                      </span>
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-100 mt-1 truncate max-w-sm sm:max-w-md">
+                      {activeDelivery.status === "ASSIGNED" ? activeDelivery.pickupAddress : activeDelivery.dropoffAddress}
+                    </h3>
+                  </div>
+                </div>
+
+                {/* 1-Tap Smart Turn-by-Turn Action (Approach A) */}
+                <div className="flex items-center gap-2 z-10 w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={() => launchSmartNavigation("smart")}
+                    className="flex-1 sm:flex-initial px-5 py-3 rounded-xl bg-gradient-to-r from-teal-500 via-emerald-500 to-teal-400 hover:from-teal-400 hover:to-emerald-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-teal-500/25 flex items-center justify-center gap-2.5 transition-all cursor-pointer active:scale-95"
+                  >
+                    <Icon icon="solar:compass-bold" className="text-lg" />
+                    <span>Start Turn-by-Turn Navigation</span>
+                  </button>
+
+                  {/* Optional Waze Quick Launcher */}
+                  <button
+                    type="button"
+                    onClick={() => launchSmartNavigation("waze")}
+                    title="Open in Waze (Traffic & Police Alerts)"
+                    className="px-3 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer"
+                  >
+                    <Icon icon="simple-icons:waze" className="text-base text-cyan-400" />
+                    <span className="hidden sm:inline">Waze</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Navigation Map with Real-Time HUD Overlay */}
+              <div className="h-[300px] rounded-xl overflow-hidden border border-white/10 relative z-0 shadow-lg">
+                {/* Live Floating Route Corridor Badge */}
+                <div className="absolute top-3 left-3 z-[1000] bg-slate-950/85 backdrop-blur-md border border-teal-500/30 px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-2 text-xs">
+                  <span className="w-2 h-2 rounded-full bg-teal-400 animate-ping" />
+                  <span className="font-mono text-teal-300 font-bold">
+                    {distanceKm ? `${distanceKm} km` : "Real-road GPS"}
+                  </span>
+                  <span className="text-slate-400">•</span>
+                  <span className="text-slate-300 font-semibold">
+                    {durationMins ? `${durationMins} mins drive` : "Optimized corridor"}
+                  </span>
+                </div>
+
                 <MapContainer
                   center={[
                     (activeDelivery.pickupLatitude + activeDelivery.dropoffLatitude) / 2,
@@ -805,8 +920,8 @@ export function DriverDashboardPage() {
                     <Polyline
                       positions={routeCoords}
                       color="#00F2FE"
-                      weight={4}
-                      opacity={0.85}
+                      weight={5}
+                      opacity={0.9}
                     />
                   ) : (
                     <Polyline
