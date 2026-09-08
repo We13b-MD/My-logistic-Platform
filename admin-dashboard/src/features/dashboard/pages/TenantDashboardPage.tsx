@@ -215,6 +215,7 @@ export function TenantDashboardPage() {
 
   useEffect(() => {
     fetchData();
+    fetchBillingData();
     // Load Paystack Inline script dynamically
     const script = document.createElement("script");
     script.src = "https://js.paystack.co/v1/inline.js";
@@ -230,6 +231,15 @@ export function TenantDashboardPage() {
       fetchBillingData();
     }
   }, [activeTab]);
+
+  // Compute trial status & expiration (30 calendar days from tenant onboarding)
+  const isSuperAdmin = user?.role === "PLATFORM_SUPER_ADMIN" || user?.role === "PLATFORM_SUB_ADMIN";
+  const daysSinceCreation = tenantCreatedDate 
+    ? Math.floor((Date.now() - new Date(tenantCreatedDate).getTime()) / (1000 * 60 * 60 * 24)) 
+    : 0;
+  const trialDaysRemaining = Math.max(0, 30 - daysSinceCreation);
+  const isTrialExpired = !isSuperAdmin && tenantSubscriptionStatus !== "ACTIVE" && (tenantSubscriptionStatus === "EXPIRED" || daysSinceCreation >= 30);
+
 
   // Handle Create Vehicle (Super Admin only)
   const handleCreateVehicleSubmit = async (e: React.FormEvent) => {
@@ -333,6 +343,15 @@ export function TenantDashboardPage() {
   // Handle Dispatch submit
   const handleDispatchSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isTrialExpired) {
+      toast.error("Your 30-day free trial has elapsed. Please activate a subscription to dispatch new shipments.", {
+        duration: 6000,
+      });
+      setActiveTab("billing");
+      return;
+    }
+
     setDispatching(true);
 
     try {
@@ -532,6 +551,60 @@ export function TenantDashboardPage() {
           </button>
         </div>
       </header>
+
+      {/* 30-Day Free Trial Notice Banner (Urgency & Industry Standard Paywall) */}
+      {!isSuperAdmin && isTrialExpired && (
+        <div className="max-w-[1400px] w-full mx-auto px-6 pt-6 z-10">
+          <div className="border border-rose-500/50 bg-rose-950/40 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-lg shadow-rose-950/50">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center font-bold text-lg border border-rose-500/40 shrink-0">
+                <Icon icon="lucide:alert-triangle" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-rose-200 uppercase tracking-wider flex items-center gap-2">
+                  30-Day Free Trial Elapsed • New Dispatches Paused
+                </h4>
+                <p className="text-[12px] text-slate-300">
+                  Your 30-day pilot has completed. Active in-transit deliveries remain fully accessible, but new cargo dispatches require an active subscription.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setActiveTab("billing")}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-slate-950 text-xs font-bold transition-all shadow-md cursor-pointer flex items-center gap-2"
+            >
+              <Icon icon="solar:card-transfer-bold-duotone" className="text-base" />
+              Activate Subscription (₦50,000/mo)
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!isSuperAdmin && !isTrialExpired && tenantSubscriptionStatus === "TRIAL" && trialDaysRemaining <= 7 && (
+        <div className="max-w-[1400px] w-full mx-auto px-6 pt-6 z-10">
+          <div className="border border-amber-500/40 bg-amber-950/25 rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center font-bold text-sm border border-amber-500/40 shrink-0">
+                ⏳
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-amber-200 uppercase tracking-wider">
+                  Trial Ending Soon — {trialDaysRemaining} Day{trialDaysRemaining === 1 ? "" : "s"} Remaining
+                </h4>
+                <p className="text-[11px] text-slate-300">
+                  Your complimentary 30-day logistics trial is expiring soon. Subscribe now to maintain continuous dispatch access.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setActiveTab("billing")}
+              className="px-3.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-semibold transition-all cursor-pointer"
+            >
+              View Plans & Renew
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Onboarding Quick-Start Progress Tracker (Time-To-Value < 60s) */}
       <div className="max-w-[1400px] w-full mx-auto px-6 pt-6 z-10">
@@ -1968,16 +2041,18 @@ export function TenantDashboardPage() {
                   {tenantSubscriptionStatus === "TRIAL" && (
                     <div className="space-y-1.5 pt-2">
                       <div className="flex justify-between text-xs font-semibold">
-                        <span className="text-cyan-400 uppercase tracking-wider text-[10px] font-bold">30-Day Free Trial Progress</span>
-                        <span className="text-on-surface-variant">
-                          {Math.max(0, 30 - Math.floor((Date.now() - new Date(tenantCreatedDate || Date.now()).getTime()) / (1000 * 60 * 60 * 24)))} days remaining
+                        <span className="text-cyan-400 uppercase tracking-wider text-[10px] font-bold">
+                          {isTrialExpired ? "30-Day Free Trial (Expired)" : "30-Day Free Trial Progress"}
+                        </span>
+                        <span className={isTrialExpired ? "text-rose-400 font-bold" : "text-on-surface-variant"}>
+                          {isTrialExpired ? "Trial expired (Day 30 reached)" : `${trialDaysRemaining} days remaining`}
                         </span>
                       </div>
                       <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden border border-white/5">
                         <div 
-                          className="bg-gradient-to-r from-cyan-500 to-primary h-full transition-all duration-500"
+                          className={`h-full transition-all duration-500 ${isTrialExpired ? "bg-rose-500" : "bg-gradient-to-r from-cyan-500 to-primary"}`}
                           style={{ 
-                            width: `${Math.max(0, Math.min(100, (1 - Math.floor((Date.now() - new Date(tenantCreatedDate || Date.now()).getTime()) / (1000 * 60 * 60 * 24)) / 30) * 100))}%` 
+                            width: `${Math.max(0, Math.min(100, (daysSinceCreation / 30) * 100))}%` 
                           }}
                         />
                       </div>

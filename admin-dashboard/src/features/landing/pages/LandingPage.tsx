@@ -297,21 +297,30 @@ export function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-stretch">
 
-            {/* Tier 1: Free */}
-            <div className="glass-panel rounded-2xl p-8 flex flex-col border border-slate-800 relative">
+            {/* Tier 1: 30-Day Free Pilot */}
+            <div className="glass-panel rounded-2xl p-8 flex flex-col border border-slate-800 relative hover:border-slate-700 transition-all">
               <div className="mb-6">
-                <span className="text-[10px] font-bold text-teal-400 uppercase tracking-widest bg-slate-900 px-3 py-1 rounded-full border border-slate-800">Starter</span>
-                <h3 className="text-xl font-bold text-slate-100 mt-4">Local Hub</h3>
-                <p className="text-xs text-slate-500 mt-1">Perfect for small local carrier startups.</p>
+                <span className="text-[10px] font-bold text-teal-400 uppercase tracking-widest bg-slate-900 px-3 py-1 rounded-full border border-slate-800">
+                  30-Day Free Pilot
+                </span>
+                <h3 className="text-xl font-bold text-slate-100 mt-4">Starter Pilot</h3>
+                <p className="text-xs text-slate-500 mt-1">Full enterprise access for 30 days with zero upfront payment.</p>
               </div>
-              <div className="mb-6 flex items-baseline gap-1">
-                <span className="text-3xl font-bold text-slate-100">₦0</span>
-                <span className="text-xs text-slate-500">/ month</span>
+              <div className="mb-6 flex flex-col">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-3xl font-bold text-slate-100">₦0</span>
+                  <span className="text-xs text-teal-400 font-semibold">/ first 30 days</span>
+                </div>
+                <span className="text-[11px] text-slate-400 mt-1">Renews at ₦25,000/month after trial</span>
               </div>
               <ul className="space-y-3.5 mb-8 flex-grow">
                 <li className="flex items-center gap-2.5 text-xs text-slate-300">
                   <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
-                  <span>Up to 1,000 deliveries / month</span>
+                  <span><strong>30 days</strong> unrestricted pilot access</span>
+                </li>
+                <li className="flex items-center gap-2.5 text-xs text-slate-300">
+                  <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
+                  <span>Up to 1,000 deliveries during trial</span>
                 </li>
                 <li className="flex items-center gap-2.5 text-xs text-slate-300">
                   <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
@@ -323,14 +332,18 @@ export function LandingPage() {
                 </li>
                 <li className="flex items-center gap-2.5 text-xs text-slate-300">
                   <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
-                  <span>Public customer tracking links</span>
+                  <span>Live customer map tracking links</span>
+                </li>
+                <li className="flex items-center gap-2.5 text-xs text-slate-400">
+                  <Icon icon="lucide:shield-check" className="text-emerald-400 text-sm shrink-0" />
+                  <span>No credit card required to start</span>
                 </li>
               </ul>
               <button
                 onClick={() => navigate("/onboard")}
-                className="w-full bg-slate-900 hover:bg-slate-800 text-slate-100 py-3 rounded-xl text-xs font-bold transition-all border border-slate-800 cursor-pointer text-center"
+                className="w-full bg-slate-900 hover:bg-teal-500 hover:text-slate-950 text-slate-100 py-3 rounded-xl text-xs font-bold transition-all border border-slate-800 cursor-pointer text-center"
               >
-                Get Started
+                Start 30-Day Free Trial
               </button>
             </div>
 

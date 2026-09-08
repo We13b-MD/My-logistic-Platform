@@ -8,10 +8,10 @@ import { Delivery, DriverProfile } from "@/types";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
 import { Icon } from "@iconify/react";
 import { LogistelLogo } from "@/components/LogistelLogo";
+import { useOsrmRoute } from "@/utils/useOsrmRoute";
 
 // Leaflet imports
-
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -104,6 +104,14 @@ export function DriverDashboardPage() {
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [otpInput, setOtpInput] = useState("");
   const [jobHistory, setJobHistory] = useState<Delivery[]>([]);
+
+  // OSRM road route geometry for driver navigation
+  const { routeCoords } = useOsrmRoute(
+    activeDelivery?.pickupLatitude,
+    activeDelivery?.pickupLongitude,
+    activeDelivery?.dropoffLatitude,
+    activeDelivery?.dropoffLongitude
+  );
 
   // Proof of Delivery (POD) Canvas & Photo States
   const [showPodModal, setShowPodModal] = useState(false);
@@ -668,26 +676,95 @@ export function DriverDashboardPage() {
                 </span>
               </div>
 
-              {/* Addresses details */}
+              {/* Addresses details & Direct GPS Navigation */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                <div className="space-y-1">
-                  <span className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider block">
-                    1. PICKUP WAREHOUSE
-                  </span>
-                  <p className="font-medium text-on-surface">{activeDelivery.pickupAddress}</p>
-                  <p className="text-[10px] text-on-surface-variant">Phone: {activeDelivery.senderPhone}</p>
+                {/* 1. PICKUP WAREHOUSE */}
+                <div className={`p-4 rounded-xl border transition-all ${
+                  activeDelivery.status === "ASSIGNED"
+                    ? "bg-cyan-500/10 border-cyan-500/40 text-white shadow-lg shadow-cyan-500/5"
+                    : "bg-slate-900/60 border-slate-800 text-slate-300"
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
+                      1. PICKUP WAREHOUSE
+                    </span>
+                    {activeDelivery.status === "ASSIGNED" && (
+                      <span className="text-[9px] px-2 py-0.5 rounded-full font-extrabold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 animate-pulse">
+                        CURRENT TARGET
+                      </span>
+                    )}
+                  </div>
+                  <p className="font-semibold text-sm text-slate-100 mt-2">{activeDelivery.pickupAddress}</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Contact: {activeDelivery.senderPhone || "Warehouse Dispatch"}</p>
+                  
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <a
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${activeDelivery.pickupLatitude},${activeDelivery.pickupLongitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-cyan-500 hover:bg-cyan-400 text-slate-950 flex items-center gap-1.5 shadow transition-all cursor-pointer"
+                    >
+                      <Icon icon="solar:routing-bold" className="text-sm" />
+                      <span>GPS to Pickup</span>
+                    </a>
+                    {activeDelivery.senderPhone && (
+                      <a
+                        href={`tel:${activeDelivery.senderPhone}`}
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition-all"
+                      >
+                        <Icon icon="solar:phone-calling-bold" className="text-xs text-emerald-400" />
+                        <span>Call Pickup</span>
+                      </a>
+                    )}
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <span className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider block">
-                    2. DROPOFF DESTINATION
-                  </span>
-                  <p className="font-medium text-on-surface">{activeDelivery.dropoffAddress}</p>
-                  <p className="text-[10px] text-on-surface-variant">Phone: {activeDelivery.recipientPhone}</p>
+
+                {/* 2. DROPOFF DESTINATION */}
+                <div className={`p-4 rounded-xl border transition-all ${
+                  activeDelivery.status === "IN_TRANSIT" || activeDelivery.status === "PICKED_UP"
+                    ? "bg-emerald-500/10 border-emerald-500/40 text-white shadow-lg shadow-emerald-500/5"
+                    : "bg-slate-900/60 border-slate-800 text-slate-300"
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                      2. DROPOFF DESTINATION
+                    </span>
+                    {(activeDelivery.status === "IN_TRANSIT" || activeDelivery.status === "PICKED_UP") && (
+                      <span className="text-[9px] px-2 py-0.5 rounded-full font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse">
+                        CURRENT TARGET
+                      </span>
+                    )}
+                  </div>
+                  <p className="font-semibold text-sm text-slate-100 mt-2">{activeDelivery.dropoffAddress}</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Recipient: {activeDelivery.recipientName} ({activeDelivery.recipientPhone})</p>
+
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <a
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${activeDelivery.dropoffLatitude},${activeDelivery.dropoffLongitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 flex items-center gap-1.5 shadow transition-all cursor-pointer"
+                    >
+                      <Icon icon="solar:routing-bold" className="text-sm" />
+                      <span>GPS to Dropoff</span>
+                    </a>
+                    {activeDelivery.recipientPhone && (
+                      <a
+                        href={`tel:${activeDelivery.recipientPhone}`}
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition-all"
+                      >
+                        <Icon icon="solar:phone-calling-bold" className="text-xs text-emerald-400" />
+                        <span>Call Recipient</span>
+                      </a>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {/* Navigation Map */}
-              <div className="h-[220px] rounded-xl overflow-hidden border border-white/10 relative z-0">
+              <div className="h-[260px] rounded-xl overflow-hidden border border-white/10 relative z-0">
                 <MapContainer
                   center={[
                     (activeDelivery.pickupLatitude + activeDelivery.dropoffLatitude) / 2,
@@ -704,24 +781,45 @@ export function DriverDashboardPage() {
 
                   {/* Pickup Pin */}
                   <Marker position={[activeDelivery.pickupLatitude, activeDelivery.pickupLongitude]} icon={pickupIcon}>
-                    <Popup><div className="text-black text-xs">Pickup Address</div></Popup>
+                    <Popup><div className="text-black text-xs font-bold">1. Pickup: {activeDelivery.pickupAddress}</div></Popup>
                   </Marker>
 
                   {/* Dropoff Pin */}
                   <Marker position={[activeDelivery.dropoffLatitude, activeDelivery.dropoffLongitude]} icon={dropoffIcon}>
-                    <Popup><div className="text-black text-xs">Dropoff Address</div></Popup>
+                    <Popup><div className="text-black text-xs font-bold">2. Dropoff: {activeDelivery.dropoffAddress}</div></Popup>
                   </Marker>
 
-                  {/* Driver Pin (Mock coordinates if offline, otherwise show latest) */}
+                  {/* Driver Pin */}
                   <Marker
                     position={[
-                      driverProfile.lastLatitude || activeDelivery.pickupLatitude,
-                      driverProfile.lastLongitude || activeDelivery.pickupLongitude,
+                      driverProfile?.lastLatitude || activeDelivery.pickupLatitude,
+                      driverProfile?.lastLongitude || activeDelivery.pickupLongitude,
                     ]}
                     icon={driverIcon}
                   >
-                    <Popup><div className="text-black text-xs font-bold text-red-600">Your Vehicle</div></Popup>
+                    <Popup><div className="text-black text-xs font-bold text-red-600">Your Current Vehicle Location</div></Popup>
                   </Marker>
+
+                  {/* OSRM Real-Road Route Polyline */}
+                  {routeCoords.length > 1 ? (
+                    <Polyline
+                      positions={routeCoords}
+                      color="#00F2FE"
+                      weight={4}
+                      opacity={0.85}
+                    />
+                  ) : (
+                    <Polyline
+                      positions={[
+                        [activeDelivery.pickupLatitude, activeDelivery.pickupLongitude],
+                        [activeDelivery.dropoffLatitude, activeDelivery.dropoffLongitude],
+                      ]}
+                      color="#00F2FE"
+                      weight={3}
+                      dashArray="5, 10"
+                      opacity={0.5}
+                    />
+                  )}
                 </MapContainer>
               </div>
 

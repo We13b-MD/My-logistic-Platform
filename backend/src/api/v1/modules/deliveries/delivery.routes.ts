@@ -3,15 +3,17 @@ import { DeliveryController } from './delivery.controller';
 import { authenticate, authorize } from '../../middlewares/auth.middleware'
 import { validateCreateDelivery, validateUpdateStatus } from './delivery.validation';
 import { generalApiLimiter } from '../../middlewares/rateLimiter.middleware';
+import { checkTenantSubscription } from '../../middlewares/subscription.middleware';
 
 const deliveryRouter = Router();
 const deliveryController = new DeliveryController();
 
 
-//create a delivery restricted to customer and admind roles
+// Create a delivery restricted to active subscriptions/valid trial
 deliveryRouter.post(
     '/',
     authenticate,
+    checkTenantSubscription,
     authorize(['CUSTOMER', 'TENANT_SUPER_ADMIN', 'TENANT_SUB_ADMIN']),
     generalApiLimiter,
     validateCreateDelivery,
