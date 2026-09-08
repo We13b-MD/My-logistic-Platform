@@ -311,7 +311,7 @@ export function LandingPage() {
                   <span className="text-3xl font-bold text-slate-100">₦0</span>
                   <span className="text-xs text-teal-400 font-semibold">/ first 30 days</span>
                 </div>
-                <span className="text-[11px] text-slate-400 mt-1">Renews at ₦25,000/month after trial</span>
+                <span className="text-[11px] text-slate-400 mt-1">Renews at ₦50,000/month after trial</span>
               </div>
               <ul className="space-y-3.5 mb-8 flex-grow">
                 <li className="flex items-center gap-2.5 text-xs text-slate-300">
