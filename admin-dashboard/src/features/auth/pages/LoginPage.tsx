@@ -50,7 +50,24 @@ export function LoginPage() {
           });
 
           if (response.data?.status === "success" && response.data?.data) {
-            const { user, token, isNewUser } = response.data.data;
+            const { user, token, isNewUser, needsCompanyRegistration, googleProfile } = response.data.data;
+
+            if (needsCompanyRegistration) {
+              toast.info(
+                `Google account verified! Please complete your company profile to register your logistics workspace and start your 30-day free pilot.`,
+                { duration: 7000 }
+              );
+              navigate("/onboard", {
+                state: {
+                  prefilledEmail: googleProfile?.email || googleUser.email,
+                  prefilledName: googleProfile?.name || googleUser.name,
+                  googleId: googleProfile?.googleId || googleUser.sub,
+                  avatarUrl: googleProfile?.avatarUrl || googleUser.picture,
+                },
+              });
+              return;
+            }
+
             toast.success(
               isNewUser
                 ? `Welcome ${googleUser.name || ""}! Account created via Google.`

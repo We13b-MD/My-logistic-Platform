@@ -74,46 +74,28 @@ export class GoogleAuthService {
       }
       const token = generateToken(user);
       const { password: _, ...userWithoutPassword } = user;
-      return { user: userWithoutPassword, token, isNewUser: false };
+      return { 
+        user: userWithoutPassword, 
+        token, 
+        isNewUser: false, 
+        needsCompanyRegistration: false 
+      };
     }
 
-
-    // 3. Case B: New User -> Auto-Provision under primary tenant
-    let tenant = await prisma.tenant.findFirst();
-    if (!tenant) {
-      tenant = await prisma.tenant.create({
-        data: {
-          companyName: "Swift Logistics",
-          subdomain: "swift",
-          industry: "TRANSPORT",
-          isActive: true,
-        },
-      });
-    }
-
-    // Hash random fallback password for OAuth users
-    const randomPassword = Math.random().toString(36).slice(-10) + "Aa1!";
-    const hashedPassword = await bcrypt.hash(randomPassword, 12);
-
-    const newUserRole = (requestedRole && ["CUSTOMER", "DRIVER", "TENANT_SUB_ADMIN"].includes(requestedRole))
-      ? requestedRole as Role
-      : Role.CUSTOMER;
-
-    const newUser = await prisma.user.create({
-      data: {
+    // 3. Case B: Unregistered User -> Prompt Company Registration (Industry Best Practice)
+    // Do NOT auto-provision orphan accounts into someone else's tenant workspace.
+    // Return verified Google profile payload so the frontend can redirect to /onboard with pre-filled data.
+    return {
+      user: null,
+      token: null,
+      isNewUser: true,
+      needsCompanyRegistration: true,
+      googleProfile: {
         email: cleanEmail,
-        password: hashedPassword,
+        name: name || "",
+        avatarUrl: targetAvatar || "",
         googleId: mockGoogleId,
-        avatarUrl,
-        role: newUserRole,
-        tenantId: tenant.id,
       },
-      include: { tenant: true },
-    });
-
-    const token = generateToken(newUser);
-    const { password: _, ...userWithoutPassword } = newUser;
-
-    return { user: userWithoutPassword, token, isNewUser: true };
+    };
   }
 }

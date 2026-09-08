@@ -75,6 +75,8 @@ export class AuthController {
           user: result.user,
           token: result.token,
           isNewUser: result.isNewUser,
+          needsCompanyRegistration: result.needsCompanyRegistration,
+          googleProfile: (result as any).googleProfile || null,
         },
       });
     } catch (error: any) {
