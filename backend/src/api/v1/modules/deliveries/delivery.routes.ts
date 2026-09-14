@@ -21,6 +21,24 @@ deliveryRouter.post(
 );
 
 
+// Get available unassigned deliveries for online drivers to claim (must precede /:id)
+deliveryRouter.get(
+    '/available',
+    authenticate,
+    authorize(['DRIVER']),
+    generalApiLimiter,
+    (req, res) => deliveryController.getAvailable(req, res)
+);
+
+// Claim/accept an unassigned delivery by driver
+deliveryRouter.post(
+    '/:id/claim',
+    authenticate,
+    authorize(['DRIVER']),
+    generalApiLimiter,
+    (req, res) => deliveryController.claim(req, res)
+);
+
 // Get delivery by id (Accessible by customer, driver, and admin of the same tenant)
 deliveryRouter.get(
     '/:id',

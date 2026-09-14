@@ -100,12 +100,15 @@ export class DeliveryService {
             });
         }
 
-        // Queue the driver-matching job in Redis (resilient, persistent, and auto-retryable)
-        await deliveryQueue.add('MATCH_DRIVER', {
+        // Queue the driver-matching job in Redis asynchronously without blocking the HTTP response.
+        // If Redis is slow or unavailable, the delivery is still safely created and available for drivers to claim.
+        deliveryQueue.add('MATCH_DRIVER', {
             deliveryId: delivery.id,
             tenantId,
             pickupLatitude: data.pickupLatitude,
             pickupLongitude: data.pickupLongitude,
+        }).catch((err: any) => {
+            console.warn("[Queue] Redis driver matching unavailable or failed:", err?.message || err);
         });
 
         return delivery;
@@ -283,5 +286,65 @@ export class DeliveryService {
                 totalPages: Math.ceil(total / limit)
             }
         };
+    }
+
+    /**
+     * Retrieves all unassigned PENDING deliveries in the tenant for drivers to view and accept.
+     */
+    async getAvailable(tenantId: string) {
+        return await prisma.delivery.findMany({
+            where: {
+                tenantId,
+                status: DeliveryStatus.PENDING,
+                driverId: null,
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 20,
+            include: {
+                sender: { select: { email: true } },
+            }
+        });
+    }
+
+    /**
+     * Atomically claims an unassigned PENDING delivery for an online driver.
+     * Prevents race conditions using an atomic database transaction.
+     */
+    async claimDelivery(deliveryId: string, driverUserId: string, tenantId: string) {
+        const driverProfile = await prisma.driverProfile.findUnique({
+            where: { userId: driverUserId }
+        });
+
+        if (!driverProfile) {
+            throw new Error('Driver profile not found. Please complete profile onboarding.');
+        }
+
+        return await prisma.$transaction(async (tx) => {
+            const delivery = await tx.delivery.findUnique({
+                where: { id: deliveryId }
+            });
+
+            if (!delivery) throw new Error('Delivery not found');
+            if (delivery.tenantId !== tenantId) throw new Error('Access Denied: Tenant Isolation Breach');
+            if (delivery.driverId !== null || delivery.status !== DeliveryStatus.PENDING) {
+                throw new Error('This shipment has already been accepted by another driver.');
+            }
+
+            return await tx.delivery.update({
+                where: { id: deliveryId },
+                data: {
+                    driverId: driverProfile.id,
+                    status: DeliveryStatus.ASSIGNED,
+                },
+                include: {
+                    sender: { select: { email: true } },
+                    driver: {
+                        include: {
+                            user: { select: { email: true } }
+                        }
+                    }
+                }
+            });
+        });
     }
 }

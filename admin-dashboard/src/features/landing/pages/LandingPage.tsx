@@ -43,16 +43,31 @@ export function LandingPage() {
           <a href="#features" className="text-xs font-semibold text-slate-400 hover:text-teal-400 uppercase tracking-widest transition-colors">Features</a>
           <a href="#solutions" className="text-xs font-semibold text-slate-400 hover:text-teal-400 uppercase tracking-widest transition-colors">Solutions</a>
           <a href="#pricing" className="text-xs font-semibold text-slate-400 hover:text-teal-400 uppercase tracking-widest transition-colors">Pricing</a>
+          <button
+            onClick={() => navigate("/track")}
+            className="text-xs font-semibold text-teal-400 hover:text-teal-300 uppercase tracking-widest transition-colors cursor-pointer flex items-center gap-1.5"
+          >
+            <Icon icon="solar:map-point-wave-bold" className="text-sm" />
+            <span>Track Shipment</span>
+          </button>
         </div>
 
         {/* Call to Actions */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate("/track")}
+            className="px-3 py-1.5 rounded-xl bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 border border-teal-500/30 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+          >
+            <Icon icon="solar:map-point-wave-bold" className="text-sm text-teal-400 animate-pulse" />
+            <span className="hidden sm:inline">Track</span> Order
+          </button>
+
           {isAuthenticated ? (
             <button
               onClick={() => navigate("/dashboard")}
-              className="bg-teal-400 hover:bg-teal-300 text-slate-950 px-5 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
+              className="bg-teal-400 hover:bg-teal-300 text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
             >
-              <span>Go to Dashboard</span>
+              <span>Dashboard</span>
               <Icon icon="lucide:arrow-right" className="text-sm text-slate-950" />
             </button>
           ) : (
@@ -65,7 +80,7 @@ export function LandingPage() {
               </button>
               <button
                 onClick={() => navigate("/onboard")}
-                className="bg-teal-400 hover:bg-teal-300 text-slate-950 px-5 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-sm"
+                className="bg-teal-400 hover:bg-teal-300 text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-sm"
               >
                 Get Started
               </button>
@@ -85,10 +100,7 @@ export function LandingPage() {
           </div>
 
           <h1 className="font-display text-4xl md:text-6xl text-slate-100 font-bold tracking-tight mb-6 max-w-4xl leading-tight">
-            The Operating System for <br className="hidden md:block" />{" "}
-            <span className="text-teal-400 font-extrabold">
-              Global Logistics
-            </span>
+            Next-Gen Autonomous Freight Telematics & Route Dispatch
           </h1>
 
           <p className="text-sm md:text-base text-slate-400 max-w-2xl mb-10 leading-relaxed">
@@ -97,6 +109,13 @@ export function LandingPage() {
 
           {/* Action Buttons with Glassmorphic Design */}
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+            <button
+              onClick={() => navigate("/track")}
+              className="glass-panel border border-teal-500/60 bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 backdrop-blur-xl px-8 py-4 rounded-xl text-sm font-bold transition-all shadow-xl shadow-teal-500/15 flex items-center justify-center gap-2 cursor-pointer active:scale-95 hover:border-teal-400"
+            >
+              <Icon icon="solar:map-point-wave-bold" className="text-teal-400 text-lg" />
+              <span>Track a Shipment</span>
+            </button>
             <button
               onClick={() => navigate("/onboard")}
               className="glass-panel border border-teal-500/50 bg-teal-500/15 hover:bg-teal-500/25 text-white backdrop-blur-xl px-8 py-4 rounded-xl text-sm font-bold transition-all shadow-xl shadow-teal-500/10 flex items-center justify-center cursor-pointer active:scale-95 hover:border-teal-400"

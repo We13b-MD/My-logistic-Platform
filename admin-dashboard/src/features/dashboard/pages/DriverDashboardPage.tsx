@@ -105,6 +105,11 @@ export function DriverDashboardPage() {
   const [otpInput, setOtpInput] = useState("");
   const [jobHistory, setJobHistory] = useState<Delivery[]>([]);
 
+  // Available Dispatch Pool States
+  const [availableJobs, setAvailableJobs] = useState<Delivery[]>([]);
+  const [loadingAvailable, setLoadingAvailable] = useState(false);
+  const [claimingId, setClaimingId] = useState<string | null>(null);
+
   // OSRM road route geometry for driver navigation with live distance & ETA
   const { routeCoords, distanceKm, durationMins } = useOsrmRoute(
     activeDelivery?.status === "ASSIGNED"
@@ -237,6 +242,50 @@ export function DriverDashboardPage() {
       fetchDeliveries(driverProfile.id);
     }
   }, [driverProfile?.id]);
+
+  // Fetch unassigned available deliveries for online drivers
+  const fetchAvailableJobs = async () => {
+    try {
+      setLoadingAvailable(true);
+      const res = await deliveryApi.getAvailable();
+      if (res.data?.status === "success" && Array.isArray(res.data?.data)) {
+        setAvailableJobs(res.data.data);
+      }
+    } catch (error) {
+      console.error("Failed to load available deliveries pool:", error);
+    } finally {
+      setLoadingAvailable(false);
+    }
+  };
+
+  // Claim/Accept an available delivery job
+  const handleClaimDelivery = async (deliveryId: string) => {
+    setClaimingId(deliveryId);
+    try {
+      const res = await deliveryApi.claim(deliveryId);
+      if (res.data?.status === "success") {
+        toast.success("🎉 Delivery accepted! Loading route navigation...");
+        if (driverProfile?.id) {
+          await fetchDeliveries(driverProfile.id);
+        }
+        await fetchAvailableJobs();
+      }
+    } catch (error: any) {
+      console.error("Failed to claim delivery:", error);
+      toast.error(error.response?.data?.message || "Failed to accept delivery.");
+    } finally {
+      setClaimingId(null);
+    }
+  };
+
+  // Poll available jobs when online and without active delivery
+  useEffect(() => {
+    if (isOnline && !activeDelivery) {
+      fetchAvailableJobs();
+      const interval = setInterval(fetchAvailableJobs, 6000);
+      return () => clearInterval(interval);
+    }
+  }, [isOnline, activeDelivery]);
 
   // 3. Complete Profile Setup submission
   const handleProfileSubmit = async (e: React.FormEvent) => {
@@ -996,18 +1045,150 @@ export function DriverDashboardPage() {
               </div>
             </div>
           </div>
+        ) : isOnline ? (
+          /* ONLINE: SHOW AVAILABLE DELIVERIES OR RADAR */
+          availableJobs.length > 0 ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-emerald-400 animate-ping" />
+                  <h2 className="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
+                    <span>Available Dispatches Near You</span>
+                    <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-mono">
+                      {availableJobs.length} Ready
+                    </span>
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={fetchAvailableJobs}
+                  disabled={loadingAvailable}
+                  className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-slate-300 border border-white/10 flex items-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <Icon icon="solar:restart-bold" className={`text-sm ${loadingAvailable ? "animate-spin" : ""}`} />
+                  <span>Refresh</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                {availableJobs.map((job) => (
+                  <div
+                    key={job.id}
+                    className="glass-panel border-white/10 hover:border-teal-500/50 p-5 rounded-2xl bg-gradient-to-r from-slate-900/90 via-slate-900/70 to-teal-950/20 shadow-xl transition-all space-y-4 relative overflow-hidden"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/5 pb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 border border-teal-500/30">
+                          Order #{job.id.slice(0, 8)}
+                        </span>
+                        <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded uppercase tracking-wider">
+                          Ready for Pickup
+                        </span>
+                      </div>
+                      <span className="text-xs text-slate-400 font-medium">
+                        Recipient: <strong className="text-slate-200">{job.recipientName}</strong>
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                      {/* Pickup */}
+                      <div className="bg-slate-950/60 p-3 rounded-xl border border-white/5 space-y-1">
+                        <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                          Pickup Hub
+                        </span>
+                        <p className="font-semibold text-slate-200 truncate">{job.pickupAddress}</p>
+                        {job.senderPhone && (
+                          <p className="text-[11px] text-slate-400">Sender Contact: {job.senderPhone}</p>
+                        )}
+                      </div>
+
+                      {/* Dropoff */}
+                      <div className="bg-slate-950/60 p-3 rounded-xl border border-white/5 space-y-1">
+                        <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                          Dropoff Destination
+                        </span>
+                        <p className="font-semibold text-slate-200 truncate">{job.dropoffAddress}</p>
+                        <p className="text-[11px] text-slate-400">Recipient Phone: {job.recipientPhone}</p>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                      <div className="text-xs text-slate-400 flex items-center gap-1.5">
+                        <Icon icon="solar:box-minimalistic-bold" className="text-teal-400 text-sm" />
+                        <span>Instant Dispatch Task</span>
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={claimingId === job.id}
+                        onClick={() => handleClaimDelivery(job.id)}
+                        className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-teal-500/25 flex items-center gap-2 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                      >
+                        {claimingId === job.id ? (
+                          <>
+                            <Icon icon="lucide:loader-2" className="animate-spin text-sm" />
+                            <span>Accepting Job...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Icon icon="solar:check-circle-bold" className="text-base" />
+                            <span>Accept Delivery ⚡</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            /* NO AVAILABLE DELIVERIES IN QUEUE - RADAR SCANNING */
+            <div className="glass-panel border-white/5 p-10 text-center rounded-2xl space-y-4 bg-slate-900/40">
+              <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
+                <div className="absolute inset-0 rounded-full border border-teal-500/30 animate-ping" />
+                <div className="w-12 h-12 rounded-full bg-teal-500/10 border border-teal-500/40 flex items-center justify-center text-teal-400 text-2xl shadow-inner">
+                  <Icon icon="solar:radar-2-bold" className="animate-spin" style={{ animationDuration: "4s" }} />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <h2 className="font-headline-md text-headline-md text-on-surface">Radar Active: Scanning for Orders</h2>
+                <p className="text-xs text-on-surface-variant max-w-[360px] mx-auto">
+                  You are live in the dispatch queue. When customers place new delivery orders, they will appear here instantly for you to accept.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={fetchAvailableJobs}
+                disabled={loadingAvailable}
+                className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-slate-300 border border-white/10 inline-flex items-center gap-1.5 transition-all cursor-pointer"
+              >
+                <Icon icon="solar:restart-bold" className={`text-sm ${loadingAvailable ? "animate-spin" : ""}`} />
+                <span>Refresh Dispatch Radar</span>
+              </button>
+            </div>
+          )
         ) : (
-          /* NO JOBS ASSIGNED VIEW */
-          <div className="glass-panel border-white/5 p-12 text-center rounded-2xl space-y-3">
-            <Icon icon="solar:bell-bing-bold-duotone" className="text-[48px] text-on-surface-variant/40 animate-pulse mx-auto" />
+          /* OFFLINE VIEW */
+          <div className="glass-panel border-white/5 p-12 text-center rounded-2xl space-y-4">
+            <Icon icon="solar:shield-warning-bold-duotone" className="text-[48px] text-amber-400/60 mx-auto" />
             <div className="space-y-1">
-              <h2 className="font-headline-md text-headline-md text-on-surface">Queue Empty</h2>
-              <p className="text-xs text-on-surface-variant max-w-[320px] mx-auto">
-                {isOnline
-                  ? "Waiting for dispatchers to assign deliveries. Keep this tab open to stream your GPS location."
-                  : "You are off duty. Go Online to begin receiving delivery tasks."}
+              <h2 className="font-headline-md text-headline-md text-on-surface">You are Currently Offline</h2>
+              <p className="text-xs text-on-surface-variant max-w-[340px] mx-auto">
+                Toggle the switch above to <strong>"Go Online"</strong> to connect to the fleet radar and start receiving cargo deliveries.
               </p>
             </div>
+            <button
+              type="button"
+              onClick={handleToggleOnline}
+              disabled={togglingOnline}
+              className="px-6 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs shadow-lg transition-all inline-flex items-center gap-2 cursor-pointer"
+            >
+              <Icon icon="solar:power-bold" className="text-sm" />
+              <span>Go Online Now</span>
+            </button>
           </div>
         )}
 

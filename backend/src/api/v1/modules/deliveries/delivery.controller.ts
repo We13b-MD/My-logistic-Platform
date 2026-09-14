@@ -150,7 +150,47 @@ export class DeliveryController {
         }
     }
 
-   
+    /**
+     * Retrieves all available unassigned PENDING deliveries for the driver's tenant.
+     */
+    async getAvailable(req: Request, res: Response) {
+        try {
+            const tenantId = (req as any).user.tenantId;
+            const deliveries = await deliveryService.getAvailable(tenantId);
+            return res.status(200).json({
+                status: 'success',
+                data: deliveries
+            });
+        } catch (err: any) {
+            return res.status(400).json({
+                status: 'error',
+                message: err.message || 'Failed to fetch available deliveries'
+            });
+        }
+    }
+
+    /**
+     * Allows an authenticated driver to accept/claim an unassigned delivery.
+     */
+    async claim(req: Request, res: Response) {
+        try {
+            const tenantId = (req as any).user.tenantId;
+            const driverUserId = (req as any).user.id;
+            const deliveryId = req.params.id as string;
+
+            const claimedDelivery = await deliveryService.claimDelivery(deliveryId, driverUserId, tenantId);
+            return res.status(200).json({
+                status: 'success',
+                message: 'Delivery claimed successfully! You are now assigned to this shipment.',
+                data: claimedDelivery
+            });
+        } catch (err: any) {
+            return res.status(400).json({
+                status: 'error',
+                message: err.message || 'Failed to claim delivery'
+            });
+        }
+    }
 }
 
 

@@ -7,6 +7,8 @@ export const deliveryApi = {
   updateStatus: (id: string, data: object) => apiClient.patch(`/deliveries/${id}/status`, data),
   uploadPOD: (data: { photoBase64?: string; signatureBase64?: string }) => apiClient.post('/deliveries/upload-pod', data),
   getDashboardMetrics: () => apiClient.get('/dashboard/metrics'),
+  getAvailable: () => apiClient.get('/deliveries/available'),
+  claim: (id: string) => apiClient.post(`/deliveries/${id}/claim`),
 };
 
 

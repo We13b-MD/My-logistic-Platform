@@ -561,6 +561,17 @@ export function CustomerDashboardPage() {
                             🔑
                           </div>
                         </div>
+
+                        {/* 1-Tap Public Live Tracking Launcher */}
+                        <a
+                          href={`/track/${selectedDelivery.deliveryOtp}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full py-2.5 px-4 bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-98"
+                        >
+                          <Icon icon="solar:map-arrow-up-bold-duotone" className="text-base text-teal-400" />
+                          <span>Track Shipment on Live Map (Code: {selectedDelivery.deliveryOtp}) ↗</span>
+                        </a>
                       </div>
 
                       {/* Package Details Summary Card */}
