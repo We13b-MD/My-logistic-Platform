@@ -518,18 +518,35 @@ export function TenantDashboardPage() {
                 <h1 className="font-display text-xl text-[#6bd8cb] font-bold tracking-tight leading-none">
                   {user.tenant.companyName}
                 </h1>
-                <span className="text-[10px] text-slate-400 uppercase tracking-widest font-mono">
-                  Dispatcher Console
-                </span>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest font-mono">
+                    Dispatcher Console
+                  </span>
+                  {user?.tenant?.subdomain && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold bg-teal-500/10 text-teal-300 border border-teal-500/30 px-2 py-0.5 rounded">
+                      <span className="text-slate-400">Subdomain:</span> {user.tenant.subdomain}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           ) : (
-            <LogistelLogo
-              size="md"
-              title={user?.tenant?.companyName || "Logistel"}
-              subtext="Dispatcher Console"
-              titleClassName="text-[#6bd8cb]"
-            />
+            <div>
+              <LogistelLogo
+                size="md"
+                title={user?.tenant?.companyName || "Logistel"}
+                subtext="Dispatcher Console"
+                titleClassName="text-[#6bd8cb]"
+              />
+              {user?.tenant?.subdomain && (
+                <div className="mt-1 flex items-center gap-1.5 pl-1">
+                  <span className="text-[10px] text-slate-400 font-mono">Company Subdomain:</span>
+                  <span className="text-[10px] font-mono font-bold bg-teal-500/10 text-teal-300 border border-teal-500/30 px-2 py-0.5 rounded">
+                    {user.tenant.subdomain}
+                  </span>
+                </div>
+              )}
+            </div>
           )}
         </div>
 
@@ -1357,10 +1374,68 @@ export function TenantDashboardPage() {
           {/* TAB 3: FLEET & DRIVERS */}
           {activeTab === "drivers" && (
             <div className="glass-panel border-white/5 p-6 rounded-2xl space-y-6">
-              <h2 className="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
-                <Icon icon="solar:delivery-bold-duotone" className="text-primary text-[20px]" />
-                Fleet Management
-              </h2>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+                <div>
+                  <h2 className="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
+                    <Icon icon="solar:delivery-bold-duotone" className="text-primary text-[20px]" />
+                    Fleet Management & Drivers
+                  </h2>
+                  <p className="text-xs text-on-surface-variant mt-1">
+                    Manage driver credentials, activate verified carriers, and monitor shift status.
+                  </p>
+                </div>
+
+                {user?.tenant?.subdomain && (
+                  <div className="flex items-center gap-2 bg-slate-900/80 px-3 py-1.5 rounded-xl border border-teal-500/30 text-xs">
+                    <span className="text-slate-400">Company Subdomain:</span>
+                    <span className="font-mono font-bold text-teal-300">{user.tenant.subdomain}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Onboard Fleet Drivers & Registration Link Card */}
+              <div className="bg-gradient-to-r from-teal-950/40 via-slate-900 to-slate-900 p-5 rounded-2xl border border-teal-500/30 space-y-3 relative overflow-hidden shadow-lg">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 z-10 relative">
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-teal-400 flex items-center gap-1.5">
+                      <Icon icon="solar:user-plus-bold" className="text-sm" />
+                      Driver Recruitment & Onboarding
+                    </span>
+                    <h3 className="text-sm font-bold text-white">
+                      Invite Drivers to Join {user?.tenant?.companyName || "Your Fleet"}
+                    </h3>
+                    <p className="text-xs text-slate-400 max-w-xl">
+                      Share your direct registration link with your drivers. Your company subdomain (<span className="font-mono text-amber-400 font-bold">{user?.tenant?.subdomain || "your-subdomain"}</span>) and the Driver role will be pre-filled automatically.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const subdomain = user?.tenant?.subdomain || "";
+                        const url = `${window.location.origin}/register?subdomain=${subdomain}&role=DRIVER`;
+                        navigator.clipboard.writeText(url);
+                        toast.success("📋 Driver invite link copied to clipboard!");
+                      }}
+                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-teal-500/20 flex items-center gap-2 transition-all cursor-pointer active:scale-95 whitespace-nowrap"
+                    >
+                      <Icon icon="solar:copy-bold" className="text-sm" />
+                      <span>Copy Driver Invite Link</span>
+                    </button>
+                    <a
+                      href={`/register?subdomain=${user?.tenant?.subdomain || ""}&role=DRIVER`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap"
+                    >
+                      <Icon icon="solar:link-bold" className="text-sm" />
+                      <span>Open Link ↗</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs text-on-surface-variant">
@@ -1377,8 +1452,12 @@ export function TenantDashboardPage() {
                   <tbody className="divide-y divide-white/5">
                     {drivers.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="py-12 text-center text-on-surface-variant opacity-60">
-                          No fleet drivers registered under your logistics company.
+                        <td colSpan={6} className="py-12 text-center text-on-surface-variant space-y-2">
+                          <Icon icon="solar:users-group-rounded-bold-duotone" className="text-3xl text-teal-400/40 mx-auto" />
+                          <p className="text-xs text-slate-300 font-semibold">No fleet drivers registered under your company yet.</p>
+                          <p className="text-[11px] text-slate-400 max-w-sm mx-auto">
+                            Click <strong>"Copy Driver Invite Link"</strong> above to send the registration page to your drivers. Once they register, they will appear here!
+                          </p>
                         </td>
                       </tr>
                     ) : (

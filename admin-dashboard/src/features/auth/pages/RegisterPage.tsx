@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { authApi } from "@/api/auth.api";
 import { tenantApi } from "@/api/tenant.api";
@@ -9,8 +9,13 @@ import { LogistelLogo } from "@/components/LogistelLogo";
 
 export function RegisterPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login } = useAuth();
   const errorAlertRef = useRef<HTMLDivElement>(null);
+
+  const initialSubdomain = (searchParams.get("subdomain") || "").toLowerCase().replace(/[^a-z0-9-]/g, "");
+  const initialRoleParam = searchParams.get("role")?.toUpperCase();
+  const initialRole = initialRoleParam === "CUSTOMER" ? "CUSTOMER" : "DRIVER";
 
   // Set document title for SEO & screen reader orientation
   useEffect(() => {
@@ -18,8 +23,8 @@ export function RegisterPage() {
   }, []);
 
   // Form input states
-  const [subdomain, setSubdomain] = useState("");
-  const [role, setRole] = useState<"DRIVER" | "CUSTOMER">("DRIVER");
+  const [subdomain, setSubdomain] = useState(initialSubdomain);
+  const [role, setRole] = useState<"DRIVER" | "CUSTOMER">(initialRole);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
