@@ -63,7 +63,7 @@ export function RegisterPage() {
         }
       } catch (error: any) {
         console.warn("Subdomain lookup error:", error);
-        setSubdomainError("Logistics company subdomain not found.");
+        setSubdomainError("Company subdomain not found.");
       } finally {
         setCheckingSubdomain(false);
       }
@@ -427,9 +427,15 @@ export function RegisterPage() {
           </form>
         </div>
 
-        {/* Footer Link to Login */}
-        <div className="mt-6 text-center">
-          <p className="font-body-md text-on-surface-variant">
+        {/* Footer Link to Login & Register Company */}
+        <div className="mt-6 text-center space-y-2">
+          <p className="font-body-md text-on-surface-variant text-xs">
+            Want to set up your business?
+            <Link className="text-primary font-semibold hover:underline ml-1 focus:outline-none focus:underline" to="/onboard">
+              Register your company
+            </Link>
+          </p>
+          <p className="font-body-md text-on-surface-variant text-xs">
             Already have an account? 
             <Link className="text-primary font-semibold hover:underline ml-1 focus:outline-none focus:underline" to="/login">
               Sign In

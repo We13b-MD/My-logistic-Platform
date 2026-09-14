@@ -402,7 +402,7 @@ export function LoginPage() {
           <p className="font-body-md text-on-surface-variant">
             Need specialized access?
             <Link className="text-primary font-semibold hover:underline ml-1 focus:outline-none focus:underline" to="/onboard">
-              Register your logistics company
+              Register your company
             </Link>
           </p>
           <div className="flex justify-center gap-4 mt-6 opacity-40">
