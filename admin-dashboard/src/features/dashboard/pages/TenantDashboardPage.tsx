@@ -156,6 +156,7 @@ export function TenantDashboardPage() {
     expectedDeliveryTime: "",
   });
   const [dispatching, setDispatching] = useState(false);
+  const [assigningDeliveryId, setAssigningDeliveryId] = useState<string | null>(null);
 
   // Load deliveries, drivers, vehicles, and decision engine metrics
   const fetchData = async () => {
@@ -339,6 +340,23 @@ export function TenantDashboardPage() {
     }
   };
 
+  // Dispatcher assigns driver to delivery directly
+  const handleAssignDriverToDelivery = async (deliveryId: string, driverId: string) => {
+    if (!driverId) return;
+    setAssigningDeliveryId(deliveryId);
+    try {
+      const res = await deliveryApi.assignDriver(deliveryId, driverId);
+      if (res.data?.status === "success") {
+        toast.success("Shipment successfully assigned to driver!");
+        fetchData();
+      }
+    } catch (error: any) {
+      console.error("Failed to assign driver:", error);
+      toast.error(error.response?.data?.message || "Failed to assign driver.");
+    } finally {
+      setAssigningDeliveryId(null);
+    }
+  };
 
   // Handle Dispatch submit
   const handleDispatchSubmit = async (e: React.FormEvent) => {
@@ -1106,9 +1124,23 @@ export function TenantDashboardPage() {
                                     <span>{delivery.driver.user.email}</span>
                                   </div>
                                 ) : (
-                                  <span className="text-amber-500 font-bold uppercase text-[9px] bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                                    Unassigned
-                                  </span>
+                                  <div className="flex items-center gap-1.5">
+                                    <select
+                                      disabled={assigningDeliveryId === delivery.id || delivery.status === "DELIVERED" || delivery.status === "CANCELLED"}
+                                      value=""
+                                      onChange={(e) => handleAssignDriverToDelivery(delivery.id, e.target.value)}
+                                      className="bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[11px] font-semibold rounded px-2 py-1 focus:outline-none cursor-pointer hover:bg-amber-500/20 transition-colors disabled:opacity-50"
+                                    >
+                                      <option value="" disabled className="bg-surface text-on-surface">
+                                        {assigningDeliveryId === delivery.id ? "Assigning..." : "⚡ Assign Driver"}
+                                      </option>
+                                      {drivers.map((drv) => (
+                                        <option key={drv.id} value={drv.id} className="bg-surface text-on-surface">
+                                          {drv.user?.email || "Driver"} ({drv.vehicleType})
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
                                 )}
                               </td>
                               <td className="py-3">
@@ -1170,14 +1202,52 @@ export function TenantDashboardPage() {
                           <td className="py-4 max-w-[180px] truncate">{delivery.dropoffAddress}</td>
                           <td className="py-4">
                             {delivery.driver?.user?.email ? (
-                              <div className="flex items-center gap-1.5">
-                                <Icon icon="solar:user-circle-bold" className="text-[14px] text-secondary" />
-                                <span>{delivery.driver.user.email}</span>
+                              <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-1.5">
+                                  <Icon icon="solar:user-circle-bold" className="text-[14px] text-secondary" />
+                                  <span className="font-medium text-on-surface">{delivery.driver.user.email}</span>
+                                </div>
+                                {delivery.status !== "DELIVERED" && delivery.status !== "CANCELLED" && (
+                                  <div className="flex items-center gap-1 mt-0.5">
+                                    <select
+                                      disabled={assigningDeliveryId === delivery.id}
+                                      value={delivery.driverId || ""}
+                                      onChange={(e) => handleAssignDriverToDelivery(delivery.id, e.target.value)}
+                                      className="bg-surface-container-high/80 border border-white/10 text-on-surface-variant text-[11px] rounded px-1.5 py-0.5 focus:outline-none focus:border-primary cursor-pointer hover:border-primary/50 transition-colors"
+                                      title="Reassign driver"
+                                    >
+                                      <option value="" disabled>Reassign Driver...</option>
+                                      {drivers.map((drv) => (
+                                        <option key={drv.id} value={drv.id} className="bg-surface text-on-surface">
+                                          {drv.user?.email || "Driver"} ({drv.vehicleType}) {drv.isOnline ? "🟢" : "⚪"}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                )}
                               </div>
                             ) : (
-                              <span className="text-amber-500 font-bold uppercase text-[9px] bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                                Unassigned
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <select
+                                  disabled={assigningDeliveryId === delivery.id || delivery.status === "DELIVERED" || delivery.status === "CANCELLED"}
+                                  value=""
+                                  onChange={(e) => handleAssignDriverToDelivery(delivery.id, e.target.value)}
+                                  className="bg-primary/10 border border-primary/40 text-primary hover:bg-primary/20 text-xs font-semibold rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer transition-colors disabled:opacity-50"
+                                >
+                                  <option value="" disabled className="bg-surface text-on-surface">
+                                    {assigningDeliveryId === delivery.id ? "Assigning..." : "⚡ Assign Fleet Driver..."}
+                                  </option>
+                                  {drivers.length === 0 ? (
+                                    <option value="" disabled className="bg-surface text-on-surface">No fleet drivers registered yet</option>
+                                  ) : (
+                                    drivers.map((drv) => (
+                                      <option key={drv.id} value={drv.id} className="bg-surface text-on-surface">
+                                        {drv.user?.email || "Driver"} ({drv.vehicleType}) {drv.isOnline ? "🟢 Online" : "⚪ Offline"}
+                                      </option>
+                                    ))
+                                  )}
+                                </select>
+                              </div>
                             )}
                           </td>
                           <td className="py-4 font-mono font-bold tracking-widest text-primary">

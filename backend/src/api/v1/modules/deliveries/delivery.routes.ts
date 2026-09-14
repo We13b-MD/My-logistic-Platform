@@ -39,6 +39,15 @@ deliveryRouter.post(
     (req, res) => deliveryController.claim(req, res)
 );
 
+// Dispatcher-led assignment: Admin/Dispatcher assigns a delivery to a specific driver
+deliveryRouter.post(
+    '/:id/assign',
+    authenticate,
+    authorize(['TENANT_SUPER_ADMIN', 'TENANT_SUB_ADMIN']),
+    generalApiLimiter,
+    (req, res) => deliveryController.assignDriver(req, res)
+);
+
 // Get delivery by id (Accessible by customer, driver, and admin of the same tenant)
 deliveryRouter.get(
     '/:id',

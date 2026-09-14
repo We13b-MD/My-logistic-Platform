@@ -347,4 +347,44 @@ export class DeliveryService {
             });
         });
     }
+
+    /**
+     * Dispatcher-led assignment: Allows a company admin/dispatcher to assign
+     * any shipment in their tenant to a specific vetted fleet driver.
+     */
+    async assignDriverByDispatcher(deliveryId: string, driverId: string, tenantId: string) {
+        const driverProfile = await prisma.driverProfile.findUnique({
+            where: { id: driverId },
+            include: { user: true }
+        });
+
+        if (!driverProfile || driverProfile.user.tenantId !== tenantId) {
+            throw new Error('Driver not found or does not belong to your company fleet.');
+        }
+
+        return await prisma.$transaction(async (tx) => {
+            const delivery = await tx.delivery.findUnique({
+                where: { id: deliveryId }
+            });
+
+            if (!delivery) throw new Error('Delivery not found');
+            if (delivery.tenantId !== tenantId) throw new Error('Access Denied: Tenant Isolation Breach');
+
+            return await tx.delivery.update({
+                where: { id: deliveryId },
+                data: {
+                    driverId: driverProfile.id,
+                    status: DeliveryStatus.ASSIGNED,
+                },
+                include: {
+                    sender: { select: { email: true } },
+                    driver: {
+                        include: {
+                            user: { select: { email: true } }
+                        }
+                    }
+                }
+            });
+        });
+    }
 }

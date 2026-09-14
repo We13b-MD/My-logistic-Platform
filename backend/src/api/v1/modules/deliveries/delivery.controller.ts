@@ -191,6 +191,37 @@ export class DeliveryController {
             });
         }
     }
+
+    /**
+     * Dispatcher-led assignment: Allows a tenant admin or dispatcher to assign
+     * a shipment to a specific fleet driver.
+     */
+    async assignDriver(req: Request, res: Response) {
+        try {
+            const tenantId = (req as any).user.tenantId;
+            const deliveryId = req.params.id as string;
+            const { driverId } = req.body;
+
+            if (!driverId) {
+                return res.status(400).json({
+                    status: 'error',
+                    message: 'Driver ID is required for assignment.'
+                });
+            }
+
+            const assignedDelivery = await deliveryService.assignDriverByDispatcher(deliveryId, driverId, tenantId);
+            return res.status(200).json({
+                status: 'success',
+                message: 'Driver assigned to delivery successfully!',
+                data: assignedDelivery
+            });
+        } catch (err: any) {
+            return res.status(400).json({
+                status: 'error',
+                message: err.message || 'Failed to assign driver'
+            });
+        }
+    }
 }
 
 

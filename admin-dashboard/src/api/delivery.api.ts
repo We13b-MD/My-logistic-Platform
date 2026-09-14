@@ -9,6 +9,7 @@ export const deliveryApi = {
   getDashboardMetrics: () => apiClient.get('/dashboard/metrics'),
   getAvailable: () => apiClient.get('/deliveries/available'),
   claim: (id: string) => apiClient.post(`/deliveries/${id}/claim`),
+  assignDriver: (deliveryId: string, driverId: string) => apiClient.post(`/deliveries/${deliveryId}/assign`, { driverId }),
 };
 
 
