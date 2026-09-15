@@ -19,6 +19,9 @@ export interface OsrmRouteResult {
   routeCoords: [number, number][];
   distanceKm: number | null;
   durationMins: number | null;
+  rawDurationMins: number | null;
+  trafficMultiplier: number | null;
+  trafficCondition: "FREE_FLOW" | "NORMAL_CITY" | "PEAK_RUSH" | null;
   loading: boolean;
   error: string | null;
 }
@@ -27,11 +30,15 @@ export function useOsrmRoute(
   pickupLat: number | null | undefined,
   pickupLng: number | null | undefined,
   dropoffLat: number | null | undefined,
-  dropoffLng: number | null | undefined
+  dropoffLng: number | null | undefined,
+  vehicleType?: string | null
 ): OsrmRouteResult {
   const [routeCoords, setRouteCoords] = useState<[number, number][]>([]);
   const [distanceKm, setDistanceKm] = useState<number | null>(null);
   const [durationMins, setDurationMins] = useState<number | null>(null);
+  const [rawDurationMins, setRawDurationMins] = useState<number | null>(null);
+  const [trafficMultiplier, setTrafficMultiplier] = useState<number | null>(null);
+  const [trafficCondition, setTrafficCondition] = useState<"FREE_FLOW" | "NORMAL_CITY" | "PEAK_RUSH" | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,6 +48,9 @@ export function useOsrmRoute(
       setRouteCoords([]);
       setDistanceKm(null);
       setDurationMins(null);
+      setRawDurationMins(null);
+      setTrafficMultiplier(null);
+      setTrafficCondition(null);
       return;
     }
 
@@ -82,8 +92,43 @@ export function useOsrmRoute(
         setRouteCoords(coords);
         // distance is in metres → convert to km
         setDistanceKm(Math.round((route.distance / 1000) * 10) / 10);
-        // duration is in seconds → convert to minutes
-        setDurationMins(Math.round(route.duration / 60));
+
+        // Raw theoretical duration (free-flow empty expressway)
+        const idealMins = Math.round(route.duration / 60);
+        setRawDurationMins(idealMins);
+
+        // ─────────────────────────────────────────────────────────────────────
+        // Lagos Urban Traffic Multiplier (Realistic City Calibration)
+        // ─────────────────────────────────────────────────────────────────────
+        const currentHour = new Date().getHours();
+        const isPeak =
+          (currentHour >= 7 && currentHour <= 10) || (currentHour >= 16 && currentHour <= 20);
+        const isLateNight = currentHour >= 22 || currentHour < 6;
+
+        const condition: "FREE_FLOW" | "NORMAL_CITY" | "PEAK_RUSH" = isLateNight
+          ? "FREE_FLOW"
+          : isPeak
+          ? "PEAK_RUSH"
+          : "NORMAL_CITY";
+
+        const vType = (vehicleType || "BIKE").toUpperCase();
+        let multiplier = 2.4; // standard urban default
+
+        if (vType === "BIKE") {
+          // Motorbikes can lane-split past traffic jams
+          multiplier = isLateNight ? 1.2 : isPeak ? 2.2 : 1.8;
+        } else if (vType === "TRUCK") {
+          // Heavy trucks are subject to movement restrictions & slow acceleration
+          multiplier = isLateNight ? 1.5 : isPeak ? 4.0 : 3.2;
+        } else {
+          // CAR / VAN
+          multiplier = isLateNight ? 1.3 : isPeak ? 3.5 : 2.6;
+        }
+
+        const realisticDuration = Math.max(1, Math.round(idealMins * multiplier));
+        setDurationMins(realisticDuration);
+        setTrafficMultiplier(multiplier);
+        setTrafficCondition(condition);
       } catch (err: any) {
         if (!cancelled) {
           console.warn("OSRM route fetch failed:", err.message);
@@ -102,7 +147,16 @@ export function useOsrmRoute(
     return () => {
       cancelled = true;
     };
-  }, [pickupLat, pickupLng, dropoffLat, dropoffLng]);
+  }, [pickupLat, pickupLng, dropoffLat, dropoffLng, vehicleType]);
 
-  return { routeCoords, distanceKm, durationMins, loading, error };
+  return {
+    routeCoords,
+    distanceKm,
+    durationMins,
+    rawDurationMins,
+    trafficMultiplier,
+    trafficCondition,
+    loading,
+    error,
+  };
 }

@@ -123,7 +123,8 @@ export function DriverDashboardPage() {
       : activeDelivery?.dropoffLatitude,
     activeDelivery?.status === "ASSIGNED"
       ? activeDelivery?.pickupLongitude
-      : activeDelivery?.dropoffLongitude
+      : activeDelivery?.dropoffLongitude,
+    driverProfile?.vehicleType
   );
 
   // Approach A: Smart Default Navigation Launcher (Detects iOS, Android, or Desktop)
