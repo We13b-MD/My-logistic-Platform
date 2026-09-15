@@ -243,6 +243,70 @@ export function DriverDashboardPage() {
     }
   }, [driverProfile?.id]);
 
+  // Tier 2 Enforced Telemetry: Automatically activate online state when assigned an active cargo delivery
+  useEffect(() => {
+    if (activeDelivery && !isOnline) {
+      setIsOnline(true);
+      submitStatusToggle(true);
+    }
+  }, [activeDelivery?.id]);
+
+  // Automated Silent GPS Streaming Loop (Tier 2 Enforced Telemetry)
+  useEffect(() => {
+    const shouldTrack = isOnline || Boolean(activeDelivery);
+    if (!shouldTrack) return;
+
+    let watchId: number | null = null;
+    let heartbeatInterval: any = null;
+
+    const pushLocation = async (lat: number, lng: number) => {
+      try {
+        await driverApi.toggleOnlineStatus({
+          isOnline: true,
+          latitude: lat,
+          longitude: lng,
+        });
+      } catch (err: any) {
+        console.warn("[Telemetry] Silent background location push failed:", err.message);
+      }
+    };
+
+    if (navigator.geolocation) {
+      // 1. Live position watcher (emits on physical movement)
+      watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          pushLocation(pos.coords.latitude, pos.coords.longitude);
+        },
+        (err) => {
+          console.warn("[Telemetry] Geolocation watch warning:", err.message);
+        },
+        { enableHighAccuracy: true, maximumAge: 5000, timeout: 12000 }
+      );
+
+      // 2. Continuous 10-second heartbeat to ensure uninterrupted pings even when stopped at traffic
+      heartbeatInterval = setInterval(() => {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            pushLocation(pos.coords.latitude, pos.coords.longitude);
+          },
+          (err) => {
+            console.warn("[Telemetry] Heartbeat ping warning:", err.message);
+          },
+          { enableHighAccuracy: true, timeout: 6000 }
+        );
+      }, 10000);
+    }
+
+    return () => {
+      if (watchId !== null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+      }
+    };
+  }, [isOnline, activeDelivery?.id]);
+
   // Fetch unassigned available deliveries for online drivers
   const fetchAvailableJobs = async () => {
     try {
@@ -311,6 +375,10 @@ export function DriverDashboardPage() {
 
   // 4. Toggle online status with browser GPS coordinate capture
   const handleToggleOnline = () => {
+    if (activeDelivery && isOnline) {
+      toast.error("Security Enforcement: You cannot go offline while assigned to an active delivery. Location is monitored by dispatch.");
+      return;
+    }
     setTogglingOnline(true);
     const nextStatus = !isOnline;
 
@@ -622,21 +690,33 @@ export function DriverDashboardPage() {
             <div>
               <span className="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold block">Duty Status</span>
               <span className="font-semibold text-sm">
-                {isOnline ? "Active & Online (Matching Routes)" : "Off Duty / Offline"}
+                {activeDelivery
+                  ? "On Active Cargo Dispatch (Telemetry Enforced)"
+                  : isOnline
+                  ? "Active & Online (Matching Routes)"
+                  : "Off Duty / Offline"}
               </span>
             </div>
           </div>
 
           <button
             onClick={handleToggleOnline}
-            disabled={togglingOnline}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${isOnline
-              ? "bg-error/15 border border-error/30 text-error hover:bg-error/30"
-              : "bg-primary-container text-on-primary-container hover:brightness-110 shadow-lg shadow-primary/10"
-              }`}
+            disabled={togglingOnline || Boolean(activeDelivery)}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              activeDelivery
+                ? "bg-teal-500/20 text-teal-300 border border-teal-500/40 cursor-not-allowed"
+                : isOnline
+                ? "bg-error/15 border border-error/30 text-error hover:bg-error/30 cursor-pointer"
+                : "bg-primary-container text-on-primary-container hover:brightness-110 shadow-lg shadow-primary/10 cursor-pointer"
+            }`}
           >
             {togglingOnline ? (
               <Icon icon="lucide:loader-2" className="animate-spin text-[16px]" />
+            ) : activeDelivery ? (
+              <span className="flex items-center gap-1.5">
+                <Icon icon="solar:lock-bold" className="text-xs" />
+                <span>GPS Enforced</span>
+              </span>
             ) : isOnline ? (
               "Go Offline"
             ) : (
@@ -644,6 +724,29 @@ export function DriverDashboardPage() {
             )}
           </button>
         </div>
+
+        {/* Cargo Transit Telemetry Notice */}
+        {activeDelivery && (
+          <div className="bg-teal-950/40 border border-teal-500/30 p-4 rounded-2xl flex items-center justify-between gap-3 shadow-lg">
+            <div className="flex items-center gap-3">
+              <span className="w-2.5 h-2.5 rounded-full bg-teal-400 animate-ping shrink-0"></span>
+              <div>
+                <h4 className="text-xs font-bold text-teal-300 uppercase tracking-wide flex items-center gap-1.5">
+                  <Icon icon="solar:shield-check-bold" className="text-sm" />
+                  Cargo Transit Security Telemetry Active
+                </h4>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Your device is automatically streaming real-time GPS telemetry to the admin dispatch radar. No manual broadcast needed.
+                </p>
+              </div>
+            </div>
+            <div className="hidden sm:flex flex-col items-end shrink-0 font-mono text-[10px]">
+              <span className="text-teal-300 font-bold bg-teal-500/20 px-2 py-0.5 rounded border border-teal-500/30">
+                10s AUTO-STREAM
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* FUEL & TELEMATICS CONSOLE */}
         <div className="glass-panel border-white/5 p-5 rounded-2xl space-y-4 bg-slate-900/60 relative overflow-hidden">

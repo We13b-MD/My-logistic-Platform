@@ -1,5 +1,5 @@
 import { prisma } from "../../../../config/prisma";
-import { Prisma } from "@prisma/client";
+import { Prisma, DeliveryStatus } from "@prisma/client";
 
 export class DriverService {
   /**
@@ -143,6 +143,32 @@ export class DriverService {
         lastLongitude: longitude,
       },
     });
+
+    // If coordinates provided, record breadcrumb for any active deliveries currently in progress
+    if (latitude !== undefined && longitude !== undefined) {
+      try {
+        const activeDeliveries = await prisma.delivery.findMany({
+          where: {
+            driverId: profile.id,
+            status: { in: [DeliveryStatus.ASSIGNED, DeliveryStatus.PICKED_UP, DeliveryStatus.IN_TRANSIT] }
+          },
+          select: { id: true }
+        });
+
+        for (const d of activeDeliveries) {
+          await prisma.locationBreadcrumb.create({
+            data: {
+              driverId: profile.id,
+              deliveryId: d.id,
+              latitude,
+              longitude,
+            }
+          }).catch((err) => console.warn(`[Breadcrumb] Failed to record point for delivery ${d.id}:`, err.message));
+        }
+      } catch (err: any) {
+        console.warn("[Breadcrumb] Active deliveries lookup failed:", err.message);
+      }
+    }
 
     return updatedProfile;
   }

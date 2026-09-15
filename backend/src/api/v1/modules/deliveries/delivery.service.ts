@@ -370,7 +370,7 @@ export class DeliveryService {
             if (!delivery) throw new Error('Delivery not found');
             if (delivery.tenantId !== tenantId) throw new Error('Access Denied: Tenant Isolation Breach');
 
-            return await tx.delivery.update({
+            const updatedDelivery = await tx.delivery.update({
                 where: { id: deliveryId },
                 data: {
                     driverId: driverProfile.id,
@@ -385,6 +385,25 @@ export class DeliveryService {
                     }
                 }
             });
+
+            // Tier 1: Auto-anchor initial breadcrumb so GPS trail is never empty upon assignment
+            const initialLat = driverProfile.lastLatitude ?? delivery.pickupLatitude;
+            const initialLng = driverProfile.lastLongitude ?? delivery.pickupLongitude;
+
+            if (initialLat !== null && initialLng !== null) {
+                await tx.locationBreadcrumb.create({
+                    data: {
+                        driverId: driverProfile.id,
+                        deliveryId: delivery.id,
+                        latitude: initialLat,
+                        longitude: initialLng,
+                    }
+                }).catch((err) => {
+                    console.warn('[Breadcrumb] Initial anchor insertion failed:', err.message);
+                });
+            }
+
+            return updatedDelivery;
         });
     }
 }

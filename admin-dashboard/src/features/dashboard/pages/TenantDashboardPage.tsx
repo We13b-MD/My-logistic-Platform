@@ -78,28 +78,70 @@ export function TenantDashboardPage() {
   const [tenantSubscriptionStatus, setTenantSubscriptionStatus] = useState<string>("TRIAL");
   const [tenantCreatedDate, setTenantCreatedDate] = useState<string>("");
 
-  // GPS Breadcrumb Trail state (Gap 1 — Cargo Diversion Investigation)
+  // GPS Breadcrumb Trail & Telemetry State
   const [trailDelivery, setTrailDelivery] = useState<Delivery | null>(null);
   const [trailPoints, setTrailPoints] = useState<[number, number][]>([]);
   const [rawTrailPoints, setRawTrailPoints] = useState<{ lat: number; lng: number; recordedAt: string }[]>([]);
   const [trailLoading, setTrailLoading] = useState(false);
   const [trailPointCount, setTrailPointCount] = useState(0);
+  const [trailMeta, setTrailMeta] = useState<{
+    geofence?: {
+      status: string;
+      distanceFromPickupMeters: number;
+      distanceFromDropoffMeters: number;
+      departedPickup: boolean;
+      description: string;
+    };
+    telemetry?: {
+      status: string;
+      secondsSinceLastPing: number;
+      description: string;
+    };
+    driver?: {
+      id: string;
+      name: string;
+      email: string;
+      lastLatitude: number;
+      lastLongitude: number;
+      secondsSinceLastPing: number;
+      isOnline: boolean;
+      vehicle?: any;
+    };
+  } | null>(null);
+
+  // Haversine distance calculator for on-the-fly departure detection
+  const computeHaversineMeters = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371e3;
+    const toRad = (deg: number) => (deg * Math.PI) / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return Math.round(R * c);
+  };
 
   const fetchTrail = async (delivery: Delivery) => {
     setTrailDelivery(delivery);
     setTrailPoints([]);
     setRawTrailPoints([]);
+    setTrailMeta(null);
     setTrailLoading(true);
     try {
       const res = await trackingApi.getBreadcrumbTrail(delivery.id);
       if (res.data?.status === "success") {
-        const { trail, totalPoints } = res.data.data;
+        const { trail, totalPoints, geofence, telemetry, driver } = res.data.data;
         const coords: [number, number][] = trail.map((p: { lat: number; lng: number }) => [p.lat, p.lng]);
         setTrailPoints(coords);
         setRawTrailPoints(trail || []);
         setTrailPointCount(totalPoints);
-        if (totalPoints === 0) {
-          toast.info("No GPS breadcrumbs recorded yet for this delivery. Driver must broadcast location first.");
+        setTrailMeta({ geofence, telemetry, driver });
+
+        if (totalPoints > 0) {
+          toast.success(`Loaded GPS radar (${totalPoints} telemetry points available).`);
+        } else {
+          toast.info("Initial dispatch anchor pinned. Monitoring for on-road telemetry.");
         }
       }
     } catch (err: any) {
@@ -1207,6 +1249,26 @@ export function TenantDashboardPage() {
                                   <Icon icon="solar:user-circle-bold" className="text-[14px] text-secondary" />
                                   <span className="font-medium text-on-surface">{delivery.driver.user.email}</span>
                                 </div>
+                                {delivery.driver?.lastLatitude && delivery.driver?.lastLongitude && (
+                                  <div className="text-[10px] mt-0.5">
+                                    {computeHaversineMeters(
+                                      delivery.driver.lastLatitude,
+                                      delivery.driver.lastLongitude,
+                                      delivery.pickupLatitude,
+                                      delivery.pickupLongitude
+                                    ) > 300 ? (
+                                      <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                        Left Location ({(computeHaversineMeters(delivery.driver.lastLatitude, delivery.driver.lastLongitude, delivery.pickupLatitude, delivery.pickupLongitude) / 1000).toFixed(1)}km)
+                                      </span>
+                                    ) : (
+                                      <span className="text-blue-400 font-medium flex items-center gap-1">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                                        At Pickup Location
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
                                 {delivery.status !== "DELIVERED" && delivery.status !== "CANCELLED" && (
                                   <div className="flex items-center gap-1 mt-0.5">
                                     <select
@@ -1302,32 +1364,104 @@ export function TenantDashboardPage() {
               {trailDelivery && (
                 <div className="mt-4 border border-orange-500/25 bg-orange-500/5 rounded-2xl p-5 space-y-4">
                   {/* Panel Header */}
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-orange-500/20 pb-3">
                     <div>
                       <div className="flex items-center gap-2">
                         <Icon icon="solar:routing-bold-duotone" className="text-orange-400 text-xl" />
                         <h3 className="font-bold text-orange-300 text-sm">
-                          GPS Audit Trail — {trailDelivery.recipientName}
+                          Fleet GPS Radar & Audit Trail — {trailDelivery.recipientName}
                         </h3>
                         {trailLoading && (
                           <Icon icon="lucide:loader-2" className="animate-spin text-orange-400 text-sm" />
                         )}
                       </div>
                       <p className="text-[11px] text-slate-400 mt-0.5">
+                        {trailDelivery.driver?.user?.email ? (
+                          <span>Assigned Carrier: <strong className="text-slate-200">{trailDelivery.driver.user.email}</strong> • </span>
+                        ) : null}
                         {trailLoading
-                          ? "Loading GPS breadcrumbs from database..."
+                          ? "Querying GPS breadcrumbs and vehicle radar..."
                           : trailPointCount > 0
-                          ? `${trailPointCount} GPS points recorded — orange line shows actual truck path driven`
-                          : "No GPS breadcrumbs yet — driver must broadcast location while on this delivery"}
+                          ? `${trailPointCount} telemetry points recorded — live path and cargo diversion audit active`
+                          : "Initial dispatch baseline anchor — monitoring live road movements"}
                       </p>
                     </div>
-                    <button
-                      onClick={() => { setTrailDelivery(null); setTrailPoints([]); }}
-                      className="text-slate-400 hover:text-white transition-colors"
-                    >
-                      <Icon icon="lucide:x" className="text-lg" />
-                    </button>
+
+                    {/* Geofence & Watchdog Sentinels */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {trailMeta?.geofence && (
+                        <span className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 border ${
+                          trailMeta.geofence.status === 'DEPARTED_PICKUP'
+                            ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                            : trailMeta.geofence.status === 'ARRIVED_DROPOFF'
+                            ? "bg-teal-500/20 text-teal-300 border-teal-500/40"
+                            : "bg-blue-500/20 text-blue-300 border-blue-500/40"
+                        }`}>
+                          <span className={`w-2 h-2 rounded-full ${
+                            trailMeta.geofence.status === 'DEPARTED_PICKUP' ? 'bg-emerald-400 animate-pulse' : 'bg-blue-400'
+                          }`}></span>
+                          {trailMeta.geofence.status === 'DEPARTED_PICKUP'
+                            ? `Left Location (${(trailMeta.geofence.distanceFromPickupMeters / 1000).toFixed(1)}km)`
+                            : trailMeta.geofence.status === 'ARRIVED_DROPOFF'
+                            ? "Arrived Dropoff"
+                            : `At Pickup (${trailMeta.geofence.distanceFromPickupMeters}m)`}
+                        </span>
+                      )}
+
+                      {trailMeta?.telemetry && (
+                        <span className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 border ${
+                          trailMeta.telemetry.status === 'LIVE_STREAMING'
+                            ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                            : trailMeta.telemetry.status === 'SIGNAL_LOST'
+                            ? "bg-red-500/20 text-red-300 border-red-500/40 animate-pulse"
+                            : "bg-slate-800 text-slate-300 border-slate-700"
+                        }`}>
+                          {trailMeta.telemetry.status === 'LIVE_STREAMING' ? (
+                            <>
+                              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                              Live GPS Stream
+                            </>
+                          ) : trailMeta.telemetry.status === 'SIGNAL_LOST' ? (
+                            <>
+                              <Icon icon="solar:danger-triangle-bold" className="text-red-400 text-sm" />
+                              Signal Interrupted ({Math.floor(trailMeta.telemetry.secondsSinceLastPing / 60)}m ago)
+                            </>
+                          ) : (
+                            <>
+                              <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                              Baseline Anchor
+                            </>
+                          )}
+                        </span>
+                      )}
+
+                      <button
+                        onClick={() => { setTrailDelivery(null); setTrailPoints([]); setTrailMeta(null); }}
+                        className="text-slate-400 hover:text-white transition-colors p-1"
+                        title="Close GPS panel"
+                      >
+                        <Icon icon="lucide:x" className="text-lg" />
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Watchdog Alert Banner if Signal Lost */}
+                  {trailMeta?.telemetry?.status === 'SIGNAL_LOST' && (
+                    <div className="bg-red-950/60 border border-red-500/40 p-3 rounded-xl flex items-center justify-between text-xs text-red-200">
+                      <div className="flex items-center gap-2">
+                        <Icon icon="solar:danger-triangle-bold" className="text-red-400 text-lg shrink-0" />
+                        <span>
+                          <strong>Watchdog Sentinel Alert:</strong> Telemetry ping from assigned carrier has not been received for {Math.floor(trailMeta.telemetry.secondsSinceLastPing / 60)} minutes.
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => toast.info(`Safety ping requested for ${trailDelivery.driver?.user?.email || "driver"}`)}
+                        className="bg-red-500/20 hover:bg-red-500/30 text-red-300 px-2.5 py-1 rounded-lg border border-red-500/40 font-bold shrink-0 ml-2 cursor-pointer"
+                      >
+                        📡 Send Safety Ping
+                      </button>
+                    </div>
+                  )}
 
                   {/* Trail Map */}
                   <div className="h-[420px] rounded-xl overflow-hidden border border-orange-500/20 relative z-0">
@@ -1366,6 +1500,50 @@ export function TenantDashboardPage() {
                           </div>
                         </Popup>
                       </Marker>
+
+                      {/* Live / Last Known Driver Position Pin */}
+                      {(trailMeta?.driver?.lastLatitude || trailDelivery.driver?.lastLatitude) && (
+                        <Marker
+                          position={[
+                            trailMeta?.driver?.lastLatitude ?? trailDelivery.driver!.lastLatitude!,
+                            trailMeta?.driver?.lastLongitude ?? trailDelivery.driver!.lastLongitude!,
+                          ]}
+                          icon={driverIcon}
+                        >
+                          <Popup>
+                            <div className="text-xs font-sans space-y-1">
+                              <strong className="text-red-400 block font-bold">
+                                🛵 Carrier: {trailMeta?.driver?.name || trailDelivery.driver?.user?.email || "Assigned Driver"}
+                              </strong>
+                              <p className="text-slate-700">
+                                <strong>Status:</strong> {trailDelivery.status}
+                              </p>
+                              {trailMeta?.geofence && (
+                                <p className="text-slate-700">
+                                  <strong>Departure:</strong> {trailMeta.geofence.description}
+                                </p>
+                              )}
+                              {trailMeta?.telemetry && (
+                                <p className="text-slate-700">
+                                  <strong>Signal:</strong> {trailMeta.telemetry.description}
+                                </p>
+                              )}
+                            </div>
+                          </Popup>
+                        </Marker>
+                      )}
+
+                      {/* Direct Planned Delivery Corridor (Dashed Cyan Line) */}
+                      <Polyline
+                        positions={[
+                          [trailDelivery.pickupLatitude, trailDelivery.pickupLongitude],
+                          [trailDelivery.dropoffLatitude, trailDelivery.dropoffLongitude],
+                        ]}
+                        color="#06b6d4"
+                        dashArray="6, 8"
+                        weight={3}
+                        opacity={0.6}
+                      />
 
                       {/* Actual GPS Trail — bright orange so deviations are instantly visible */}
                       {trailPoints.length > 1 && (
@@ -1419,10 +1597,14 @@ export function TenantDashboardPage() {
                   </div>
 
                   {/* Trail Legend */}
-                  <div className="flex flex-wrap gap-4 text-xs text-slate-400">
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400">
                     <span className="flex items-center gap-1.5">
                       <span className="w-3 h-1 rounded bg-orange-500 inline-block"></span>
                       Actual truck path driven
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-3 h-0.5 border-t-2 border-dashed border-cyan-400 inline-block"></span>
+                      Planned corridor
                     </span>
                     <span className="flex items-center gap-1.5">
                       <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
@@ -1432,7 +1614,11 @@ export function TenantDashboardPage() {
                       <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>
                       Dropoff destination
                     </span>
-                    <span className="text-orange-400 font-semibold">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>
+                      Carrier Pin
+                    </span>
+                    <span className="text-orange-400 font-semibold ml-auto">
                       ⚠ Any path not between pickup and dropoff = potential cargo diversion
                     </span>
                   </div>

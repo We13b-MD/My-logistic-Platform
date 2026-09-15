@@ -139,15 +139,33 @@ export class TrackingRepository{
      * cargo diversion or transloading fraud.
      */
     async getBreadcrumbTrail(deliveryId: string, tenantId: string) {
-        // First verify the delivery belongs to this tenant (security isolation)
+        // First verify the delivery belongs to this tenant (security isolation) and fetch details
         const delivery = await prisma.delivery.findFirst({
             where: { id: deliveryId, tenantId },
-            select: { id: true },
+            include: {
+                driver: {
+                    include: {
+                        user: {
+                            select: {
+                                firstName: true,
+                                lastName: true,
+                                email: true,
+                            }
+                        },
+                        vehicle: {
+                            select: {
+                                plateNumber: true,
+                                vehicleType: true,
+                            }
+                        }
+                    }
+                }
+            }
         });
 
         if (!delivery) return null;
 
-        return prisma.locationBreadcrumb.findMany({
+        const breadcrumbs = await prisma.locationBreadcrumb.findMany({
             where: { deliveryId },
             orderBy: { recordedAt: 'asc' }, // oldest first → draws trail in correct direction
             select: {
@@ -157,5 +175,7 @@ export class TrackingRepository{
                 recordedAt: true,
             },
         });
+
+        return { delivery, breadcrumbs };
     }
 }
