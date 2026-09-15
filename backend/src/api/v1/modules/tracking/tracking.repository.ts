@@ -147,8 +147,7 @@ export class TrackingRepository{
                     include: {
                         user: {
                             select: {
-                                firstName: true,
-                                lastName: true,
+                                id: true,
                                 email: true,
                             }
                         },

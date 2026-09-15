@@ -206,7 +206,7 @@ export class TrackingService{
             },
             driver: delivery.driver ? {
                 id: delivery.driver.id,
-                name: `${delivery.driver.user.firstName} ${delivery.driver.user.lastName}`.trim(),
+                name: delivery.driver.user.email.split('@')[0],
                 email: delivery.driver.user.email,
                 lastLatitude: driverLat,
                 lastLongitude: driverLng,
