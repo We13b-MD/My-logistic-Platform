@@ -94,6 +94,22 @@ $$\text{Realistic Estimated Duration (mins)} = \text{Theoretical OSRM Duration} 
       * Peak Rush Hour: **4.0x**
   * Automatically detects local peak hours (**7:00–10:00 AM** and **4:00–8:00 PM**) to dynamically reflect rush hour gridlocks.
   * Passed `driverProfile?.vehicleType` in [`DriverDashboardPage.tsx`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/features/dashboard/pages/DriverDashboardPage.tsx) so driver navigation reflects their specific vehicle's capability.
+  * Added dynamic **`durationRange`** (e.g. `~14 - 19 mins (Lagos traffic)`) to provide realistic time windows rather than brittle single-minute numbers.
+
+---
+
+### F. Real-World Mobile Navigation & Satellite Telemetry Analysis
+
+#### 1. Why Did Google Maps Show 20 mins While the App Showed 13 mins?
+* **Vehicle Mode Mismatch:** Our app's calculation defaulted to a **Dispatch Motorbike (`BIKE`)** ($7\text{ mins} \times 1.8 = \mathbf{13\text{ mins}}$) because motorbikes lane-split through bottlenecks. However, tapping "Start Turn-by-Turn Navigation" previously launched Google Maps in **Car Driving Mode** (`mode=d`), where a 4-wheeled car stuck in live Ojuelegba traffic took **20 minutes**.
+* **Resolution:**
+  1. Updated [`DriverDashboardPage.tsx`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/features/dashboard/pages/DriverDashboardPage.tsx) to launch vehicle-specific intent modes (`mode=l` / `travelmode=two_wheeler` for motorbikes vs. `mode=d` / `travelmode=driving` for cars/vans).
+  2. For a Car/Van, our multiplier ($2.6\times$) predicts **18 – 20 minutes**, matching Google Maps live car traffic.
+  3. Integrated **`durationRange`** (e.g. `~14 - 20 mins (Lagos traffic)`) in [`useOsrmRoute.ts`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/utils/useOsrmRoute.ts) to display realistic time buffers.
+
+#### 2. Why Did Google Maps Show *"GPS Signal Lost"* on Mobile?
+* **Indoor Concrete Attenuation:** Browsers can estimate an approximate indoor position using Wi-Fi routers and cell towers. However, when Google Maps enters **turn-by-turn driving mode**, it strictly requires line-of-sight satellite GNSS/GPS signals from space. Concrete roofs and office walls block satellite radio frequencies, causing Google Maps to show *"Searching for GPS / GPS signal lost"*.
+* **Resolution:** Normal satellite physics. Once the carrier moves outdoors into the street or onto the vehicle under the open sky, satellite line-of-sight connects and navigation locks immediately.
 
 ---
 

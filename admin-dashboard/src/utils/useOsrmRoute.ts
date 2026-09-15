@@ -20,6 +20,7 @@ export interface OsrmRouteResult {
   distanceKm: number | null;
   durationMins: number | null;
   rawDurationMins: number | null;
+  durationRange: string | null;
   trafficMultiplier: number | null;
   trafficCondition: "FREE_FLOW" | "NORMAL_CITY" | "PEAK_RUSH" | null;
   loading: boolean;
@@ -37,6 +38,7 @@ export function useOsrmRoute(
   const [distanceKm, setDistanceKm] = useState<number | null>(null);
   const [durationMins, setDurationMins] = useState<number | null>(null);
   const [rawDurationMins, setRawDurationMins] = useState<number | null>(null);
+  const [durationRange, setDurationRange] = useState<string | null>(null);
   const [trafficMultiplier, setTrafficMultiplier] = useState<number | null>(null);
   const [trafficCondition, setTrafficCondition] = useState<"FREE_FLOW" | "NORMAL_CITY" | "PEAK_RUSH" | null>(null);
   const [loading, setLoading] = useState(false);
@@ -126,7 +128,12 @@ export function useOsrmRoute(
         }
 
         const realisticDuration = Math.max(1, Math.round(idealMins * multiplier));
+        const minMins = Math.max(1, Math.round(idealMins * (multiplier * 0.85)));
+        const maxMins = Math.max(minMins + 2, Math.round(idealMins * (multiplier * 1.25)));
+        const rangeStr = `${minMins} - ${maxMins} mins`;
+
         setDurationMins(realisticDuration);
+        setDurationRange(rangeStr);
         setTrafficMultiplier(multiplier);
         setTrafficCondition(condition);
       } catch (err: any) {
@@ -154,6 +161,7 @@ export function useOsrmRoute(
     distanceKm,
     durationMins,
     rawDurationMins,
+    durationRange,
     trafficMultiplier,
     trafficCondition,
     loading,

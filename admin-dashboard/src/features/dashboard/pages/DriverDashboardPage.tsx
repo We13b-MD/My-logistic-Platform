@@ -111,7 +111,7 @@ export function DriverDashboardPage() {
   const [claimingId, setClaimingId] = useState<string | null>(null);
 
   // OSRM road route geometry for driver navigation with live distance & ETA
-  const { routeCoords, distanceKm, durationMins } = useOsrmRoute(
+  const { routeCoords, distanceKm, durationMins, durationRange } = useOsrmRoute(
     activeDelivery?.status === "ASSIGNED"
       ? (driverProfile?.lastLatitude || activeDelivery?.pickupLatitude)
       : activeDelivery?.pickupLatitude,
@@ -165,14 +165,17 @@ export function DriverDashboardPage() {
       return;
     }
 
-    // Google Maps navigation intent (Native Google Maps app on Android/iOS, Web on desktop)
+    // Google Maps navigation intent (Vehicle-aware: two-wheeler mode for bikes vs driving mode for cars/vans)
+    const isBike = driverProfile?.vehicleType === "BIKE";
+    const googleMode = isBike ? "l" : "d";
+    const travelMode = isBike ? "two_wheeler" : "driving";
+
     if (isAndroid) {
-      // Direct intent for Google Maps App in turn-by-turn driving mode
-      window.location.href = `google.navigation:q=${targetLat},${targetLng}&mode=d`;
+      window.location.href = `google.navigation:q=${targetLat},${targetLng}&mode=${googleMode}`;
     } else {
-      window.open(`https://www.google.com/maps/dir/?api=1&destination=${targetLat},${targetLng}&travelmode=driving`, "_blank");
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${targetLat},${targetLng}&travelmode=${travelMode}`, "_blank");
     }
-    toast.success("Launching Turn-by-Turn Driving Navigation...");
+    toast.success(`Launching Turn-by-Turn Navigation (${isBike ? "Motorbike" : "Car/Van"} Mode)...`);
   };
 
   // Proof of Delivery (POD) Canvas & Photo States
@@ -986,7 +989,7 @@ export function DriverDashboardPage() {
                         {activeDelivery.status === "ASSIGNED" ? "Target: Pickup Hub" : "Target: Dropoff Client"}
                       </span>
                       <span className="text-xs text-slate-400 font-mono">
-                        {distanceKm ? `${distanceKm} km` : "Routing..."} • {durationMins ? `~${durationMins} mins` : "Calculating ETA..."}
+                        {distanceKm ? `${distanceKm} km` : "Routing..."} • {durationRange ? `~${durationRange}` : durationMins ? `~${durationMins} mins` : "Calculating ETA..."}
                       </span>
                     </div>
                     <h3 className="text-sm font-bold text-slate-100 mt-1 truncate max-w-sm sm:max-w-md">
@@ -1029,7 +1032,7 @@ export function DriverDashboardPage() {
                   </span>
                   <span className="text-slate-400">•</span>
                   <span className="text-slate-300 font-semibold">
-                    {durationMins ? `${durationMins} mins drive` : "Optimized corridor"}
+                    {durationRange ? `~${durationRange} (Lagos traffic)` : durationMins ? `${durationMins} mins drive` : "Optimized corridor"}
                   </span>
                 </div>
 
