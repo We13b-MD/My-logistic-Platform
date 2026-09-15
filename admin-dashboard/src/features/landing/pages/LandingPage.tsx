@@ -327,10 +327,10 @@ export function LandingPage() {
               </div>
               <div className="mb-6 flex flex-col">
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-3xl font-bold text-slate-100">₦0</span>
+                  <span className="text-3xl font-bold text-slate-100">$0</span>
                   <span className="text-xs text-teal-400 font-semibold">/ first 30 days</span>
                 </div>
-                <span className="text-[11px] text-slate-400 mt-1">Renews at ₦50,000/month after trial</span>
+                <span className="text-[11px] text-slate-400 mt-1">Renews at $65/month after trial</span>
               </div>
               <ul className="space-y-3.5 mb-8 flex-grow">
                 <li className="flex items-center gap-2.5 text-xs text-slate-300">
@@ -377,7 +377,7 @@ export function LandingPage() {
                 <p className="text-xs text-slate-500 mt-1">For expanding carriers managing regular drivers.</p>
               </div>
               <div className="mb-6 flex items-baseline gap-1">
-                <span className="text-3xl font-bold text-slate-100">₦50,000</span>
+                <span className="text-3xl font-bold text-slate-100">$65</span>
                 <span className="text-xs text-slate-500">/ month</span>
               </div>
               <ul className="space-y-3.5 mb-8 flex-grow">

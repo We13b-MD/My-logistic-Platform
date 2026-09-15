@@ -111,6 +111,17 @@ $$\text{Realistic Estimated Duration (mins)} = \text{Theoretical OSRM Duration} 
 * **Indoor Concrete Attenuation:** Browsers can estimate an approximate indoor position using Wi-Fi routers and cell towers. However, when Google Maps enters **turn-by-turn driving mode**, it strictly requires line-of-sight satellite GNSS/GPS signals from space. Concrete roofs and office walls block satellite radio frequencies, causing Google Maps to show *"Searching for GPS / GPS signal lost"*.
 * **Resolution:** Normal satellite physics. Once the carrier moves outdoors into the street or onto the vehicle under the open sky, satellite line-of-sight connects and navigation locks immediately.
 
+### G. Home Screen Pricing Currency Conversion (USD $)
+
+* **Problem:** The landing page previously presented plans in Nigerian Naira (`₦50,000/month`), whereas the platform's pricing strategy has transitioned to US Dollars as the primary operating currency, with an updated baseline subscription rate of **₦100,000/month** converted to USD.
+* **Solution ([`LandingPage.tsx`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/features/landing/pages/LandingPage.tsx)):**
+  * Updated all currency symbols on the home screen pricing section to **US Dollars (`$`)**.
+  * Converted the monthly subscription tier (**Fleet Hub / Growth**) from ₦100,000/month to its clean SaaS USD equivalent: **$65/month**.
+  * Updated the 30-Day Free Pilot card to display:
+    * `$0 / first 30 days`
+    * `Renews at $65/month after trial`
+  * Tier 3 remains **Custom** for enterprise fleets.
+
 ---
 
 ## 3. Modified Files Index
@@ -124,6 +135,7 @@ $$\text{Realistic Estimated Duration (mins)} = \text{Theoretical OSRM Duration} 
 | [`admin-dashboard/src/features/dashboard/pages/DriverDashboardPage.tsx`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/features/dashboard/pages/DriverDashboardPage.tsx) | Frontend | 10s silent background GPS loop, locked duty status during transit, cargo security banner. |
 | [`admin-dashboard/src/features/dashboard/pages/TenantDashboardPage.tsx`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/features/dashboard/pages/TenantDashboardPage.tsx) | Frontend | Live GPS radar modal, departure indicators in deliveries table, watchdog alert banner. |
 | [`admin-dashboard/src/utils/useOsrmRoute.ts`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/utils/useOsrmRoute.ts) | Frontend Hook | Lagos Urban Traffic Multiplier, peak hour detection, vehicle type differentiation. |
+| [`admin-dashboard/src/features/landing/pages/LandingPage.tsx`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/features/landing/pages/LandingPage.tsx) | Frontend Landing | Updated pricing display to USD (`$`), converted monthly subscription rate from ₦100,000/mo to `$65/month`. |
 
 ---
 
