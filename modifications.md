@@ -71,6 +71,13 @@ This document records the architectural enhancements and code modifications impl
 ---
 
 ### E. Lagos Urban Traffic Multiplier (Realistic Travel Times)
+
+#### 📖 Definition: What is an Urban Traffic Multiplier?
+> **An Urban Traffic Multiplier is a calibration coefficient applied to theoretical road routing algorithms to account for real-world urban congestion, traffic bottlenecks ("go-slow"), traffic lights, and pedestrian delays.**  
+> Standard open-source routing engines (like OSRM) calculate duration assuming a vehicle drives uninterrupted at maximum legal speed limits. In reality, dense cities like Lagos do not permit uninterrupted driving. The Urban Traffic Multiplier bridges this gap by multiplying raw theoretical drive times by a real-world congestion factor, providing trustworthy arrival estimates to dispatchers and customers without incurring expensive commercial map API fees (e.g. Google Maps).
+
+$$\text{Realistic Estimated Duration (mins)} = \text{Theoretical OSRM Duration} \times \text{Urban Traffic Multiplier}$$
+
 * **Problem:** The routing engine (OSRM) displayed 7 minutes for 6 km between Surulere and Yaba because it assumed free-flow driving at maximum legal speed limits with no traffic lights or congestion.
 * **Solution ([`useOsrmRoute.ts`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/utils/useOsrmRoute.ts)):**
   * Integrated a dynamic **Urban Traffic Multiplier** that calibrates theoretical travel times to real-world Nigerian road conditions:
