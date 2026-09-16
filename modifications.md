@@ -156,7 +156,17 @@ $$\text{Realistic Estimated Duration (mins)} = \text{Theoretical OSRM Duration} 
   1. **Turn-by-Turn Voice Guidance (`window.speechSynthesis`):** Supported natively on Apple Safari (iOS 7+) using Siri/Samantha voices, and on Android Chrome.
   2. **Screen Wake Lock (`navigator.wakeLock`):** Supported on iOS Safari (16.4+) and all modern Android browsers. Ensures the phone screen does not dim or sleep while mounted on handlebars or dashboards.
   3. **High-Accuracy GPS Telemetry (`navigator.geolocation`):** Continuous foreground coordinates lock on both Apple and Android hardware without OS battery-saver sleep drops.
-  4. **Emergency External Fallback:** Automatically detects platform: launches Apple Maps (`maps://maps.apple.com`) on iOS/macOS, and Google Maps (`google.navigation:`) on Android.
+### J. Tenant Subscription & Checkout Currency Alignment (USD $)
+
+* **Problem:** The tenant billing console in [`TenantDashboardPage.tsx`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/features/dashboard/pages/TenantDashboardPage.tsx) and backend settlement service were hardcoded to Nigerian Naira (`₦50,000/mo` and `₦500,000/yr`), causing a mismatch with the updated global platform pricing ($65/mo).
+* **Solution:**
+  * In [`TenantDashboardPage.tsx`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/features/dashboard/pages/TenantDashboardPage.tsx):
+    * Updated trial expiration alert banner button to: **`Activate Subscription ($65/mo)`**.
+    * Updated Monthly Due card to: **`$65 / month`**.
+    * Updated subscription buttons to: **`Subscribe Monthly ($65/mo)`** and **`Subscribe Annual ($650/yr - Save 17%)`**.
+    * Updated Paystack popup checkout configuration to charge in **USD cents** (`$65` = 6,500 cents / `$650` = 65,000 cents with `currency: "USD"`).
+  * In [`backend/src/api/v1/modules/pricing/pricing.service.ts`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/src/api/v1/modules/pricing/pricing.service.ts):
+    * Updated `verifyPaystackSubscription` to validate amounts in both **USD cents** (6,500 / 65,000) and equivalent **NGN kobo** (10,000,000 / 100,000,000) for seamless cross-currency settlement compatibility.
 
 ---
 

@@ -310,9 +310,12 @@ export class PricingService {
         throw new Error(resData.message || "Transaction verification failed");
       }
 
-      // Verify correct amounts (multiplied by 100 for kobo)
-      const expectedAmountKobo = planType === "ANNUAL" ? 50000000 : 5000000;
-      if (resData.data.amount < expectedAmountKobo) {
+      // Verify correct amounts: supports USD ($65 / $650 in cents) and NGN (₦100,000 / ₦1,000,000 in kobo)
+      const isUSD = resData.data.currency === "USD";
+      const expectedAmount = isUSD
+        ? (planType === "ANNUAL" ? 65000 : 6500)
+        : (planType === "ANNUAL" ? 100000000 : 10000000);
+      if (resData.data.amount < expectedAmount) {
         throw new Error("Incorrect transaction amount settled");
       }
 

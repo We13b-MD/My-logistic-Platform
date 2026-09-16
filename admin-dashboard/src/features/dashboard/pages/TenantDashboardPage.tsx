@@ -506,14 +506,14 @@ export function TenantDashboardPage() {
       return;
     }
 
-    const priceNGN = planType === "ANNUAL" ? 500000 : 50000;
+    const priceUSD = planType === "ANNUAL" ? 650 : 65;
     const emailAddress = user?.email || "billing@company.com";
 
     const paymentPop = (window as any).PaystackPop.setup({
       key: publicKey,
       email: emailAddress,
-      amount: priceNGN * 100, // in kobo
-      currency: "NGN",
+      amount: priceUSD * 100, // in cents ($65 = 6,500 cents)
+      currency: "USD",
       callback: async (response: any) => {
         toast.info("Verifying transaction reference with secure backend...");
         setSubscribing(true);
@@ -651,7 +651,7 @@ export function TenantDashboardPage() {
               className="px-4 py-2 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-slate-950 text-xs font-bold transition-all shadow-md cursor-pointer flex items-center gap-2"
             >
               <Icon icon="solar:card-transfer-bold-duotone" className="text-base" />
-              Activate Subscription (₦50,000/mo)
+              Activate Subscription ($65/mo)
             </button>
           </div>
         </div>
@@ -2367,7 +2367,7 @@ export function TenantDashboardPage() {
                     <div className="bg-surface-container-lowest border border-white/5 rounded-xl p-4 flex-grow max-w-xs">
                       <span className="text-[10px] text-on-surface-variant font-bold uppercase block">Monthly Due</span>
                       <div className="font-headline-md text-headline-lg text-primary mt-1 font-bold">
-                        ₦50,000 <span className="text-xs text-on-surface-variant font-normal">/ month</span>
+                        $65 <span className="text-xs text-on-surface-variant font-normal">/ month</span>
                       </div>
                     </div>
                   </div>
@@ -2420,14 +2420,14 @@ export function TenantDashboardPage() {
                           className="w-full bg-primary-container text-on-primary-container font-headline-md py-2.5 rounded-lg hover:brightness-110 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 shadow-lg shadow-primary/10"
                         >
                           <Icon icon="solar:card-bold-duotone" className="text-[16px]" />
-                          Subscribe Monthly (₦50k)
+                          Subscribe Monthly ($65/mo)
                         </button>
                         <button
                           onClick={() => handlePaystackCheckout("ANNUAL")}
                           className="w-full bg-surface-container-high border border-outline-variant text-on-surface font-headline-md py-2.5 rounded-lg hover:bg-white/5 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2"
                         >
                           <Icon icon="solar:tag-price-bold-duotone" className="text-[16px]" />
-                          Subscribe Annual (₦500k)
+                          Subscribe Annual ($650/yr - Save 17%)
                         </button>
                       </>
                     )}
