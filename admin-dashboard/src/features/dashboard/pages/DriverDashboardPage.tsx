@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { driverApi } from "@/api/driver.api";
@@ -151,18 +151,31 @@ export function DriverDashboardPage() {
 
   // Audio Guidance & Screen-Wake Engine
   const { speak, isMuted, toggleMute, isWakeLocked } = useNavigationAudio(isNavigatingInApp);
+  const lastAnnouncedStepRef = useRef<number>(-1);
 
-  // Track driver progress through turn steps, speak instructions & auto-recalculate with live GPS
+  // 1. Announce turn instruction ONCE per step (never repeats on every GPS movement)
+  useEffect(() => {
+    if (!isNavigatingInApp || !steps.length) {
+      lastAnnouncedStepRef.current = -1;
+      return;
+    }
+
+    const currentStep = steps[currentStepIndex];
+    if (!currentStep) return;
+
+    if (lastAnnouncedStepRef.current !== currentStepIndex) {
+      lastAnnouncedStepRef.current = currentStepIndex;
+      speak(currentStep.instruction);
+    }
+  }, [isNavigatingInApp, currentStepIndex, steps, speak]);
+
+  // 2. Continuous real-time GPS distance countdown to turn junction and auto-advance
   useEffect(() => {
     if (!isNavigatingInApp || !steps.length) return;
 
     const currentStep = steps[currentStepIndex];
     if (!currentStep) return;
 
-    // Speak initial direction for this step
-    speak(currentStep.instruction);
-
-    // Check distance between driver and current step junction using live GPS
     const driverLat = liveCoords?.lat || driverProfile?.lastLatitude;
     const driverLng = liveCoords?.lng || driverProfile?.lastLongitude;
     if (driverLat && driverLng && currentStep.location) {
@@ -170,21 +183,16 @@ export function DriverDashboardPage() {
       const dLng = (driverLng - currentStep.location[1]) * 111320 * Math.cos((driverLat * Math.PI) / 180);
       const distToTurnMeters = Math.round(Math.sqrt(dLat * dLat + dLng * dLng));
 
-      // Real-time countdown on HUD banner
+      // Update HUD banner countdown in real-time
       setLiveMetersToTurn(distToTurnMeters);
 
-      // When driver is within 35m of junction, auto-advance to next turn
-      if (distToTurnMeters < 35 && currentStepIndex < steps.length - 1) {
+      // When driver is within 35m of the turn junction, auto-advance to next maneuver
+      if (distToTurnMeters <= 35 && currentStepIndex < steps.length - 1) {
         setCurrentStepIndex((prev) => prev + 1);
       }
-
-      // Off-Route Detection: If driver is > 150m away from step
-      if (distToTurnMeters > 150 && currentStepIndex > 0) {
-        // Driver made an unexpected detour — announce reroute
-        speak("Recalculating route to destination");
-      }
     }
-  }, [isNavigatingInApp, currentStepIndex, steps, liveCoords?.lat, liveCoords?.lng, driverProfile?.lastLatitude, driverProfile?.lastLongitude, speak]);
+  }, [isNavigatingInApp, currentStepIndex, steps, liveCoords?.lat, liveCoords?.lng, driverProfile?.lastLatitude, driverProfile?.lastLongitude]);
+
 
 
 
@@ -1079,9 +1087,14 @@ export function DriverDashboardPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      setIsNavigatingInApp((prev) => !prev);
-                      if (!isNavigatingInApp && steps.length > 0) {
-                        speak(steps[0].instruction, true);
+                      if (!isNavigatingInApp) {
+                        setCurrentStepIndex(0);
+                        lastAnnouncedStepRef.current = -1;
+                        setIsNavigatingInApp(true);
+                      } else {
+                        setIsNavigatingInApp(false);
+                        setCurrentStepIndex(0);
+                        setLiveMetersToTurn(null);
                       }
                     }}
                     className={`flex-1 sm:flex-initial px-5 py-3 rounded-xl font-extrabold text-xs shadow-lg flex items-center justify-center gap-2.5 transition-all cursor-pointer active:scale-95 ${isNavigatingInApp
@@ -1142,7 +1155,7 @@ export function DriverDashboardPage() {
                       </div>
                     </div>
 
-                    {/* Audio Mute & Next Step Manual Controls */}
+                    {/* Audio Mute & Exit Navigation Controls */}
                     <div className="flex items-center gap-1.5 shrink-0">
                       <button
                         type="button"
@@ -1156,16 +1169,18 @@ export function DriverDashboardPage() {
                         <Icon icon={isMuted ? "solar:volume-cross-bold" : "solar:volume-loud-bold"} className="text-base" />
                       </button>
 
-                      {currentStepIndex < steps.length - 1 && (
-                        <button
-                          type="button"
-                          onClick={() => setCurrentStepIndex((i) => i + 1)}
-                          title="Skip to next step"
-                          className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs transition-all cursor-pointer"
-                        >
-                          <Icon icon="lucide:arrow-right" className="text-sm" />
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsNavigatingInApp(false);
+                          setCurrentStepIndex(0);
+                          setLiveMetersToTurn(null);
+                        }}
+                        title="Close Navigator HUD"
+                        className="p-2 rounded-lg bg-slate-800/80 hover:bg-red-500/20 text-slate-400 hover:text-red-400 border border-slate-700 hover:border-red-500/30 text-xs transition-all cursor-pointer"
+                      >
+                        <Icon icon="solar:close-circle-bold" className="text-sm" />
+                      </button>
                     </div>
                   </div>
                 )}

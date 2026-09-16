@@ -177,10 +177,11 @@ $$\text{Realistic Estimated Duration (mins)} = \text{Theoretical OSRM Duration} 
      * Real-time physical movement listener (`watchPosition`, `maximumAge: 2000`).
      * High-frequency 3-second continuous heartbeat (`setInterval`, `timeout: 5000`).
   2. **Dynamic Turn-by-Turn Meter Countdown (`liveMetersToTurn`):** Calculates Euclidean/Haversine meters between `liveCoords` and the target junction coordinates on every GPS tick:
-     * Displays `In ${liveMetersToTurn}m` dynamically on the top HUD banner (e.g. `In 64m` $\rightarrow$ `In 45m` $\rightarrow$ `In 15m`).
-  3. **Auto-Advancement to Next Maneuver:** Automatically transitions `currentStepIndex` to the next instruction when the driver approaches within **35 meters** of the junction and speaks the next instruction via speech synthesis.
-  4. **Dynamic Off-Route Detection:** Senses when the driver deviates $>150\text{m}$ from the expected step and alerts *"Recalculating route to destination"*.
-  5. **Gliding Driver Marker & Camera Follow:** The map pin (`driverIcon`) and Leaflet `<MapRecenter />` now track `liveCoords` directly, smoothly following the carrier's movement across streets.
+  3. **Automated Turn Progression:** Automatically transitions `currentStepIndex` to the next instruction when the driver approaches within **35 meters** of the junction.
+  4. **Once-Per-Step Voice Announcements:** Decoupled turn speech from live GPS coordinate updates using `lastAnnouncedStepRef`. The navigator speaks each maneuver instruction strictly once upon reaching a step, preventing repetition on continuous GPS pings.
+  5. **Elimination of False "Recalculating" Loops:** Removed the flawed `distToTurnMeters > 150` check that falsely treated normal travel down a street as an off-route deviation.
+  6. **Clean HUD Controls:** Removed the confusing manual right-arrow skip button beside the volume icon. Replaced it with a clean Exit Navigator (`X`) button alongside the Audio Mute/Unmute toggle.
+  7. **Gliding Driver Marker & Camera Follow:** The map pin (`driverIcon`) and Leaflet `<MapRecenter />` track `liveCoords` directly, smoothly following the carrier's movement across streets.
 
 ---
 
