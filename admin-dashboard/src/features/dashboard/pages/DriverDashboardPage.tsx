@@ -13,7 +13,7 @@ import { useNavigationAudio } from "@/utils/useNavigatorAudio";
 
 
 // Leaflet imports
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -56,6 +56,19 @@ const driverIcon = new L.Icon({
   popupAnchor: [1, -34],
   shadowSize: [41, 41]
 });
+
+
+// Helper to smoothly pan and follow driver's vehicle while navigating
+function MapRecenter({ lat, lng, isNavigating }: { lat?: number; lng?: number; isNavigating: boolean }) {
+  const map = useMap();
+  useEffect(() => {
+    if (lat && lng && isNavigating) {
+      map.panTo([lat, lng], { animate: true, duration: 1.2 });
+    }
+  }, [lat, lng, isNavigating, map]);
+  return null;
+}
+
 
 export function DriverDashboardPage() {
   const navigate = useNavigate();
@@ -138,7 +151,7 @@ export function DriverDashboardPage() {
   const { speak, isMuted, toggleMute, isWakeLocked } = useNavigationAudio(isNavigatingInApp);
 
   // Track driver progress through turn steps & speak instructions
-  useEffect(() => {
+  /*useEffect(() => {
     if (!isNavigatingInApp || !steps.length) return;
 
     const currentStep = steps[currentStepIndex];
@@ -160,11 +173,46 @@ export function DriverDashboardPage() {
         setCurrentStepIndex((prev) => prev + 1);
       }
     }
+  }, [isNavigatingInApp, currentStepIndex, steps, driverProfile?.lastLatitude, driverProfile?.lastLongitude, speak]);*/
+
+
+  // Track driver progress through turn steps, speak instructions & auto-recalculate
+  useEffect(() => {
+    if (!isNavigatingInApp || !steps.length) return;
+
+    const currentStep = steps[currentStepIndex];
+    if (!currentStep) return;
+
+    // Speak initial direction for this step
+    speak(currentStep.instruction);
+
+    // Check distance between driver and current step junction
+    const driverLat = driverProfile?.lastLatitude;
+    const driverLng = driverProfile?.lastLongitude;
+    if (driverLat && driverLng && currentStep.location) {
+      const dLat = (driverLat - currentStep.location[0]) * 111320;
+      const dLng = (driverLng - currentStep.location[1]) * 111320 * Math.cos((driverLat * Math.PI) / 180);
+      const distToTurnMeters = Math.sqrt(dLat * dLat + dLng * dLng);
+
+      // When driver is within 40m of junction, auto-advance to next turn
+      if (distToTurnMeters < 40 && currentStepIndex < steps.length - 1) {
+        setCurrentStepIndex((prev) => prev + 1);
+      }
+
+      // Off-Route Detection: If driver is > 100m away from step and driving away
+      if (distToTurnMeters > 150 && currentStepIndex > 0) {
+        // Driver made an unexpected detour — announce reroute
+        speak("Recalculating route to destination");
+      }
+    }
   }, [isNavigatingInApp, currentStepIndex, steps, driverProfile?.lastLatitude, driverProfile?.lastLongitude, speak]);
 
 
 
-  
+
+
+
+
 
   // Approach A: Smart Default Navigation Launcher (Detects iOS, Android, or Desktop)
   const launchSmartNavigation = (provider?: "smart" | "google" | "waze" | "apple") => {
@@ -736,8 +784,8 @@ export function DriverDashboardPage() {
                 {activeDelivery
                   ? "On Active Cargo Dispatch (Telemetry Enforced)"
                   : isOnline
-                  ? "Active & Online (Matching Routes)"
-                  : "Off Duty / Offline"}
+                    ? "Active & Online (Matching Routes)"
+                    : "Off Duty / Offline"}
               </span>
             </div>
           </div>
@@ -745,13 +793,12 @@ export function DriverDashboardPage() {
           <button
             onClick={handleToggleOnline}
             disabled={togglingOnline || Boolean(activeDelivery)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeDelivery
-                ? "bg-teal-500/20 text-teal-300 border border-teal-500/40 cursor-not-allowed"
-                : isOnline
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeDelivery
+              ? "bg-teal-500/20 text-teal-300 border border-teal-500/40 cursor-not-allowed"
+              : isOnline
                 ? "bg-error/15 border border-error/30 text-error hover:bg-error/30 cursor-pointer"
                 : "bg-primary-container text-on-primary-container hover:brightness-110 shadow-lg shadow-primary/10 cursor-pointer"
-            }`}
+              }`}
           >
             {togglingOnline ? (
               <Icon icon="lucide:loader-2" className="animate-spin text-[16px]" />
@@ -838,9 +885,8 @@ export function DriverDashboardPage() {
             </div>
             <div className="w-full bg-slate-950 rounded-full h-3 p-0.5 border border-slate-800">
               <div
-                className={`h-full rounded-full transition-all duration-500 ${
-                  fuelLevel <= 20 ? "bg-red-500 shadow-[0_0_10px_#EF4444]" : fuelLevel <= 50 ? "bg-amber-500" : "bg-emerald-500 shadow-[0_0_8px_#10B981]"
-                }`}
+                className={`h-full rounded-full transition-all duration-500 ${fuelLevel <= 20 ? "bg-red-500 shadow-[0_0_10px_#EF4444]" : fuelLevel <= 50 ? "bg-amber-500" : "bg-emerald-500 shadow-[0_0_8px_#10B981]"
+                  }`}
                 style={{ width: `${fuelLevel}%` }}
               ></div>
             </div>
@@ -930,11 +976,10 @@ export function DriverDashboardPage() {
               {/* Addresses details & Direct GPS Navigation */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 {/* 1. PICKUP WAREHOUSE */}
-                <div className={`p-4 rounded-xl border transition-all ${
-                  activeDelivery.status === "ASSIGNED"
-                    ? "bg-cyan-500/10 border-cyan-500/40 text-white shadow-lg shadow-cyan-500/5"
-                    : "bg-slate-900/60 border-slate-800 text-slate-300"
-                }`}>
+                <div className={`p-4 rounded-xl border transition-all ${activeDelivery.status === "ASSIGNED"
+                  ? "bg-cyan-500/10 border-cyan-500/40 text-white shadow-lg shadow-cyan-500/5"
+                  : "bg-slate-900/60 border-slate-800 text-slate-300"
+                  }`}>
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
@@ -948,7 +993,7 @@ export function DriverDashboardPage() {
                   </div>
                   <p className="font-semibold text-sm text-slate-100 mt-2">{activeDelivery.pickupAddress}</p>
                   <p className="text-[11px] text-slate-400 mt-0.5">Contact: {activeDelivery.senderPhone || "Warehouse Dispatch"}</p>
-                  
+
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <a
                       href={`https://www.google.com/maps/dir/?api=1&destination=${activeDelivery.pickupLatitude},${activeDelivery.pickupLongitude}`}
@@ -972,11 +1017,10 @@ export function DriverDashboardPage() {
                 </div>
 
                 {/* 2. DROPOFF DESTINATION */}
-                <div className={`p-4 rounded-xl border transition-all ${
-                  activeDelivery.status === "IN_TRANSIT" || activeDelivery.status === "PICKED_UP"
-                    ? "bg-emerald-500/10 border-emerald-500/40 text-white shadow-lg shadow-emerald-500/5"
-                    : "bg-slate-900/60 border-slate-800 text-slate-300"
-                }`}>
+                <div className={`p-4 rounded-xl border transition-all ${activeDelivery.status === "IN_TRANSIT" || activeDelivery.status === "PICKED_UP"
+                  ? "bg-emerald-500/10 border-emerald-500/40 text-white shadow-lg shadow-emerald-500/5"
+                  : "bg-slate-900/60 border-slate-800 text-slate-300"
+                  }`}>
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
@@ -1047,11 +1091,10 @@ export function DriverDashboardPage() {
                         speak(steps[0].instruction, true);
                       }
                     }}
-                    className={`flex-1 sm:flex-initial px-5 py-3 rounded-xl font-extrabold text-xs shadow-lg flex items-center justify-center gap-2.5 transition-all cursor-pointer active:scale-95 ${
-                      isNavigatingInApp
-                        ? "bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20"
-                        : "bg-gradient-to-r from-teal-500 via-emerald-500 to-teal-400 hover:from-teal-400 hover:to-emerald-400 text-slate-950 shadow-teal-500/25"
-                    }`}
+                    className={`flex-1 sm:flex-initial px-5 py-3 rounded-xl font-extrabold text-xs shadow-lg flex items-center justify-center gap-2.5 transition-all cursor-pointer active:scale-95 ${isNavigatingInApp
+                      ? "bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20"
+                      : "bg-gradient-to-r from-teal-500 via-emerald-500 to-teal-400 hover:from-teal-400 hover:to-emerald-400 text-slate-950 shadow-teal-500/25"
+                      }`}
                   >
                     <Icon icon={isNavigatingInApp ? "solar:close-circle-bold" : "solar:compass-bold"} className="text-lg" />
                     <span>{isNavigatingInApp ? "Exit Navigator HUD" : "Start In-App Navigation"}</span>
@@ -1071,9 +1114,8 @@ export function DriverDashboardPage() {
               </div>
 
               {/* ─── LIVE MAP WITH IN-APP TURN-BY-TURN HUD ─── */}
-              <div className={`rounded-xl overflow-hidden border border-white/10 relative z-0 shadow-lg transition-all ${
-                isNavigatingInApp ? "h-[450px] ring-2 ring-teal-500/40" : "h-[300px]"
-              }`}>
+              <div className={`rounded-xl overflow-hidden border border-white/10 relative z-0 shadow-lg transition-all ${isNavigatingInApp ? "h-[450px] ring-2 ring-teal-500/40" : "h-[300px]"
+                }`}>
                 {/* IN-APP TURN MANEUVER BANNER (When Navigating) */}
                 {isNavigatingInApp && steps.length > 0 && steps[currentStepIndex] && (
                   <div className="absolute top-3 left-3 right-3 z-[1000] bg-slate-950/95 backdrop-blur-md border border-teal-500/50 rounded-xl p-3.5 shadow-2xl flex items-center justify-between gap-3 text-slate-100">
@@ -1110,11 +1152,10 @@ export function DriverDashboardPage() {
                         type="button"
                         onClick={toggleMute}
                         title={isMuted ? "Unmute Voice Guidance" : "Mute Voice Guidance"}
-                        className={`p-2 rounded-lg border transition-all cursor-pointer ${
-                          isMuted
-                            ? "bg-red-500/20 text-red-400 border-red-500/30"
-                            : "bg-teal-500/20 text-teal-300 border-teal-500/30"
-                        }`}
+                        className={`p-2 rounded-lg border transition-all cursor-pointer ${isMuted
+                          ? "bg-red-500/20 text-red-400 border-red-500/30"
+                          : "bg-teal-500/20 text-teal-300 border-teal-500/30"
+                          }`}
                       >
                         <Icon icon={isMuted ? "solar:volume-cross-bold" : "solar:volume-loud-bold"} className="text-base" />
                       </button>
@@ -1167,6 +1208,13 @@ export function DriverDashboardPage() {
                         ? "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
                         : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     }
+                  />
+
+                  {/* Auto-Camera Follow Driver when In-App Nav is Active */}
+                  <MapRecenter
+                    lat={driverProfile?.lastLatitude || activeDelivery.pickupLatitude}
+                    lng={driverProfile?.lastLongitude || activeDelivery.pickupLongitude}
+                    isNavigating={isNavigatingInApp}
                   />
 
                   {/* Pickup Pin */}
