@@ -118,21 +118,37 @@ export function useOsrmRoute(
         // Parse Turn-by-Turn Maneuver Steps for the In-App HUD
         // ─────────────────────────────────────────────────────────────────────
         const rawSteps = route.legs?.[0]?.steps || [];
-        const parsedSteps: RouteStep[] = rawSteps.map((s: any) => {
+        const parsedSteps: RouteStep[] = rawSteps.map((s: any, idx: number) => {
           const type = s.maneuver?.type || "continue";
           const modifier = s.maneuver?.modifier || "";
-          const name = s.name || "Unnamed Road";
+          let rawName = (s.name || "").trim();
 
-          // Generate human-friendly speech & text instruction
-          let text = `Continue on ${name}`;
-          if (type === "depart") text = `Head out on ${name}`;
-          else if (type === "arrive") text = `Arrive at destination`;
-          else if (type === "roundabout") text = `Enter roundabout and take exit onto ${name}`;
-          else if (modifier) text = `Turn ${modifier} onto ${name}`;
+          // If current step is an unnamed compound/driveway, resolve smartly toward the next road
+          let displayName = rawName;
+          if (!displayName || displayName.toLowerCase() === "unnamed road") {
+            const nextNamedStep = rawSteps.slice(idx + 1).find((st: any) => st.name && st.name.trim() !== "");
+            if (nextNamedStep && nextNamedStep.name) {
+              displayName = `toward ${nextNamedStep.name}`;
+            } else {
+              displayName = "main road";
+            }
+          }
+
+          // Generate natural human-friendly speech & text instruction
+          let text = `Continue on ${displayName}`;
+          if (type === "depart") {
+            text = displayName.startsWith("toward") ? `Head out ${displayName}` : `Head out on ${displayName}`;
+          } else if (type === "arrive") {
+            text = `Arrive at destination`;
+          } else if (type === "roundabout") {
+            text = `Enter roundabout and take exit onto ${displayName}`;
+          } else if (modifier) {
+            text = displayName.startsWith("toward") ? `Turn ${modifier} ${displayName}` : `Turn ${modifier} onto ${displayName}`;
+          }
 
           return {
             instruction: text,
-            streetName: name,
+            streetName: displayName,
             maneuverType: type,
             modifier: modifier,
             distanceMeters: Math.round(s.distance || 0),

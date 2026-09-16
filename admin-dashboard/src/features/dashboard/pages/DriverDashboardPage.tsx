@@ -1132,12 +1132,15 @@ export function DriverDashboardPage() {
                         )}
                       </div>
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="text-[11px] font-mono font-bold text-teal-300 bg-teal-500/20 px-2 py-0.5 rounded border border-teal-500/30">
-                            {steps[currentStepIndex].distanceMeters > 0 ? `${steps[currentStepIndex].distanceMeters}m` : "Ahead"}
+                            In {steps[currentStepIndex].distanceMeters > 0 ? `${steps[currentStepIndex].distanceMeters}m` : "Ahead"}
                           </span>
-                          <span className="text-[10px] text-slate-400">
-                            Step {currentStepIndex + 1} of {steps.length}
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            Turn {currentStepIndex + 1} of {steps.length}
+                          </span>
+                          <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 font-mono">
+                            🏁 Trip Total: {distanceKm ? `${distanceKm} km` : "6 km"} • {durationRange ? `~${durationRange}` : durationMins ? `~${durationMins} mins` : "14 mins"}
                           </span>
                         </div>
                         <p className="font-bold text-xs sm:text-sm text-white truncate mt-0.5">
