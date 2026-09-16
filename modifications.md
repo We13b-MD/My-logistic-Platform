@@ -120,7 +120,34 @@ $$\text{Realistic Estimated Duration (mins)} = \text{Theoretical OSRM Duration} 
   * Updated the 30-Day Free Pilot card to display:
     * `$0 / first 30 days`
     * `Renews at $65/month after trial`
-  * Tier 3 remains **Custom** for enterprise fleets.
+### H. Custom In-App OSRM Turn-by-Turn Navigator Architecture (Driver Console)
+
+* **Architectural Decision:** Transition the driver navigation experience from external app redirection (Google Maps / Apple Maps) to a dedicated, high-precision **Custom In-App OSRM Turn-by-Turn Navigator** hosted directly inside the driver console.
+
+#### 1. Why External Maps Limit Enterprise Logistics:
+* **Background Telemetry Drop (The Battery-Saver Trap):** When a driver switches to Google Maps or Apple Maps, iOS and Android immediately place the Logistel web tab into background sleep mode. Background GPS pings are throttled from 10 seconds to 5–15 minutes or killed entirely, blinding dispatchers in real time.
+* **Zero Cargo Corridor Enforcement (Anti-Theft Blindspot):** Google Maps routes civilian vehicles; if a driver takes an unauthorized detour with cargo, Google Maps silently recalculates without warning the fleet manager.
+* **High Operational Friction:** Leaving the app forces the driver to constantly toggle between Google Maps and Logistel to confirm delivery, view package notes, input customer OTP codes, and collect POD signatures.
+
+#### 2. Target Audience Scope:
+* **Driver (`DriverDashboardPage.tsx`):** Turn-by-turn HUD, maneuver arrows, voice prompts, auto-rotating map, screen wake lock.
+* **Dispatcher (`TenantDashboardPage.tsx`):** Unaffected — uses multi-vehicle **Fleet Radar** with breadcrumb trails, delay alerts, and geofence badges.
+* **Customer (`CustomerDashboardPage.tsx` / Public Tracking):** Unaffected — uses live **ETA & Package Route Progress**.
+
+#### 3. Two-Tier Hybrid Architecture (The Uber / Amazon Flex Model):
+* **Primary (Default):** Custom In-App OSRM Turn-by-Turn Navigator.
+  * **Screen Wake Lock API (`navigator.wakeLock`):** Keeps the driver’s phone screen permanently illuminated while on active delivery.
+  * **Web Speech API (`speechSynthesis.speak()`):** Speaks clear audio prompts (*"In 200 meters, turn right onto Bode Thomas Street"*) with zero external API fees.
+  * **Turn-by-Turn HUD:** Clean top banner showing directional arrows, distance countdown, street names, and audio mute toggle.
+  * **Guaranteed Active-Tab Telemetry:** Continuous 10-second GPS breadcrumbs without OS throttling.
+  * **Instant Auto-Recalculate:** Automatically detects missed turns or road blocks ($>60\text{m}$ off corridor) and recalculates in under 1 second.
+* **Secondary Fallback:** A discreet **"Open in Google/Apple Maps"** emergency link remains available as a safety net if a driver ever encounters an unmapped new estate or needs satellite street-view verification.
+
+#### 4. Implementation Roadmap (4 Phases):
+* **Phase 1: OSRM Turn Engine (`useOsrmRoute.ts`):** Enable `&steps=true` to parse raw maneuver steps, street names, and junction coordinates into a typed `RouteStep[]` stream.
+* **Phase 2: Speech Guidance & Screen Wake Lock:** Implement native audio voice synthesis and phone display wake lock.
+* **Phase 3: Navigation HUD UI (`DriverDashboardPage.tsx`):** Build high-contrast turn card, step distance countdown, and 1-tap call/OTP action bar.
+* **Phase 4: Live Step Progress & Auto-Recalculation:** Compare real-time GPS coordinates against upcoming step waypoints to auto-advance turns and trigger re-routing when off-path.
 
 ---
 
