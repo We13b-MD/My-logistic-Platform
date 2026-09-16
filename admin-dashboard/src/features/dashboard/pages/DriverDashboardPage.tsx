@@ -125,13 +125,20 @@ export function DriverDashboardPage() {
   const [loadingAvailable, setLoadingAvailable] = useState(false);
   const [claimingId, setClaimingId] = useState<string | null>(null);
 
+  // ─── Custom In-App Navigator States ───
+  const [liveCoords, setLiveCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [liveMetersToTurn, setLiveMetersToTurn] = useState<number | null>(null);
+  const [isNavigatingInApp, setIsNavigatingInApp] = useState(false);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [mapLayerType, setMapLayerType] = useState<"streets" | "satellite">("streets");
+
   // OSRM road route geometry for driver navigation with live distance, ETA & turn steps
   const { routeCoords, distanceKm, durationMins, durationRange, steps } = useOsrmRoute(
     activeDelivery?.status === "ASSIGNED"
-      ? (driverProfile?.lastLatitude || activeDelivery?.pickupLatitude)
+      ? (liveCoords?.lat || driverProfile?.lastLatitude || activeDelivery?.pickupLatitude)
       : activeDelivery?.pickupLatitude,
     activeDelivery?.status === "ASSIGNED"
-      ? (driverProfile?.lastLongitude || activeDelivery?.pickupLongitude)
+      ? (liveCoords?.lng || driverProfile?.lastLongitude || activeDelivery?.pickupLongitude)
       : activeDelivery?.pickupLongitude,
     activeDelivery?.status === "ASSIGNED"
       ? activeDelivery?.pickupLatitude
@@ -142,41 +149,10 @@ export function DriverDashboardPage() {
     driverProfile?.vehicleType
   );
 
-  // ─── Custom In-App Navigator States ───
-  const [isNavigatingInApp, setIsNavigatingInApp] = useState(false);
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [mapLayerType, setMapLayerType] = useState<"streets" | "satellite">("streets");
-
   // Audio Guidance & Screen-Wake Engine
   const { speak, isMuted, toggleMute, isWakeLocked } = useNavigationAudio(isNavigatingInApp);
 
-  // Track driver progress through turn steps & speak instructions
-  /*useEffect(() => {
-    if (!isNavigatingInApp || !steps.length) return;
-
-    const currentStep = steps[currentStepIndex];
-    if (!currentStep) return;
-
-    // Speak initial direction for this step
-    speak(currentStep.instruction);
-
-    // Check distance between driver and current step junction
-    const driverLat = driverProfile?.lastLatitude;
-    const driverLng = driverProfile?.lastLongitude;
-    if (driverLat && driverLng && currentStep.location) {
-      const dLat = (driverLat - currentStep.location[0]) * 111320;
-      const dLng = (driverLng - currentStep.location[1]) * 111320 * Math.cos((driverLat * Math.PI) / 180);
-      const distToTurnMeters = Math.sqrt(dLat * dLat + dLng * dLng);
-
-      // When driver is within 40m of junction, auto-advance to next turn
-      if (distToTurnMeters < 40 && currentStepIndex < steps.length - 1) {
-        setCurrentStepIndex((prev) => prev + 1);
-      }
-    }
-  }, [isNavigatingInApp, currentStepIndex, steps, driverProfile?.lastLatitude, driverProfile?.lastLongitude, speak]);*/
-
-
-  // Track driver progress through turn steps, speak instructions & auto-recalculate
+  // Track driver progress through turn steps, speak instructions & auto-recalculate with live GPS
   useEffect(() => {
     if (!isNavigatingInApp || !steps.length) return;
 
@@ -186,26 +162,29 @@ export function DriverDashboardPage() {
     // Speak initial direction for this step
     speak(currentStep.instruction);
 
-    // Check distance between driver and current step junction
-    const driverLat = driverProfile?.lastLatitude;
-    const driverLng = driverProfile?.lastLongitude;
+    // Check distance between driver and current step junction using live GPS
+    const driverLat = liveCoords?.lat || driverProfile?.lastLatitude;
+    const driverLng = liveCoords?.lng || driverProfile?.lastLongitude;
     if (driverLat && driverLng && currentStep.location) {
       const dLat = (driverLat - currentStep.location[0]) * 111320;
       const dLng = (driverLng - currentStep.location[1]) * 111320 * Math.cos((driverLat * Math.PI) / 180);
-      const distToTurnMeters = Math.sqrt(dLat * dLat + dLng * dLng);
+      const distToTurnMeters = Math.round(Math.sqrt(dLat * dLat + dLng * dLng));
 
-      // When driver is within 40m of junction, auto-advance to next turn
-      if (distToTurnMeters < 40 && currentStepIndex < steps.length - 1) {
+      // Real-time countdown on HUD banner
+      setLiveMetersToTurn(distToTurnMeters);
+
+      // When driver is within 35m of junction, auto-advance to next turn
+      if (distToTurnMeters < 35 && currentStepIndex < steps.length - 1) {
         setCurrentStepIndex((prev) => prev + 1);
       }
 
-      // Off-Route Detection: If driver is > 100m away from step and driving away
+      // Off-Route Detection: If driver is > 150m away from step
       if (distToTurnMeters > 150 && currentStepIndex > 0) {
         // Driver made an unexpected detour — announce reroute
         speak("Recalculating route to destination");
       }
     }
-  }, [isNavigatingInApp, currentStepIndex, steps, driverProfile?.lastLatitude, driverProfile?.lastLongitude, speak]);
+  }, [isNavigatingInApp, currentStepIndex, steps, liveCoords?.lat, liveCoords?.lng, driverProfile?.lastLatitude, driverProfile?.lastLongitude, speak]);
 
 
 
@@ -363,29 +342,43 @@ export function DriverDashboardPage() {
     };
 
     if (navigator.geolocation) {
+      // Immediate initial GPS fix
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setLiveCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          pushLocation(pos.coords.latitude, pos.coords.longitude);
+        },
+        (err) => {
+          console.warn("[Telemetry] Initial GPS fix warning:", err.message);
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+
       // 1. Live position watcher (emits on physical movement)
       watchId = navigator.geolocation.watchPosition(
         (pos) => {
+          setLiveCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
           pushLocation(pos.coords.latitude, pos.coords.longitude);
         },
         (err) => {
           console.warn("[Telemetry] Geolocation watch warning:", err.message);
         },
-        { enableHighAccuracy: true, maximumAge: 5000, timeout: 12000 }
+        { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
       );
 
-      // 2. Continuous 10-second heartbeat to ensure uninterrupted pings even when stopped at traffic
+      // 2. High-frequency 3-second heartbeat for continuous live navigation
       heartbeatInterval = setInterval(() => {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
+            setLiveCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
             pushLocation(pos.coords.latitude, pos.coords.longitude);
           },
           (err) => {
             console.warn("[Telemetry] Heartbeat ping warning:", err.message);
           },
-          { enableHighAccuracy: true, timeout: 6000 }
+          { enableHighAccuracy: true, timeout: 5000 }
         );
-      }, 10000);
+      }, 3000);
     }
 
     return () => {
@@ -1134,7 +1127,7 @@ export function DriverDashboardPage() {
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="text-[11px] font-mono font-bold text-teal-300 bg-teal-500/20 px-2 py-0.5 rounded border border-teal-500/30">
-                            In {steps[currentStepIndex].distanceMeters > 0 ? `${steps[currentStepIndex].distanceMeters}m` : "Ahead"}
+                            In {liveMetersToTurn !== null ? `${liveMetersToTurn}m` : steps[currentStepIndex].distanceMeters > 0 ? `${steps[currentStepIndex].distanceMeters}m` : "Ahead"}
                           </span>
                           <span className="text-[10px] text-slate-400 font-mono">
                             Turn {currentStepIndex + 1} of {steps.length}
@@ -1215,8 +1208,8 @@ export function DriverDashboardPage() {
 
                   {/* Auto-Camera Follow Driver when In-App Nav is Active */}
                   <MapRecenter
-                    lat={driverProfile?.lastLatitude || activeDelivery.pickupLatitude}
-                    lng={driverProfile?.lastLongitude || activeDelivery.pickupLongitude}
+                    lat={liveCoords?.lat || driverProfile?.lastLatitude || activeDelivery.pickupLatitude}
+                    lng={liveCoords?.lng || driverProfile?.lastLongitude || activeDelivery.pickupLongitude}
                     isNavigating={isNavigatingInApp}
                   />
 
@@ -1230,15 +1223,15 @@ export function DriverDashboardPage() {
                     <Popup><div className="text-black text-xs font-bold">2. Dropoff: {activeDelivery.dropoffAddress}</div></Popup>
                   </Marker>
 
-                  {/* Driver Pin */}
+                  {/* Driver Pin (Glides dynamically with Live GPS) */}
                   <Marker
                     position={[
-                      driverProfile?.lastLatitude || activeDelivery.pickupLatitude,
-                      driverProfile?.lastLongitude || activeDelivery.pickupLongitude,
+                      liveCoords?.lat || driverProfile?.lastLatitude || activeDelivery.pickupLatitude,
+                      liveCoords?.lng || driverProfile?.lastLongitude || activeDelivery.pickupLongitude,
                     ]}
                     icon={driverIcon}
                   >
-                    <Popup><div className="text-black text-xs font-bold text-red-600">Your Current Location</div></Popup>
+                    <Popup><div className="text-black text-xs font-bold text-red-600">Your Live GPS Location</div></Popup>
                   </Marker>
 
                   {/* OSRM Real-Road Route Polyline */}

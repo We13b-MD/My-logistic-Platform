@@ -165,8 +165,22 @@ $$\text{Realistic Estimated Duration (mins)} = \text{Theoretical OSRM Duration} 
     * Updated Monthly Due card to: **`$65 / month`**.
     * Updated subscription buttons to: **`Subscribe Monthly ($65/mo)`** and **`Subscribe Annual ($650/yr - Save 17%)`**.
     * Updated Paystack popup checkout configuration to charge in **USD cents** (`$65` = 6,500 cents / `$650` = 65,000 cents with `currency: "USD"`).
-  * In [`backend/src/api/v1/modules/pricing/pricing.service.ts`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/src/api/v1/modules/pricing/pricing.service.ts):
-    * Updated `verifyPaystackSubscription` to validate amounts in both **USD cents** (6,500 / 65,000) and equivalent **NGN kobo** (10,000,000 / 100,000,000) for seamless cross-currency settlement compatibility.
+### K. Live Dynamic GPS Navigation & Real-Time Distance Countdown
+
+* **Root Cause of Static 64m Distance on Mobile:**
+  * In `DriverDashboardPage.tsx`, `navigator.geolocation.watchPosition` was broadcasting coordinates to the backend via `pushLocation` over HTTP POST, but it had **no local React state hook**.
+  * The navigation calculations, step distance tracker, map marker, and camera were relying on `driverProfile.lastLatitude` / `driverProfile.lastLongitude` — static database values retrieved once upon initial page load.
+  * When the driver physically walked or drove outside, the device moved, but the React UI sat frozen with the initial 64m distance and unmoving marker.
+* **Solution ([`DriverDashboardPage.tsx`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/features/dashboard/pages/DriverDashboardPage.tsx)):**
+  1. **Live GPS React State (`liveCoords`):** Added `{ lat: number; lng: number } | null` state updated immediately by:
+     * High-accuracy initial fix (`getCurrentPosition`, `timeout: 8000`).
+     * Real-time physical movement listener (`watchPosition`, `maximumAge: 2000`).
+     * High-frequency 3-second continuous heartbeat (`setInterval`, `timeout: 5000`).
+  2. **Dynamic Turn-by-Turn Meter Countdown (`liveMetersToTurn`):** Calculates Euclidean/Haversine meters between `liveCoords` and the target junction coordinates on every GPS tick:
+     * Displays `In ${liveMetersToTurn}m` dynamically on the top HUD banner (e.g. `In 64m` $\rightarrow$ `In 45m` $\rightarrow$ `In 15m`).
+  3. **Auto-Advancement to Next Maneuver:** Automatically transitions `currentStepIndex` to the next instruction when the driver approaches within **35 meters** of the junction and speaks the next instruction via speech synthesis.
+  4. **Dynamic Off-Route Detection:** Senses when the driver deviates $>150\text{m}$ from the expected step and alerts *"Recalculating route to destination"*.
+  5. **Gliding Driver Marker & Camera Follow:** The map pin (`driverIcon`) and Leaflet `<MapRecenter />` now track `liveCoords` directly, smoothly following the carrier's movement across streets.
 
 ---
 
