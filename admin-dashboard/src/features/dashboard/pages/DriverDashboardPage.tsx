@@ -58,14 +58,39 @@ const driverIcon = new L.Icon({
 });
 
 
-// Helper to smoothly pan and follow driver's vehicle while navigating
-function MapRecenter({ lat, lng, isNavigating }: { lat?: number; lng?: number; isNavigating: boolean }) {
+// Helper to smoothly follow driver and zoom to street-level (zoom 17) while navigating
+function MapRecenter({
+  lat,
+  lng,
+  isNavigating,
+  routeCoords,
+}: {
+  lat?: number;
+  lng?: number;
+  isNavigating: boolean;
+  routeCoords?: [number, number][];
+}) {
   const map = useMap();
+
+  // Street-level camera follow (zoom 17 shows driveways, streets, and road labels)
   useEffect(() => {
     if (lat && lng && isNavigating) {
-      map.panTo([lat, lng], { animate: true, duration: 1.2 });
+      map.setView([lat, lng], 17, { animate: true });
     }
   }, [lat, lng, isNavigating, map]);
+
+  // When route is loaded and not in street navigation, frame full trip corridor
+  useEffect(() => {
+    if (!isNavigating && routeCoords && routeCoords.length > 1) {
+      try {
+        const bounds = L.latLngBounds(routeCoords.map(([rLat, rLng]) => [rLat, rLng]));
+        map.fitBounds(bounds, { padding: [50, 50] });
+      } catch (e) {
+        // fallback
+      }
+    }
+  }, [isNavigating, routeCoords, map]);
+
   return null;
 }
 
@@ -131,53 +156,148 @@ export function DriverDashboardPage() {
   const [isNavigatingInApp, setIsNavigatingInApp] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [mapLayerType, setMapLayerType] = useState<"streets" | "satellite">("streets");
+  // Default to dropoff (customer in Yaba) so driver gets the full trip route with all turns
+  const [navTarget, setNavTarget] = useState<"dropoff" | "pickup">("dropoff");
+  const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
+  const [gpsError, setGpsError] = useState<string | null>(null);
+  const [requestingGps, setRequestingGps] = useState(false);
+
+  // Manual Trigger to force browser GPS permission prompt and lock Mende location
+  const requestGpsFix = () => {
+    if (!navigator.geolocation) {
+      setGpsError("Geolocation is not supported by your mobile browser.");
+      toast.error("Geolocation not supported by your browser");
+      return;
+    }
+
+    setRequestingGps(true);
+    setGpsError(null);
+
+    // Fast network fix (cell tower / Wi-Fi - works instantly in 100ms)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLiveCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setGpsAccuracy(Math.round(pos.coords.accuracy));
+        setRequestingGps(false);
+        setGpsError(null);
+        toast.success(`Live GPS Connected! Located device (±${Math.round(pos.coords.accuracy)}m)`);
+      },
+      (fastErr) => {
+        console.warn("[GPS] Quick network fix failed, trying satellite:", fastErr.message);
+        // Fallback to high-accuracy satellite with 15s timeout
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            setLiveCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+            setGpsAccuracy(Math.round(pos.coords.accuracy));
+            setRequestingGps(false);
+            setGpsError(null);
+            toast.success(`Satellite GPS Connected! (±${Math.round(pos.coords.accuracy)}m)`);
+          },
+          (err) => {
+            setRequestingGps(false);
+            if (err.code === 1) {
+              setGpsError("Location Permission Denied: Tap the lock icon in your browser address bar and set Location to Allow.");
+              toast.error("Location permission denied. Please allow location in your browser settings.");
+            } else if (err.code === 2) {
+              setGpsError("Location Unavailable: Please make sure Location / GPS is turned ON in your phone settings.");
+              toast.error("Phone GPS unavailable. Turn on Location Services.");
+            } else {
+              setGpsError("GPS Timeout: Searching for satellite signal... Try stepping under open sky.");
+              toast.error("GPS timed out. Step outside under open sky and retry.");
+            }
+          },
+          { enableHighAccuracy: true, timeout: 15000 }
+        );
+      },
+      { enableHighAccuracy: false, timeout: 6000, maximumAge: 60000 }
+    );
+  };
+
+  // Always route from driver's actual real-time location to the selected target
+  const navOriginLat = liveCoords?.lat || driverProfile?.lastLatitude || activeDelivery?.pickupLatitude;
+  const navOriginLng = liveCoords?.lng || driverProfile?.lastLongitude || activeDelivery?.pickupLongitude;
+  const navDestLat = navTarget === "pickup" ? activeDelivery?.pickupLatitude : activeDelivery?.dropoffLatitude;
+  const navDestLng = navTarget === "pickup" ? activeDelivery?.pickupLongitude : activeDelivery?.dropoffLongitude;
 
   // OSRM road route geometry for driver navigation with live distance, ETA & turn steps
   const { routeCoords, distanceKm, durationMins, durationRange, steps } = useOsrmRoute(
-    activeDelivery?.status === "ASSIGNED"
-      ? (liveCoords?.lat || driverProfile?.lastLatitude || activeDelivery?.pickupLatitude)
-      : activeDelivery?.pickupLatitude,
-    activeDelivery?.status === "ASSIGNED"
-      ? (liveCoords?.lng || driverProfile?.lastLongitude || activeDelivery?.pickupLongitude)
-      : activeDelivery?.pickupLongitude,
-    activeDelivery?.status === "ASSIGNED"
-      ? activeDelivery?.pickupLatitude
-      : activeDelivery?.dropoffLatitude,
-    activeDelivery?.status === "ASSIGNED"
-      ? activeDelivery?.pickupLongitude
-      : activeDelivery?.dropoffLongitude,
+    navOriginLat,
+    navOriginLng,
+    navDestLat,
+    navDestLng,
     driverProfile?.vehicleType
   );
 
   // Audio Guidance & Screen-Wake Engine
   const { speak, isMuted, toggleMute, isWakeLocked } = useNavigationAudio(isNavigatingInApp);
-  const lastAnnouncedStepRef = useRef<number>(-1);
+  const lastSpokenStepRef = useRef<number>(-1);
+  const approachAnnouncedRef = useRef<boolean>(false);
+  const lastPeriodicAnnounceTimeRef = useRef<number>(0);
 
-  // 1. Announce turn instruction ONCE per step (never repeats on every GPS movement)
+  // 1. Google Maps-style multi-stage voice guidance:
+  //    - Stage A: Speaks initial maneuver with distance ("In 450 meters, turn right onto...")
+  //    - Stage B: Approach reminder at 100m ("In 100 meters, turn right...")
+  //    - Stage C: Periodic update every 35s on long road stretches ("Continue straight for 400 meters")
   useEffect(() => {
     if (!isNavigatingInApp || !steps.length) {
-      lastAnnouncedStepRef.current = -1;
+      lastSpokenStepRef.current = -1;
+      approachAnnouncedRef.current = false;
       return;
     }
 
     const currentStep = steps[currentStepIndex];
     if (!currentStep) return;
 
-    if (lastAnnouncedStepRef.current !== currentStepIndex) {
-      lastAnnouncedStepRef.current = currentStepIndex;
-      speak(currentStep.instruction);
-    }
-  }, [isNavigatingInApp, currentStepIndex, steps, speak]);
+    // Stage A: Initial Step Entrance Announcement
+    if (lastSpokenStepRef.current !== currentStepIndex) {
+      lastSpokenStepRef.current = currentStepIndex;
+      approachAnnouncedRef.current = false;
+      lastPeriodicAnnounceTimeRef.current = Date.now();
 
-  // 2. Continuous real-time GPS distance countdown to turn junction and auto-advance
+      const initialDist = currentStep.distanceMeters || liveMetersToTurn;
+      if (initialDist && initialDist > 60 && currentStepIndex > 0) {
+        speak(`In ${initialDist} meters, ${currentStep.instruction.toLowerCase()}`);
+      } else {
+        speak(currentStep.instruction);
+      }
+      return;
+    }
+
+    // Stage B: Approach Reminder (when within 70m - 130m of upcoming turn)
+    if (
+      liveMetersToTurn !== null &&
+      liveMetersToTurn >= 70 &&
+      liveMetersToTurn <= 130 &&
+      !approachAnnouncedRef.current &&
+      (currentStep.distanceMeters || 0) > 150
+    ) {
+      approachAnnouncedRef.current = true;
+      speak(`In 100 meters, ${currentStep.instruction.toLowerCase()}`);
+      return;
+    }
+
+    // Stage C: Periodic Reassurance for Long Stretches (every 35s of driving on a straight road > 200m)
+    const now = Date.now();
+    if (
+      liveMetersToTurn !== null &&
+      liveMetersToTurn > 200 &&
+      now - lastPeriodicAnnounceTimeRef.current > 35000
+    ) {
+      lastPeriodicAnnounceTimeRef.current = now;
+      const roundedDist = Math.round(liveMetersToTurn / 50) * 50;
+      speak(`Continue straight for ${roundedDist} meters`);
+    }
+  }, [isNavigatingInApp, currentStepIndex, steps, liveMetersToTurn, speak]);
+
+  // 2. Continuous real-time GPS distance countdown, imminent turn prompt at 35m & auto-advance
   useEffect(() => {
     if (!isNavigatingInApp || !steps.length) return;
 
     const currentStep = steps[currentStepIndex];
     if (!currentStep) return;
 
-    const driverLat = liveCoords?.lat || driverProfile?.lastLatitude;
-    const driverLng = liveCoords?.lng || driverProfile?.lastLongitude;
+    const driverLat = liveCoords?.lat || driverProfile?.lastLatitude || activeDelivery?.pickupLatitude;
+    const driverLng = liveCoords?.lng || driverProfile?.lastLongitude || activeDelivery?.pickupLongitude;
     if (driverLat && driverLng && currentStep.location) {
       const dLat = (driverLat - currentStep.location[0]) * 111320;
       const dLng = (driverLng - currentStep.location[1]) * 111320 * Math.cos((driverLat * Math.PI) / 180);
@@ -186,12 +306,18 @@ export function DriverDashboardPage() {
       // Update HUD banner countdown in real-time
       setLiveMetersToTurn(distToTurnMeters);
 
-      // When driver is within 35m of the turn junction, auto-advance to next maneuver
-      if (distToTurnMeters <= 35 && currentStepIndex < steps.length - 1) {
-        setCurrentStepIndex((prev) => prev + 1);
+      // When driver is within 35m of the turn junction, announce imminent turn and advance
+      if (distToTurnMeters <= 35) {
+        if (currentStepIndex < steps.length - 1) {
+          speak(currentStep.instruction);
+          setCurrentStepIndex((prev) => prev + 1);
+        } else if (currentStepIndex === steps.length - 1 && distToTurnMeters <= 25) {
+          speak("You have arrived at your destination");
+        }
       }
     }
-  }, [isNavigatingInApp, currentStepIndex, steps, liveCoords?.lat, liveCoords?.lng, driverProfile?.lastLatitude, driverProfile?.lastLongitude]);
+  }, [isNavigatingInApp, currentStepIndex, steps, liveCoords?.lat, liveCoords?.lng, driverProfile?.lastLatitude, driverProfile?.lastLongitude, activeDelivery?.pickupLatitude, activeDelivery?.pickupLongitude, speak]);
+
 
 
 
@@ -205,8 +331,8 @@ export function DriverDashboardPage() {
   const launchSmartNavigation = (provider?: "smart" | "google" | "waze" | "apple") => {
     if (!activeDelivery) return;
 
-    // Determine current target destination (Pickup warehouse if not yet picked up, Dropoff if in transit)
-    const isPickupTarget = activeDelivery.status === "ASSIGNED";
+    // Determine current target destination based on selected nav target (default: customer dropoff)
+    const isPickupTarget = navTarget === "pickup";
     const targetLat = isPickupTarget ? activeDelivery.pickupLatitude : activeDelivery.dropoffLatitude;
     const targetLng = isPickupTarget ? activeDelivery.pickupLongitude : activeDelivery.dropoffLongitude;
     const targetLabel = encodeURIComponent(isPickupTarget ? activeDelivery.pickupAddress : activeDelivery.dropoffAddress);
@@ -331,9 +457,6 @@ export function DriverDashboardPage() {
 
   // Automated Silent GPS Streaming Loop (Tier 2 Enforced Telemetry)
   useEffect(() => {
-    const shouldTrack = isOnline || Boolean(activeDelivery);
-    if (!shouldTrack) return;
-
     let watchId: number | null = null;
     let heartbeatInterval: any = null;
 
@@ -350,43 +473,56 @@ export function DriverDashboardPage() {
     };
 
     if (navigator.geolocation) {
-      // Immediate initial GPS fix
+      // 1. Instant Network/Cell-Tower Fix (Works in 100ms even indoors in Mende)
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           setLiveCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          setGpsAccuracy(Math.round(pos.coords.accuracy));
+          setGpsError(null);
           pushLocation(pos.coords.latitude, pos.coords.longitude);
         },
         (err) => {
-          console.warn("[Telemetry] Initial GPS fix warning:", err.message);
+          console.warn("[Telemetry] Fast fix warning:", err.message);
         },
-        { enableHighAccuracy: true, timeout: 8000 }
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
       );
 
-      // 1. Live position watcher (emits on physical movement)
+      // 2. High-Accuracy Satellite Watcher (Refines to 5m as carrier moves outside)
       watchId = navigator.geolocation.watchPosition(
         (pos) => {
           setLiveCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          setGpsAccuracy(Math.round(pos.coords.accuracy));
+          setGpsError(null);
           pushLocation(pos.coords.latitude, pos.coords.longitude);
         },
         (err) => {
           console.warn("[Telemetry] Geolocation watch warning:", err.message);
+          if (err.code === 1) {
+            setGpsError("Location Permission Denied: Tap the lock icon in your browser address bar and set Location to Allow.");
+          } else if (err.code === 2) {
+            setGpsError("Location Unavailable: Ensure Phone GPS is switched ON in phone settings.");
+          }
         },
-        { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
+        { enableHighAccuracy: true, maximumAge: 3000, timeout: 15000 }
       );
 
-      // 2. High-frequency 3-second heartbeat for continuous live navigation
+      // 3. High-Frequency Continuous Heartbeat Ping
       heartbeatInterval = setInterval(() => {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             setLiveCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+            setGpsAccuracy(Math.round(pos.coords.accuracy));
+            setGpsError(null);
             pushLocation(pos.coords.latitude, pos.coords.longitude);
           },
           (err) => {
             console.warn("[Telemetry] Heartbeat ping warning:", err.message);
           },
-          { enableHighAccuracy: true, timeout: 5000 }
+          { enableHighAccuracy: true, timeout: 8000 }
         );
-      }, 3000);
+      }, 4000);
+    } else {
+      setGpsError("Geolocation is not supported by your mobile browser.");
     }
 
     return () => {
@@ -1060,27 +1196,65 @@ export function DriverDashboardPage() {
               </div>
 
               {/* ─── Custom In-App Turn-by-Turn Navigation Cockpit ─── */}
-              <div className="bg-gradient-to-r from-slate-900 via-slate-900/90 to-teal-950/40 border border-teal-500/30 rounded-2xl p-4 shadow-xl flex flex-wrap items-center justify-between gap-4 relative overflow-hidden">
+              <div className="bg-gradient-to-r from-slate-900 via-slate-900/90 to-teal-950/40 border border-teal-500/30 rounded-2xl p-4 shadow-xl flex flex-col gap-3 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-48 h-48 bg-teal-500/5 rounded-full blur-2xl pointer-events-none" />
 
-                <div className="flex items-center gap-3.5 z-10">
-                  <div className="w-12 h-12 rounded-xl bg-teal-500/20 text-teal-300 border border-teal-500/40 flex items-center justify-center text-2xl shadow-inner shrink-0">
-                    <Icon icon={activeDelivery.status === "ASSIGNED" ? "solar:box-minimalistic-bold-duotone" : "solar:routing-2-bold-duotone"} />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] uppercase tracking-widest font-extrabold px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 border border-teal-500/30">
-                        {activeDelivery.status === "ASSIGNED" ? "Target: Pickup Hub" : "Target: Dropoff Client"}
-                      </span>
-                      <span className="text-xs text-slate-400 font-mono">
-                        {distanceKm ? `${distanceKm} km` : "Routing..."} • {durationRange ? `~${durationRange}` : durationMins ? `~${durationMins} mins` : "Calculating ETA..."}
-                      </span>
+                {/* Target Toggle Tabs (Dropoff vs Pickup) */}
+                <div className="flex items-center justify-between gap-2 border-b border-white/5 pb-2.5 z-10">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Navigate To:</span>
+                    <div className="flex bg-slate-950/80 p-0.5 rounded-xl border border-white/10 gap-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNavTarget("dropoff");
+                          setCurrentStepIndex(0);
+                        }}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${navTarget === "dropoff"
+                          ? "bg-teal-500 text-slate-950 shadow"
+                          : "text-slate-400 hover:text-white"
+                          }`}
+                      >
+                        <Icon icon="solar:flag-2-bold" />
+                        <span>Customer Dropoff (Yaba)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNavTarget("pickup");
+                          setCurrentStepIndex(0);
+                        }}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${navTarget === "pickup"
+                          ? "bg-teal-500 text-slate-950 shadow"
+                          : "text-slate-400 hover:text-white"
+                          }`}
+                      >
+                        <Icon icon="solar:box-minimalistic-bold" />
+                        <span>Pickup Hub (Surulere)</span>
+                      </button>
                     </div>
-                    <h3 className="text-sm font-bold text-slate-100 mt-1 truncate max-w-sm sm:max-w-md">
-                      {activeDelivery.status === "ASSIGNED" ? activeDelivery.pickupAddress : activeDelivery.dropoffAddress}
-                    </h3>
                   </div>
                 </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-4 z-10">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-12 h-12 rounded-xl bg-teal-500/20 text-teal-300 border border-teal-500/40 flex items-center justify-center text-2xl shadow-inner shrink-0">
+                      <Icon icon={navTarget === "dropoff" ? "solar:flag-2-bold" : "solar:box-minimalistic-bold-duotone"} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] uppercase tracking-widest font-extrabold px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 border border-teal-500/30">
+                          {navTarget === "dropoff" ? "Target: Customer Dropoff" : "Target: Pickup Hub"}
+                        </span>
+                        <span className="text-xs text-slate-400 font-mono">
+                          {distanceKm ? `${distanceKm} km` : "Routing..."} • {durationRange ? `~${durationRange}` : durationMins ? `~${durationMins} mins` : "Calculating ETA..."}
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-bold text-slate-100 mt-1 truncate max-w-sm sm:max-w-md">
+                        {navTarget === "dropoff" ? activeDelivery.dropoffAddress : activeDelivery.pickupAddress}
+                      </h3>
+                    </div>
+                  </div>
 
                 {/* Primary Action Button: Launch In-App Navigator */}
                 <div className="flex items-center gap-2 z-10 w-full sm:w-auto">
@@ -1089,7 +1263,7 @@ export function DriverDashboardPage() {
                     onClick={() => {
                       if (!isNavigatingInApp) {
                         setCurrentStepIndex(0);
-                        lastAnnouncedStepRef.current = -1;
+                        lastSpokenStepRef.current = -1;
                         setIsNavigatingInApp(true);
                       } else {
                         setIsNavigatingInApp(false);
@@ -1117,6 +1291,55 @@ export function DriverDashboardPage() {
                     <span className="hidden sm:inline">External Maps</span>
                   </button>
                 </div>
+              </div>
+            </div>
+
+              {/* ─── LIVE PHONE GPS STATUS & DIAGNOSTICS BAR ─── */}
+              <div className={`p-3 rounded-xl border flex flex-wrap items-center justify-between gap-3 text-xs transition-all ${
+                liveCoords
+                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                  : gpsError
+                  ? "bg-red-500/10 border-red-500/30 text-red-300"
+                  : "bg-amber-500/10 border-amber-500/30 text-amber-300"
+              }`}>
+                <div className="flex items-center gap-2.5">
+                  <div className={`w-2.5 h-2.5 rounded-full ${
+                    liveCoords ? "bg-emerald-400 animate-pulse" : "bg-amber-400 animate-ping"
+                  }`} />
+                  <div>
+                    <div className="font-bold flex items-center gap-2">
+                      <span>
+                        {liveCoords
+                          ? `Live Phone GPS Locked (${liveCoords.lat.toFixed(4)}° N, ${liveCoords.lng.toFixed(4)}° E)`
+                          : gpsError
+                          ? gpsError
+                          : "Connecting to Phone GPS (Mende)..."}
+                      </span>
+                      {gpsAccuracy && (
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          ±{gpsAccuracy}m precision
+                        </span>
+                      )}
+                    </div>
+                    {!liveCoords && !gpsError && (
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Please ensure Location Services are allowed in your mobile browser.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {!liveCoords && (
+                  <button
+                    type="button"
+                    onClick={requestGpsFix}
+                    disabled={requestingGps}
+                    className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow transition-all cursor-pointer"
+                  >
+                    <Icon icon={requestingGps ? "lucide:loader-2" : "solar:gps-bold"} className={requestingGps ? "animate-spin text-sm" : "text-sm"} />
+                    <span>{requestingGps ? "Connecting GPS..." : "📡 Connect My Phone GPS"}</span>
+                  </button>
+                )}
               </div>
 
               {/* ─── LIVE MAP WITH IN-APP TURN-BY-TURN HUD ─── */}
@@ -1221,11 +1444,12 @@ export function DriverDashboardPage() {
                     }
                   />
 
-                  {/* Auto-Camera Follow Driver when In-App Nav is Active */}
+                  {/* Auto-Camera Follow Driver (Street-level zoom 17 when Navigating, full route framing when idle) */}
                   <MapRecenter
                     lat={liveCoords?.lat || driverProfile?.lastLatitude || activeDelivery.pickupLatitude}
                     lng={liveCoords?.lng || driverProfile?.lastLongitude || activeDelivery.pickupLongitude}
                     isNavigating={isNavigatingInApp}
+                    routeCoords={routeCoords}
                   />
 
                   {/* Pickup Pin */}
@@ -1249,26 +1473,36 @@ export function DriverDashboardPage() {
                     <Popup><div className="text-black text-xs font-bold text-red-600">Your Live GPS Location</div></Popup>
                   </Marker>
 
-                  {/* OSRM Real-Road Route Polyline */}
+                  {/* OSRM Real-Road Driveway Corridor */}
                   {routeCoords.length > 1 ? (
-                    <Polyline
-                      positions={routeCoords}
-                      color="#00F2FE"
-                      weight={5}
-                      opacity={0.9}
-                    />
-                  ) : (
+                    <>
+                      {/* High-contrast casing outline */}
+                      <Polyline
+                        positions={routeCoords}
+                        color="#0369a1"
+                        weight={9}
+                        opacity={0.8}
+                      />
+                      {/* Glowing vibrant driveway corridor */}
+                      <Polyline
+                        positions={routeCoords}
+                        color="#00F2FE"
+                        weight={5}
+                        opacity={1}
+                      />
+                    </>
+                  ) : (navOriginLat && navOriginLng && navDestLat && navDestLng ? (
                     <Polyline
                       positions={[
-                        [activeDelivery.pickupLatitude, activeDelivery.pickupLongitude],
-                        [activeDelivery.dropoffLatitude, activeDelivery.dropoffLongitude],
+                        [navOriginLat, navOriginLng],
+                        [navDestLat, navDestLng],
                       ]}
                       color="#00F2FE"
-                      weight={3}
-                      dashArray="5, 10"
-                      opacity={0.5}
+                      weight={4}
+                      dashArray="6, 10"
+                      opacity={0.7}
                     />
-                  )}
+                  ) : null)}
                 </MapContainer>
               </div>
 

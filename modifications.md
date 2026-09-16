@@ -177,11 +177,24 @@ $$\text{Realistic Estimated Duration (mins)} = \text{Theoretical OSRM Duration} 
      * Real-time physical movement listener (`watchPosition`, `maximumAge: 2000`).
      * High-frequency 3-second continuous heartbeat (`setInterval`, `timeout: 5000`).
   2. **Dynamic Turn-by-Turn Meter Countdown (`liveMetersToTurn`):** Calculates Euclidean/Haversine meters between `liveCoords` and the target junction coordinates on every GPS tick:
-  3. **Automated Turn Progression:** Automatically transitions `currentStepIndex` to the next instruction when the driver approaches within **35 meters** of the junction.
-  4. **Once-Per-Step Voice Announcements:** Decoupled turn speech from live GPS coordinate updates using `lastAnnouncedStepRef`. The navigator speaks each maneuver instruction strictly once upon reaching a step, preventing repetition on continuous GPS pings.
-  5. **Elimination of False "Recalculating" Loops:** Removed the flawed `distToTurnMeters > 150` check that falsely treated normal travel down a street as an off-route deviation.
-  6. **Clean HUD Controls:** Removed the confusing manual right-arrow skip button beside the volume icon. Replaced it with a clean Exit Navigator (`X`) button alongside the Audio Mute/Unmute toggle.
-  7. **Gliding Driver Marker & Camera Follow:** The map pin (`driverIcon`) and Leaflet `<MapRecenter />` track `liveCoords` directly, smoothly following the carrier's movement across streets.
+### L. Google Maps-Style Turn Co-Pilot & Navigation Target Switcher
+
+* **Root Causes of the Two Reported Issues:**
+  1. **"Never spoke again after the first instruction":** The delivery was in `ASSIGNED` status, meaning the app routed the driver to the **Pickup Hub in Surulere** (only 64 meters away from where the user stood). With a 64m route, there was only 1 step. Once the user walked 30 meters, the entire route was finished, so there were no further steps left to speak.
+  2. **"No driveway shown, looking plane":** At default city-level zoom (zoom 13), a 64-meter route is only a couple of pixels wide, making the map look completely flat/empty with no visible driveway corridor.
+* **Solutions Implemented ([`DriverDashboardPage.tsx`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/features/dashboard/pages/DriverDashboardPage.tsx)):**
+  1. **Navigation Target Switcher (`navTarget`):**
+     * Added high-contrast tab controls: **`[ 🏁 Customer Dropoff: Yaba (6.1 km) ]`** vs **`[ 📦 Pickup Hub: Surulere (64m) ]`**.
+     * Defaults to **Customer Dropoff (Yaba)** so the driver immediately gets the complete 6.1 km trip with 8+ turn maneuvers, realistic 14–19 min Lagos traffic ETA, and the full road corridor across Lagos.
+  2. **Multi-Stage Google Maps Audio Co-Pilot:**
+     * **Stage A (Step Entry):** Announces upcoming maneuver with distance (*"In 450 meters, turn right onto Funsho Williams Avenue"*).
+     * **Stage B (Approach Alert):** Re-announces when approaching within $70\text{m} - 130\text{m}$ of the turn (*"In 100 meters, turn right onto Funsho Williams Avenue"*).
+     * **Stage C (Imminent Turn):** Prompts at the junction ($35\text{m}$): *"Turn right onto Funsho Williams Avenue"*, then auto-advances.
+     * **Stage D (Straight-Road Reassurance):** Every 35 seconds of driving along a long street ($>200\text{m}$), calms the driver with: *"Continue straight for [X] meters"*.
+     * **Stage E (Arrival):** Announces *"You have arrived at your destination"*.
+  3. **Street-Level Zoom (Zoom 17) & Dual-Layer Driveway Corridor:**
+     * When navigation launches, `<MapRecenter />` automatically sets camera to **Zoom 17** (street-level), revealing individual driveways, roads, and street names right in front of the vehicle.
+     * Rendered a dual-layer Polyline corridor: a high-contrast dark blue casing outline (`weight: 9`) under a glowing cyan driveway core (`weight: 5`), clearly visible on both street and satellite views.
 
 ---
 
