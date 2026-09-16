@@ -9,6 +9,8 @@ import { SignatureCanvas } from "@/components/SignatureCanvas";
 import { Icon } from "@iconify/react";
 import { LogistelLogo } from "@/components/LogistelLogo";
 import { useOsrmRoute } from "@/utils/useOsrmRoute";
+import { useNavigationAudio } from "@/utils/useNavigatorAudio";
+
 
 // Leaflet imports
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
@@ -110,8 +112,8 @@ export function DriverDashboardPage() {
   const [loadingAvailable, setLoadingAvailable] = useState(false);
   const [claimingId, setClaimingId] = useState<string | null>(null);
 
-  // OSRM road route geometry for driver navigation with live distance & ETA
-  const { routeCoords, distanceKm, durationMins, durationRange } = useOsrmRoute(
+  // OSRM road route geometry for driver navigation with live distance, ETA & turn steps
+  const { routeCoords, distanceKm, durationMins, durationRange, steps } = useOsrmRoute(
     activeDelivery?.status === "ASSIGNED"
       ? (driverProfile?.lastLatitude || activeDelivery?.pickupLatitude)
       : activeDelivery?.pickupLatitude,
@@ -126,6 +128,43 @@ export function DriverDashboardPage() {
       : activeDelivery?.dropoffLongitude,
     driverProfile?.vehicleType
   );
+
+  // ─── Custom In-App Navigator States ───
+  const [isNavigatingInApp, setIsNavigatingInApp] = useState(false);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [mapLayerType, setMapLayerType] = useState<"streets" | "satellite">("streets");
+
+  // Audio Guidance & Screen-Wake Engine
+  const { speak, isMuted, toggleMute, isWakeLocked } = useNavigationAudio(isNavigatingInApp);
+
+  // Track driver progress through turn steps & speak instructions
+  useEffect(() => {
+    if (!isNavigatingInApp || !steps.length) return;
+
+    const currentStep = steps[currentStepIndex];
+    if (!currentStep) return;
+
+    // Speak initial direction for this step
+    speak(currentStep.instruction);
+
+    // Check distance between driver and current step junction
+    const driverLat = driverProfile?.lastLatitude;
+    const driverLng = driverProfile?.lastLongitude;
+    if (driverLat && driverLng && currentStep.location) {
+      const dLat = (driverLat - currentStep.location[0]) * 111320;
+      const dLng = (driverLng - currentStep.location[1]) * 111320 * Math.cos((driverLat * Math.PI) / 180);
+      const distToTurnMeters = Math.sqrt(dLat * dLat + dLng * dLng);
+
+      // When driver is within 40m of junction, auto-advance to next turn
+      if (distToTurnMeters < 40 && currentStepIndex < steps.length - 1) {
+        setCurrentStepIndex((prev) => prev + 1);
+      }
+    }
+  }, [isNavigatingInApp, currentStepIndex, steps, driverProfile?.lastLatitude, driverProfile?.lastLongitude, speak]);
+
+
+
+  
 
   // Approach A: Smart Default Navigation Launcher (Detects iOS, Android, or Desktop)
   const launchSmartNavigation = (provider?: "smart" | "google" | "waze" | "apple") => {
@@ -975,7 +1014,7 @@ export function DriverDashboardPage() {
                 </div>
               </div>
 
-              {/* Uber/Glovo Style Driver Navigation Cockpit HUD */}
+              {/* ─── Custom In-App Turn-by-Turn Navigation Cockpit ─── */}
               <div className="bg-gradient-to-r from-slate-900 via-slate-900/90 to-teal-950/40 border border-teal-500/30 rounded-2xl p-4 shadow-xl flex flex-wrap items-center justify-between gap-4 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-48 h-48 bg-teal-500/5 rounded-full blur-2xl pointer-events-none" />
 
@@ -998,42 +1037,118 @@ export function DriverDashboardPage() {
                   </div>
                 </div>
 
-                {/* 1-Tap Smart Turn-by-Turn Action (Approach A) */}
+                {/* Primary Action Button: Launch In-App Navigator */}
                 <div className="flex items-center gap-2 z-10 w-full sm:w-auto">
                   <button
                     type="button"
-                    onClick={() => launchSmartNavigation("smart")}
-                    className="flex-1 sm:flex-initial px-5 py-3 rounded-xl bg-gradient-to-r from-teal-500 via-emerald-500 to-teal-400 hover:from-teal-400 hover:to-emerald-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-teal-500/25 flex items-center justify-center gap-2.5 transition-all cursor-pointer active:scale-95"
+                    onClick={() => {
+                      setIsNavigatingInApp((prev) => !prev);
+                      if (!isNavigatingInApp && steps.length > 0) {
+                        speak(steps[0].instruction, true);
+                      }
+                    }}
+                    className={`flex-1 sm:flex-initial px-5 py-3 rounded-xl font-extrabold text-xs shadow-lg flex items-center justify-center gap-2.5 transition-all cursor-pointer active:scale-95 ${
+                      isNavigatingInApp
+                        ? "bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20"
+                        : "bg-gradient-to-r from-teal-500 via-emerald-500 to-teal-400 hover:from-teal-400 hover:to-emerald-400 text-slate-950 shadow-teal-500/25"
+                    }`}
                   >
-                    <Icon icon="solar:compass-bold" className="text-lg" />
-                    <span>Start Turn-by-Turn Navigation</span>
+                    <Icon icon={isNavigatingInApp ? "solar:close-circle-bold" : "solar:compass-bold"} className="text-lg" />
+                    <span>{isNavigatingInApp ? "Exit Navigator HUD" : "Start In-App Navigation"}</span>
                   </button>
 
-                  {/* Optional Waze Quick Launcher */}
+                  {/* Secondary Emergency Fallback to External Maps */}
                   <button
                     type="button"
-                    onClick={() => launchSmartNavigation("waze")}
-                    title="Open in Waze (Traffic & Police Alerts)"
-                    className="px-3 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer"
+                    onClick={() => launchSmartNavigation("smart")}
+                    title="Emergency Backup: Open Google/Apple Maps"
+                    className="px-3 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
                   >
-                    <Icon icon="simple-icons:waze" className="text-base text-cyan-400" />
-                    <span className="hidden sm:inline">Waze</span>
+                    <Icon icon="solar:map-point-wave-bold" className="text-base text-cyan-400" />
+                    <span className="hidden sm:inline">External Maps</span>
                   </button>
                 </div>
               </div>
 
-              {/* Navigation Map with Real-Time HUD Overlay */}
-              <div className="h-[300px] rounded-xl overflow-hidden border border-white/10 relative z-0 shadow-lg">
-                {/* Live Floating Route Corridor Badge */}
-                <div className="absolute top-3 left-3 z-[1000] bg-slate-950/85 backdrop-blur-md border border-teal-500/30 px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-2 text-xs">
-                  <span className="w-2 h-2 rounded-full bg-teal-400 animate-ping" />
-                  <span className="font-mono text-teal-300 font-bold">
-                    {distanceKm ? `${distanceKm} km` : "Real-road GPS"}
-                  </span>
-                  <span className="text-slate-400">•</span>
-                  <span className="text-slate-300 font-semibold">
-                    {durationRange ? `~${durationRange} (Lagos traffic)` : durationMins ? `${durationMins} mins drive` : "Optimized corridor"}
-                  </span>
+              {/* ─── LIVE MAP WITH IN-APP TURN-BY-TURN HUD ─── */}
+              <div className={`rounded-xl overflow-hidden border border-white/10 relative z-0 shadow-lg transition-all ${
+                isNavigatingInApp ? "h-[450px] ring-2 ring-teal-500/40" : "h-[300px]"
+              }`}>
+                {/* IN-APP TURN MANEUVER BANNER (When Navigating) */}
+                {isNavigatingInApp && steps.length > 0 && steps[currentStepIndex] && (
+                  <div className="absolute top-3 left-3 right-3 z-[1000] bg-slate-950/95 backdrop-blur-md border border-teal-500/50 rounded-xl p-3.5 shadow-2xl flex items-center justify-between gap-3 text-slate-100">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-lg bg-teal-500 text-slate-950 flex items-center justify-center text-xl shrink-0 font-extrabold shadow">
+                        {steps[currentStepIndex].modifier?.includes("left") ? (
+                          <Icon icon="solar:round-arrow-left-bold" />
+                        ) : steps[currentStepIndex].modifier?.includes("right") ? (
+                          <Icon icon="solar:round-arrow-right-bold" />
+                        ) : steps[currentStepIndex].maneuverType === "arrive" ? (
+                          <Icon icon="solar:flag-2-bold" />
+                        ) : (
+                          <Icon icon="solar:round-arrow-up-bold" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-mono font-bold text-teal-300 bg-teal-500/20 px-2 py-0.5 rounded border border-teal-500/30">
+                            {steps[currentStepIndex].distanceMeters > 0 ? `${steps[currentStepIndex].distanceMeters}m` : "Ahead"}
+                          </span>
+                          <span className="text-[10px] text-slate-400">
+                            Step {currentStepIndex + 1} of {steps.length}
+                          </span>
+                        </div>
+                        <p className="font-bold text-xs sm:text-sm text-white truncate mt-0.5">
+                          {steps[currentStepIndex].instruction}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Audio Mute & Next Step Manual Controls */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={toggleMute}
+                        title={isMuted ? "Unmute Voice Guidance" : "Mute Voice Guidance"}
+                        className={`p-2 rounded-lg border transition-all cursor-pointer ${
+                          isMuted
+                            ? "bg-red-500/20 text-red-400 border-red-500/30"
+                            : "bg-teal-500/20 text-teal-300 border-teal-500/30"
+                        }`}
+                      >
+                        <Icon icon={isMuted ? "solar:volume-cross-bold" : "solar:volume-loud-bold"} className="text-base" />
+                      </button>
+
+                      {currentStepIndex < steps.length - 1 && (
+                        <button
+                          type="button"
+                          onClick={() => setCurrentStepIndex((i) => i + 1)}
+                          title="Skip to next step"
+                          className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs transition-all cursor-pointer"
+                        >
+                          <Icon icon="lucide:arrow-right" className="text-sm" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Satellite / Street Map Toggle & Wake Lock Badge */}
+                <div className="absolute bottom-3 right-3 z-[1000] flex items-center gap-2">
+                  {isWakeLocked && (
+                    <span className="bg-slate-950/80 backdrop-blur-md border border-emerald-500/30 text-emerald-300 px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold flex items-center gap-1 shadow">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Screen Awake
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setMapLayerType((t) => (t === "streets" ? "satellite" : "streets"))}
+                    className="bg-slate-950/85 backdrop-blur-md border border-white/20 hover:border-teal-400 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Icon icon={mapLayerType === "streets" ? "solar:satellite-bold" : "solar:map-bold"} className="text-sm text-teal-400" />
+                    <span>{mapLayerType === "streets" ? "Satellite" : "Street Map"}</span>
+                  </button>
                 </div>
 
                 <MapContainer
@@ -1041,13 +1156,17 @@ export function DriverDashboardPage() {
                     (activeDelivery.pickupLatitude + activeDelivery.dropoffLatitude) / 2,
                     (activeDelivery.pickupLongitude + activeDelivery.dropoffLongitude) / 2,
                   ]}
-                  zoom={12}
+                  zoom={13}
                   style={{ height: "100%", width: "100%" }}
                   zoomControl={false}
                 >
                   <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; OpenStreetMap contributors'
+                    url={
+                      mapLayerType === "satellite"
+                        ? "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                        : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    }
                   />
 
                   {/* Pickup Pin */}
@@ -1068,7 +1187,7 @@ export function DriverDashboardPage() {
                     ]}
                     icon={driverIcon}
                   >
-                    <Popup><div className="text-black text-xs font-bold text-red-600">Your Current Vehicle Location</div></Popup>
+                    <Popup><div className="text-black text-xs font-bold text-red-600">Your Current Location</div></Popup>
                   </Marker>
 
                   {/* OSRM Real-Road Route Polyline */}

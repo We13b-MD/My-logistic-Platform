@@ -5,15 +5,28 @@ import { useState, useEffect } from "react";
  * ─────────────────────────────────────────────────────────────────────────────
  * Fetches a real-road route between two coordinates using the public OSRM demo
  * server (https://router.project-osrm.org). Returns:
- *   - routeCoords  : Array of [lat, lng] tuples that form the road path
- *   - distanceKm   : Road distance in kilometres
- *   - durationMins : Estimated drive time in minutes
- *   - loading      : true while the request is in flight
- *   - error        : error message string if the request failed
- *
- * The hook skips the fetch when any coordinate is missing / 0.
+ *   - routeCoords        : Array of [lat, lng] tuples that form the road path
+ *   - distanceKm         : Road distance in kilometres
+ *   - durationMins       : Estimated drive time in minutes (calibrated for traffic)
+ *   - rawDurationMins    : Theoretical empty-highway duration
+ *   - durationRange      : Formatted range string (e.g. "14 - 20 mins")
+ *   - trafficMultiplier  : Dynamic multiplier applied
+ *   - trafficCondition   : Traffic classification
+ *   - steps              : Array of turn-by-turn maneuver steps for the In-App HUD
+ *   - loading            : true while request is in flight
+ *   - error              : error message string if request failed
  * ─────────────────────────────────────────────────────────────────────────────
  */
+
+export interface RouteStep {
+  instruction: string;        // e.g. "Turn left onto Bode Thomas St"
+  streetName: string;         // e.g. "Bode Thomas St"
+  maneuverType: string;       // e.g. "turn", "depart", "arrive", "roundabout"
+  modifier?: string;          // e.g. "left", "right", "slight left", "sharp right", "straight"
+  distanceMeters: number;     // e.g. 350
+  durationSeconds: number;    // e.g. 45
+  location: [number, number]; // [lat, lng] of the intersection
+}
 
 export interface OsrmRouteResult {
   routeCoords: [number, number][];
@@ -23,6 +36,7 @@ export interface OsrmRouteResult {
   durationRange: string | null;
   trafficMultiplier: number | null;
   trafficCondition: "FREE_FLOW" | "NORMAL_CITY" | "PEAK_RUSH" | null;
+  steps: RouteStep[];
   loading: boolean;
   error: string | null;
 }
@@ -41,6 +55,7 @@ export function useOsrmRoute(
   const [durationRange, setDurationRange] = useState<string | null>(null);
   const [trafficMultiplier, setTrafficMultiplier] = useState<number | null>(null);
   const [trafficCondition, setTrafficCondition] = useState<"FREE_FLOW" | "NORMAL_CITY" | "PEAK_RUSH" | null>(null);
+  const [steps, setSteps] = useState<RouteStep[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,6 +68,7 @@ export function useOsrmRoute(
       setRawDurationMins(null);
       setTrafficMultiplier(null);
       setTrafficCondition(null);
+      setSteps([]);
       return;
     }
 
@@ -63,12 +79,11 @@ export function useOsrmRoute(
       setError(null);
 
       try {
-        // OSRM public demo endpoint — free, no API key required
-        // Format: /route/v1/{profile}/{lng,lat};{lng,lat}
+        // Request route with geometries AND turn-by-turn maneuver steps
         const url =
           `https://router.project-osrm.org/route/v1/driving/` +
           `${pickupLng},${pickupLat};${dropoffLng},${dropoffLat}` +
-          `?overview=full&geometries=geojson`;
+          `?overview=full&geometries=geojson&steps=true`;
 
         const response = await fetch(url);
 
@@ -98,6 +113,36 @@ export function useOsrmRoute(
         // Raw theoretical duration (free-flow empty expressway)
         const idealMins = Math.round(route.duration / 60);
         setRawDurationMins(idealMins);
+
+        // ─────────────────────────────────────────────────────────────────────
+        // Parse Turn-by-Turn Maneuver Steps for the In-App HUD
+        // ─────────────────────────────────────────────────────────────────────
+        const rawSteps = route.legs?.[0]?.steps || [];
+        const parsedSteps: RouteStep[] = rawSteps.map((s: any) => {
+          const type = s.maneuver?.type || "continue";
+          const modifier = s.maneuver?.modifier || "";
+          const name = s.name || "Unnamed Road";
+
+          // Generate human-friendly speech & text instruction
+          let text = `Continue on ${name}`;
+          if (type === "depart") text = `Head out on ${name}`;
+          else if (type === "arrive") text = `Arrive at destination`;
+          else if (type === "roundabout") text = `Enter roundabout and take exit onto ${name}`;
+          else if (modifier) text = `Turn ${modifier} onto ${name}`;
+
+          return {
+            instruction: text,
+            streetName: name,
+            maneuverType: type,
+            modifier: modifier,
+            distanceMeters: Math.round(s.distance || 0),
+            durationSeconds: Math.round(s.duration || 0),
+            // Flip GeoJSON [lng, lat] to Leaflet [lat, lng]
+            location: [s.maneuver.location[1], s.maneuver.location[0]] as [number, number],
+          };
+        });
+
+        setSteps(parsedSteps);
 
         // ─────────────────────────────────────────────────────────────────────
         // Lagos Urban Traffic Multiplier (Realistic City Calibration)
@@ -140,8 +185,8 @@ export function useOsrmRoute(
         if (!cancelled) {
           console.warn("OSRM route fetch failed:", err.message);
           setError(err.message || "Route unavailable.");
-          // Fall back silently — the caller can draw a straight line if needed
           setRouteCoords([]);
+          setSteps([]);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -150,7 +195,7 @@ export function useOsrmRoute(
 
     fetchRoute();
 
-    // Cleanup: if coordinates change before the fetch completes, ignore stale response
+    // Cleanup: if coordinates change before fetch completes, ignore stale response
     return () => {
       cancelled = true;
     };
@@ -164,6 +209,7 @@ export function useOsrmRoute(
     durationRange,
     trafficMultiplier,
     trafficCondition,
+    steps,
     loading,
     error,
   };
