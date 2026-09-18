@@ -1256,64 +1256,62 @@ export function DriverDashboardPage() {
                     </div>
                   </div>
 
-                {/* Primary Action Button: Launch In-App Navigator */}
-                <div className="flex items-center gap-2 z-10 w-full sm:w-auto">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!isNavigatingInApp) {
-                        setCurrentStepIndex(0);
-                        lastSpokenStepRef.current = -1;
-                        setIsNavigatingInApp(true);
-                      } else {
-                        setIsNavigatingInApp(false);
-                        setCurrentStepIndex(0);
-                        setLiveMetersToTurn(null);
-                      }
-                    }}
-                    className={`flex-1 sm:flex-initial px-5 py-3 rounded-xl font-extrabold text-xs shadow-lg flex items-center justify-center gap-2.5 transition-all cursor-pointer active:scale-95 ${isNavigatingInApp
-                      ? "bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20"
-                      : "bg-gradient-to-r from-teal-500 via-emerald-500 to-teal-400 hover:from-teal-400 hover:to-emerald-400 text-slate-950 shadow-teal-500/25"
-                      }`}
-                  >
-                    <Icon icon={isNavigatingInApp ? "solar:close-circle-bold" : "solar:compass-bold"} className="text-lg" />
-                    <span>{isNavigatingInApp ? "Exit Navigator HUD" : "Start In-App Navigation"}</span>
-                  </button>
+                  {/* Primary Action Button: Launch In-App Navigator */}
+                  <div className="flex items-center gap-2 z-10 w-full sm:w-auto">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!isNavigatingInApp) {
+                          setCurrentStepIndex(0);
+                          lastSpokenStepRef.current = -1;
+                          setIsNavigatingInApp(true);
+                        } else {
+                          setIsNavigatingInApp(false);
+                          setCurrentStepIndex(0);
+                          setLiveMetersToTurn(null);
+                        }
+                      }}
+                      className={`flex-1 sm:flex-initial px-5 py-3 rounded-xl font-extrabold text-xs shadow-lg flex items-center justify-center gap-2.5 transition-all cursor-pointer active:scale-95 ${isNavigatingInApp
+                        ? "bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20"
+                        : "bg-gradient-to-r from-teal-500 via-emerald-500 to-teal-400 hover:from-teal-400 hover:to-emerald-400 text-slate-950 shadow-teal-500/25"
+                        }`}
+                    >
+                      <Icon icon={isNavigatingInApp ? "solar:close-circle-bold" : "solar:compass-bold"} className="text-lg" />
+                      <span>{isNavigatingInApp ? "Exit Navigator HUD" : "Start In-App Navigation"}</span>
+                    </button>
 
-                  {/* Secondary Emergency Fallback to External Maps */}
-                  <button
-                    type="button"
-                    onClick={() => launchSmartNavigation("smart")}
-                    title="Emergency Backup: Open Google/Apple Maps"
-                    className="px-3 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Icon icon="solar:map-point-wave-bold" className="text-base text-cyan-400" />
-                    <span className="hidden sm:inline">External Maps</span>
-                  </button>
+                    {/* Secondary Emergency Fallback to External Maps */}
+                    <button
+                      type="button"
+                      onClick={() => launchSmartNavigation("smart")}
+                      title="Emergency Backup: Open Google/Apple Maps"
+                      className="px-3 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Icon icon="solar:map-point-wave-bold" className="text-base text-cyan-400" />
+                      <span className="hidden sm:inline">External Maps</span>
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
 
               {/* ─── LIVE PHONE GPS STATUS & DIAGNOSTICS BAR ─── */}
-              <div className={`p-3 rounded-xl border flex flex-wrap items-center justify-between gap-3 text-xs transition-all ${
-                liveCoords
-                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
-                  : gpsError
+              <div className={`p-3 rounded-xl border flex flex-wrap items-center justify-between gap-3 text-xs transition-all ${liveCoords
+                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                : gpsError
                   ? "bg-red-500/10 border-red-500/30 text-red-300"
                   : "bg-amber-500/10 border-amber-500/30 text-amber-300"
-              }`}>
+                }`}>
                 <div className="flex items-center gap-2.5">
-                  <div className={`w-2.5 h-2.5 rounded-full ${
-                    liveCoords ? "bg-emerald-400 animate-pulse" : "bg-amber-400 animate-ping"
-                  }`} />
+                  <div className={`w-2.5 h-2.5 rounded-full ${liveCoords ? "bg-emerald-400 animate-pulse" : "bg-amber-400 animate-ping"
+                    }`} />
                   <div>
                     <div className="font-bold flex items-center gap-2">
                       <span>
                         {liveCoords
                           ? `Live Phone GPS Locked (${liveCoords.lat.toFixed(4)}° N, ${liveCoords.lng.toFixed(4)}° E)`
                           : gpsError
-                          ? gpsError
-                          : "Connecting to Phone GPS (Mende)..."}
+                            ? gpsError
+                            : "Connecting to Phone GPS (Mende)..."}
                       </span>
                       {gpsAccuracy && (
                         <span className="text-[10px] text-slate-400 font-mono">

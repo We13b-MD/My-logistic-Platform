@@ -1662,11 +1662,11 @@ export function TenantDashboardPage() {
                       Invite Drivers to Join {user?.tenant?.companyName || "Your Fleet"}
                     </h3>
                     <p className="text-xs text-slate-400 max-w-xl">
-                      Share your direct registration link with your drivers. Your company subdomain (<span className="font-mono text-amber-400 font-bold">{user?.tenant?.subdomain || "your-subdomain"}</span>) and the Driver role will be pre-filled automatically.
+                      Share your direct registration links with your drivers and customers. Your company subdomain (<span className="font-mono text-amber-400 font-bold">{user?.tenant?.subdomain || "your-subdomain"}</span>) will be pre-filled automatically.
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
                       onClick={() => {
@@ -1678,10 +1678,25 @@ export function TenantDashboardPage() {
                       className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-teal-500/20 flex items-center gap-2 transition-all cursor-pointer active:scale-95 whitespace-nowrap"
                     >
                       <Icon icon="solar:copy-bold" className="text-sm" />
-                      <span>Copy Driver Invite Link</span>
+                      <span>Copy Driver Link</span>
                     </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const subdomain = user?.tenant?.subdomain || "";
+                        const url = `${window.location.origin}/register?subdomain=${subdomain}&role=CUSTOMER`;
+                        navigator.clipboard.writeText(url);
+                        toast.success("📋 Customer invite link copied to clipboard!");
+                      }}
+                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-400 hover:to-indigo-400 text-white font-extrabold text-xs shadow-lg shadow-blue-500/20 flex items-center gap-2 transition-all cursor-pointer active:scale-95 whitespace-nowrap"
+                    >
+                      <Icon icon="solar:copy-bold" className="text-sm" />
+                      <span>Copy Customer Link</span>
+                    </button>
+
                     <a
-                      href={`/register?subdomain=${user?.tenant?.subdomain || ""}&role=DRIVER`}
+                      href={`/register?subdomain=${user?.tenant?.subdomain || ""}&role=CUSTOMER`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-3 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap"
