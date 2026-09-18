@@ -16,6 +16,7 @@ docs/
 ```
 
 ## Documentation Guides
+- [Customer Delivery Pricing & Charging Guide](guides/price.md) — Standard operating procedure on how customers are charged, dynamic pricing formula, and vehicle rates.
 - [Map & Live Tracking Architecture](guides/map_and_tracking_architecture.md) — Comprehensive guide on Leaflet, OpenStreetMap, OSRM turn-by-turn routing, GPS telemetry, and the live courier simulation engine.
 - [Pricing & Payments Architecture](guides/pricing_and_payments.md) — Mathematical formulas for Haversine distance, dynamic rates, and Paystack UPR engine.
 - [Security Architecture](guides/security_architecture.md) — Defense-in-depth security model and Cloudflare edge rules.
