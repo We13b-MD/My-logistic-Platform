@@ -13,7 +13,7 @@ export async function sendOtpEmail(
   otpCode: string,
   type: EmailType = "VERIFICATION"
 ): Promise<boolean> {
-  const from = process.env.SMTP_FROM || `"Logistel Operations" <noreply@logistel.com>`;
+  const from = process.env.SMTP_FROM || `"Logistel Operations" <noreply@auth.logistel.com.ng>`;
 
   let subject = "Your Verification Code";
   let title = "Verification Required";
