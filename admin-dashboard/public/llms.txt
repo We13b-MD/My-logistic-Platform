@@ -1,0 +1,15 @@
+# Logistel - B2B Multi-Tenant Logistics & Freight Dispatch Platform
+
+> Logistel is a high-performance B2B logistics infrastructure platform operating in Nigeria. It connects logistics providers, dispatchers, drivers, and customers through automated dynamic pricing, real-time GPS tracking, automated Paystack payment settlement, and multi-tenant fleet management.
+
+## Key Features
+- **Dynamic Pricing Engine**: Automated fare quotes calculated via Haversine distance, vehicle type multipliers (Bike, Car, Van, Truck), and tenant base rates.
+- **Live Courier & Freight Tracking**: Turn-by-turn navigation, Leaflet/OSRM maps, and sub-second WebSocket telemetry updates.
+- **Unique Payment Reference (UPR)**: Instant payment reconciliation with Paystack card, bank transfer, and USSD checkouts.
+- **Multi-Tenant Fleet Operations**: Dedicated company subdomains (e.g. `yourcompany.logistel.com.ng`), driver onboarding, and role-based access control.
+
+## Links & API Documentation
+- Main Site: https://logistel.com.ng
+- Parcel Tracking: https://logistel.com.ng/track
+- Logistics Company Onboarding: https://logistel.com.ng/onboard
+- Registration: https://logistel.com.ng/register

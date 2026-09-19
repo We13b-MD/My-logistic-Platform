@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Allow: /track
+Allow: /onboard
+Allow: /register
+Allow: /login
+Disallow: /platform/
+Disallow: /tenant-owner/
+Disallow: /tenant-staff/
+Disallow: /driver/
+Disallow: /customer/
+
+Sitemap: https://logistel.com.ng/sitemap.xml
