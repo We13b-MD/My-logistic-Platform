@@ -109,7 +109,7 @@ When the customer confirms the order, the system generates an official Invoice c
 ### Step 3: Payment Processing
 Customers can pay via:
 - **Debit/Credit Cards** (Mastercard, Visa, Verve)
-- **Bank Transfer** (Instant Virtual Bank Account)
+- **Bank Transfer** (Instant Virtual Bank Account)  
 - **USSD / Mobile Money**
 
 ### Step 4: Real-time Settlement & Driver Dispatch

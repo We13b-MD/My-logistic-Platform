@@ -81,9 +81,9 @@ export function TenantStaffDashboardPage() {
   // Updating driver assignment or status override
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = async (isBackground = false) => {
     try {
-      setLoading(true);
+      if (!isBackground) setLoading(true);
       const [delivRes, driverRes] = await Promise.all([
         deliveryApi.list(),
         driverApi.listForAdmin(),
@@ -96,15 +96,21 @@ export function TenantStaffDashboardPage() {
         setDrivers(driverRes.data.data || []);
       }
     } catch (error) {
-      console.error("Failed to load dispatcher data:", error);
-      toast.error("Failed to load operational fleet data.");
+      if (!isBackground) {
+        console.error("Failed to load dispatcher data:", error);
+        toast.error("Failed to load operational fleet data.");
+      }
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchData();
+    const interval = setInterval(() => {
+      fetchData(true);
+    }, 12000);
+    return () => clearInterval(interval);
   }, []);
 
   // Handle Manual Status Transition Override
@@ -232,7 +238,7 @@ export function TenantStaffDashboardPage() {
           </div>
 
           <button
-            onClick={fetchData}
+            onClick={() => fetchData()}
             disabled={loading}
             className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors border border-slate-700"
             title="Refresh Orders"

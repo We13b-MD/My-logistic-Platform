@@ -70,7 +70,7 @@ export function TenantDashboardPage() {
   const [drivers, setDrivers] = useState<DriverProfile[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [decisionMetrics, setDecisionMetrics] = useState<DashboardMetricsData | null>(null);
-  const [_loadingMetrics, setLoadingMetrics] = useState(true);
+  const [loadingMetrics, setLoadingMetrics] = useState(true);
   const [selectedPodDelivery, setSelectedPodDelivery] = useState<Delivery | null>(null);
 
   // Billing & Subscription states
@@ -201,9 +201,9 @@ export function TenantDashboardPage() {
   const [assigningDeliveryId, setAssigningDeliveryId] = useState<string | null>(null);
 
   // Load deliveries, drivers, vehicles, and decision engine metrics
-  const fetchData = async () => {
+  const fetchData = async (isBackground = false) => {
     try {
-      setLoadingMetrics(true);
+      if (!isBackground) setLoadingMetrics(true);
       const [delivRes, driverRes, vehicleRes, metricsRes] = await Promise.all([
         deliveryApi.list(),
         driverApi.listForAdmin(),
@@ -224,10 +224,12 @@ export function TenantDashboardPage() {
         setDecisionMetrics(metricsRes.data.data || null);
       }
     } catch (error) {
-      console.error("Failed to load dashboard metrics:", error);
-      toast.error("Failed to load fleet metrics. Please verify server connection.");
+      if (!isBackground) {
+        console.error("Failed to load dashboard metrics:", error);
+        toast.error("Failed to load fleet metrics. Please verify server connection.");
+      }
     } finally {
-      setLoadingMetrics(false);
+      if (!isBackground) setLoadingMetrics(false);
     }
   };
 
@@ -259,12 +261,19 @@ export function TenantDashboardPage() {
   useEffect(() => {
     fetchData();
     fetchBillingData();
+
+    // Auto-refresh fleet roster & delivery metrics every 12 seconds
+    const interval = setInterval(() => {
+      fetchData(true);
+    }, 12000);
+
     // Load Paystack Inline script dynamically
     const script = document.createElement("script");
     script.src = "https://js.paystack.co/v1/inline.js";
     script.async = true;
     document.body.appendChild(script);
     return () => {
+      clearInterval(interval);
       document.body.removeChild(script);
     };
   }, []);
@@ -610,7 +619,18 @@ export function TenantDashboardPage() {
           )}
         </div>
 
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => {
+              fetchData();
+              toast.info("Refreshed fleet data.");
+            }}
+            title="Refresh fleet data"
+            className="flex items-center gap-1.5 bg-slate-900 border border-slate-700/80 hover:bg-teal-500/10 hover:border-teal-500/30 text-slate-300 hover:text-teal-400 transition-all py-1.5 px-3 rounded-xl text-xs font-semibold cursor-pointer"
+          >
+            <Icon icon="lucide:refresh-cw" className={`text-sm ${loadingMetrics ? "animate-spin text-teal-400" : ""}`} />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
           <div className="hidden sm:flex flex-col text-right">
             <span className="text-xs text-slate-200 font-semibold">
               {user?.email}

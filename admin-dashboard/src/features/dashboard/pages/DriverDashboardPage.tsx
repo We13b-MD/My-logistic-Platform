@@ -104,6 +104,7 @@ export function DriverDashboardPage() {
   const [driverProfile, setDriverProfile] = useState<DriverProfile | null>(null);
   const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const [submittingProfile, setSubmittingProfile] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   // Profile Form State
   const [profileForm, setProfileForm] = useState({
@@ -390,8 +391,30 @@ export function DriverDashboardPage() {
       setIsProfileLoaded(false);
       const res = await driverApi.getProfile();
       if (res.data?.status === "success" && res.data?.data) {
-        setDriverProfile(res.data.data);
-        setIsOnline(res.data.data.isOnline);
+        const profile = res.data.data;
+        setDriverProfile(profile);
+        setIsOnline(true);
+
+        // Auto-set Online in backend when logging in / opening the driver portal
+        if (!profile.isOnline) {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (pos) => {
+                driverApi.toggleOnlineStatus({
+                  isOnline: true,
+                  latitude: pos.coords.latitude,
+                  longitude: pos.coords.longitude,
+                }).catch((e) => console.warn("Auto-online coordinate sync:", e));
+              },
+              () => {
+                driverApi.toggleOnlineStatus({ isOnline: true }).catch((e) => console.warn("Auto-online sync:", e));
+              },
+              { timeout: 5000 }
+            );
+          } else {
+            driverApi.toggleOnlineStatus({ isOnline: true }).catch((e) => console.warn("Auto-online sync:", e));
+          }
+        }
       } else {
         setDriverProfile(null);
       }
@@ -757,10 +780,23 @@ export function DriverDashboardPage() {
 
 
   // Handle Logout
-  const handleLogout = () => {
-    logout();
-    toast.success("Driver logged out.");
-    navigate("/login");
+  const handleLogout = async () => {
+    if (loggingOut) return;
+    if (activeDelivery) {
+      toast.error("Security Enforcement: You cannot log out while assigned to an active delivery. Please complete delivery or contact dispatch.");
+      return;
+    }
+
+    setLoggingOut(true);
+    try {
+      await driverApi.toggleOnlineStatus({ isOnline: false });
+    } catch (error) {
+      console.warn("Could not set offline status before logout:", error);
+    } finally {
+      logout();
+      toast.success("Driver logged out.");
+      navigate("/login");
+    }
   };
 
   // Screen Loader
@@ -834,8 +870,12 @@ export function DriverDashboardPage() {
             </button>
           </form>
 
-          <button onClick={handleLogout} className="w-full text-center text-xs text-on-surface-variant/60 hover:underline">
-            Logout
+          <button
+            disabled={loggingOut}
+            onClick={handleLogout}
+            className="w-full text-center text-xs text-on-surface-variant/60 hover:underline disabled:opacity-50"
+          >
+            {loggingOut ? "Logging out..." : "Logout"}
           </button>
         </main>
       </div>
@@ -865,10 +905,11 @@ export function DriverDashboardPage() {
             <p><strong>Vehicle:</strong> {driverProfile.vehicleType}</p>
           </div>
           <button
+            disabled={loggingOut}
             onClick={handleLogout}
-            className="w-full bg-surface-container-high border border-outline-variant hover:bg-white/10 text-on-surface py-3 rounded-lg text-xs font-semibold"
+            className="w-full bg-surface-container-high border border-outline-variant hover:bg-white/10 text-on-surface py-3 rounded-lg text-xs font-semibold disabled:opacity-50"
           >
-            Logout & Exit
+            {loggingOut ? "Logging out..." : "Logout & Exit"}
           </button>
         </main>
       </div>
@@ -897,11 +938,12 @@ export function DriverDashboardPage() {
         />
 
         <button
+          disabled={loggingOut}
           onClick={handleLogout}
-          className="flex items-center gap-1.5 hover:bg-error/20 text-on-surface-variant hover:text-error transition-all py-1.5 px-3 rounded-lg text-xs font-semibold"
+          className="flex items-center gap-1.5 hover:bg-error/20 text-on-surface-variant hover:text-error transition-all py-1.5 px-3 rounded-lg text-xs font-semibold disabled:opacity-50"
         >
           <Icon icon="solar:logout-2-bold" className="text-[16px]" />
-          Logout
+          {loggingOut ? "Logging out..." : "Logout"}
         </button>
       </header>
 
