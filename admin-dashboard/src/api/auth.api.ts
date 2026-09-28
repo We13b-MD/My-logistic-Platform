@@ -26,6 +26,10 @@ export const authApi = {
   requestPasswordReset: (email: string) =>
     apiClient.post('/auth/request-otp', { email }),
 
+  // Complete Password Reset with OTP
+  resetPassword: (payload: { email: string; otpCode: string; newPassword: string }) =>
+    apiClient.post('/auth/reset-password', payload),
+
   // Request Account & Data Deletion (NDPR/GDPR & App Store Compliance)
   deleteAccount: (reason?: string) =>
     apiClient.delete('/auth/delete-account', { data: { reason } }),

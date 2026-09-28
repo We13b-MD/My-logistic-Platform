@@ -6,14 +6,122 @@ import { RegisterDTO } from "./auth.types";
 import { Role } from "@prisma/client";
 import { sendOtpEmail } from "../../../../utils/email.util";
 
+interface PasswordResetRecord {
+  otpCode: string;
+  expiresAt: number;
+  userId: string;
+}
+
+// In-memory store for password reset OTP codes (10-minute validity)
+const passwordResetStore = new Map<string, PasswordResetRecord>();
+
 export class AuthService {
+  /**
+   * Request password reset OTP.
+   * STRICT ENFORCEMENT: Verifies user exists under Logistel (Driver, Dispatcher, Tenant Admin, or Customer)
+   * before generating or sending any recovery code.
+   */
   async requestOtp(email: string) {
     if (!email || !email.includes("@")) {
       throw new Error("Please provide a valid email address.");
     }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // 1. Verify user exists in the database under any registered role
+    const user = await prisma.user.findFirst({
+      where: {
+        email: { equals: normalizedEmail, mode: "insensitive" },
+      },
+      include: {
+        tenant: true,
+      },
+    });
+
+    if (!user) {
+      throw new Error(
+        `The email "${normalizedEmail}" is not registered under Logistel as a Driver, Dispatcher, Tenant Administrator, or Customer.`
+      );
+    }
+
+    if (user.deletedAt) {
+      throw new Error("This account has been deactivated. Please contact your company administrator.");
+    }
+
+    // 2. Generate cryptographically strong 6-digit OTP
     const otpCode = crypto.randomInt(100000, 999999).toString();
-    await sendOtpEmail(email, otpCode, "VERIFICATION");
-    return { email, otpCode };
+
+    // 3. Store OTP in memory with 10-minute expiry
+    passwordResetStore.set(normalizedEmail, {
+      otpCode,
+      expiresAt: Date.now() + 10 * 60 * 1000,
+      userId: user.id,
+    });
+
+    // 4. Send branded password reset email
+    await sendOtpEmail(user.email, otpCode, "PASSWORD_RESET");
+
+    // 5. Map role to human-friendly display label
+    let roleLabel = "Customer";
+    if (user.role === "DRIVER") roleLabel = "Fleet Driver";
+    else if (user.role === "TENANT_SUB_ADMIN") roleLabel = "Dispatcher / Staff Admin";
+    else if (user.role === "TENANT_SUPER_ADMIN") roleLabel = "Tenant Super Administrator";
+    else if (user.role === "PLATFORM_SUPER_ADMIN" || user.role === "PLATFORM_SUB_ADMIN") roleLabel = "Logistel Platform Admin";
+
+    return {
+      email: user.email,
+      role: user.role,
+      roleLabel,
+      tenantName: user.tenant?.companyName || "Logistel Platform",
+    };
+  }
+
+  /**
+   * Complete password reset using verified OTP code.
+   */
+  async resetPassword(data: { email: string; otpCode: string; newPassword: string }) {
+    const { email, otpCode, newPassword } = data;
+    if (!email || !otpCode || !newPassword) {
+      throw new Error("Email, verification code, and new password are required.");
+    }
+
+    if (newPassword.length < 8) {
+      throw new Error("New password must be at least 8 characters long.");
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const record = passwordResetStore.get(normalizedEmail);
+
+    if (!record || record.expiresAt < Date.now()) {
+      throw new Error("The recovery code has expired or is invalid. Please request a new code.");
+    }
+
+    if (record.otpCode !== otpCode.trim()) {
+      throw new Error("Invalid verification code. Please check your email and try again.");
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: record.userId },
+    });
+
+    if (!user) {
+      throw new Error("User account not found.");
+    }
+
+    // Hash the new password and update
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword },
+    });
+
+    // Clean up consumed OTP
+    passwordResetStore.delete(normalizedEmail);
+
+    return {
+      success: true,
+      message: "Password reset successful! You can now log in with your new password.",
+    };
   }
 
   // Authentication methods will be implemented here

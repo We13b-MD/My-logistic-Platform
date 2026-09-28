@@ -17,6 +17,8 @@ docs/
 
 ## Documentation Guides
 - [Customer Delivery Pricing & Charging Guide](guides/price.md) — Standard operating procedure on how customers are charged, dynamic pricing formula, and vehicle rates.
+- [Ideal Customers & Competitive Advantage Strategy](guides/ideal_customers_and_competitive_advantage.md) — Strategic business blueprint: Target ICPs, unfair advantages over gig apps, pitch scripts, and the 7-day customer acquisition playbook.
+- [Mobile App Master Architecture & Flow Guide](guides/mobile_app_master_architecture_and_flow.md) — Technical blueprint for React Native Expo mobile apps, store compliance, custom maps, and Stitch design specifications.
 - [Map & Live Tracking Architecture](guides/map_and_tracking_architecture.md) — Comprehensive guide on Leaflet, OpenStreetMap, OSRM turn-by-turn routing, GPS telemetry, and the live courier simulation engine.
 - [Pricing & Payments Architecture](guides/pricing_and_payments.md) — Mathematical formulas for Haversine distance, dynamic rates, and Paystack UPR engine.
 - [Security Architecture](guides/security_architecture.md) — Defense-in-depth security model and Cloudflare edge rules.

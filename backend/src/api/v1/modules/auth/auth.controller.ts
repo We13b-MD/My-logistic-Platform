@@ -94,13 +94,30 @@ export class AuthController {
       const result = await authService.requestOtp(email);
       res.status(200).json({
         status: "success",
-        message: `OTP code sent to ${email}`,
+        message: `Recovery code dispatched to ${result.email}`,
         data: result,
+      });
+    } catch (error: any) {
+      const isNotFound = error.message?.includes("not registered");
+      res.status(isNotFound ? 404 : 400).json({
+        status: "error",
+        message: error.message || "Failed to send OTP email",
+      });
+    }
+  }
+
+  async resetPassword(req: Request, res: Response): Promise<void> {
+    try {
+      const { email, otpCode, newPassword } = req.body;
+      const result = await authService.resetPassword({ email, otpCode, newPassword });
+      res.status(200).json({
+        status: "success",
+        message: result.message,
       });
     } catch (error: any) {
       res.status(400).json({
         status: "error",
-        message: error.message || "Failed to send OTP email",
+        message: error.message || "Failed to reset password",
       });
     }
   }

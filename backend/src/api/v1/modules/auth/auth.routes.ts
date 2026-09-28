@@ -10,6 +10,7 @@ authRouter.post("/register", validateRegister, (req, res) => authController.regi
 authRouter.post("/login", validateLogin, (req, res) => authController.login(req, res));
 authRouter.post("/google", (req, res) => authController.googleAuth(req, res));
 authRouter.post("/request-otp", (req, res) => authController.requestOtp(req, res));
+authRouter.post("/reset-password", (req, res) => authController.resetPassword(req, res));
 authRouter.delete("/delete-account", authenticate, (req, res) => authController.deleteAccount(req, res));
 
 
