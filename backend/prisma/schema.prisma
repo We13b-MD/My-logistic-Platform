@@ -234,3 +234,22 @@ model LocationBreadcrumb {
   @@index([driverId])   // Fast lookup: all pings for a driver
   @@index([recordedAt]) // Fast time-range queries for investigations
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PasswordResetToken — Persistent OTP Store (replaces in-memory Map)
+// ─────────────────────────────────────────────────────────────────────────────
+// Stored in PostgreSQL (Neon) so OTP codes survive server restarts,
+// Render deployments, and free-tier sleep cycles.
+// Each row is deleted immediately after the OTP is used or expires.
+// ─────────────────────────────────────────────────────────────────────────────
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  email     String
+  otpCode   String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([userId])
+}

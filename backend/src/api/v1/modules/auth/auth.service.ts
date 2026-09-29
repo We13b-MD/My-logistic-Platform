@@ -6,14 +6,6 @@ import { RegisterDTO } from "./auth.types";
 import { Role } from "@prisma/client";
 import { sendOtpEmail } from "../../../../utils/email.util";
 
-interface PasswordResetRecord {
-  otpCode: string;
-  expiresAt: number;
-  userId: string;
-}
-
-// In-memory store for password reset OTP codes (10-minute validity)
-const passwordResetStore = new Map<string, PasswordResetRecord>();
 
 export class AuthService {
   /**
@@ -50,18 +42,32 @@ export class AuthService {
 
     // 2. Generate cryptographically strong 6-digit OTP
     const otpCode = crypto.randomInt(100000, 999999).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
 
-    // 3. Store OTP in memory with 10-minute expiry
-    passwordResetStore.set(normalizedEmail, {
-      otpCode,
-      expiresAt: Date.now() + 10 * 60 * 1000,
-      userId: user.id,
+    // 3. Delete any previous unused OTP tokens for this user (and clean up expired ones)
+    await prisma.passwordResetToken.deleteMany({
+      where: {
+        OR: [
+          { email: normalizedEmail },
+          { expiresAt: { lt: new Date() } }, // clean up all expired tokens globally
+        ],
+      },
     });
 
-    // 4. Send branded password reset email
+    // 4. Persist OTP in PostgreSQL — survives server restarts & Render deployments
+    await prisma.passwordResetToken.create({
+      data: {
+        userId: user.id,
+        email: normalizedEmail,
+        otpCode,
+        expiresAt,
+      },
+    });
+
+    // 5. Send branded password reset email
     await sendOtpEmail(user.email, otpCode, "PASSWORD_RESET");
 
-    // 5. Map role to human-friendly display label
+    // 6. Map role to human-friendly display label
     let roleLabel = "Customer";
     if (user.role === "DRIVER") roleLabel = "Fleet Driver";
     else if (user.role === "TENANT_SUB_ADMIN") roleLabel = "Dispatcher / Staff Admin";
@@ -77,7 +83,7 @@ export class AuthService {
   }
 
   /**
-   * Complete password reset using verified OTP code.
+   * Complete password reset using verified OTP code (DB-persisted, restart-safe).
    */
   async resetPassword(data: { email: string; otpCode: string; newPassword: string }) {
     const { email, otpCode, newPassword } = data;
@@ -90,14 +96,23 @@ export class AuthService {
     }
 
     const normalizedEmail = email.toLowerCase().trim();
-    const record = passwordResetStore.get(normalizedEmail);
 
-    if (!record || record.expiresAt < Date.now()) {
-      throw new Error("The recovery code has expired or is invalid. Please request a new code.");
+    // Look up the OTP record from the database (not memory)
+    const record = await prisma.passwordResetToken.findFirst({
+      where: {
+        email: normalizedEmail,
+        otpCode: otpCode.trim(),
+      },
+    });
+
+    if (!record) {
+      throw new Error("Invalid verification code. Please check your email and try again.");
     }
 
-    if (record.otpCode !== otpCode.trim()) {
-      throw new Error("Invalid verification code. Please check your email and try again.");
+    if (record.expiresAt < new Date()) {
+      // Clean up expired token
+      await prisma.passwordResetToken.delete({ where: { id: record.id } });
+      throw new Error("The recovery code has expired. Please request a new code.");
     }
 
     const user = await prisma.user.findUnique({
@@ -108,15 +123,15 @@ export class AuthService {
       throw new Error("User account not found.");
     }
 
-    // Hash the new password and update
+    // Hash the new password and update in PostgreSQL
     const hashedPassword = await bcrypt.hash(newPassword, 12);
     await prisma.user.update({
       where: { id: user.id },
       data: { password: hashedPassword },
     });
 
-    // Clean up consumed OTP
-    passwordResetStore.delete(normalizedEmail);
+    // Delete the consumed OTP token from the database
+    await prisma.passwordResetToken.delete({ where: { id: record.id } });
 
     return {
       success: true,
