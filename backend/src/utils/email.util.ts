@@ -1,9 +1,12 @@
-import { mailTransporter, isMailConfigured } from "../config/mail";
-
 export type EmailType = "VERIFICATION" | "DELIVERY_HANDOFF" | "PASSWORD_RESET";
 
 /**
- * Sends a branded OTP confirmation or notification email to a user/recipient.
+ * Sends a branded OTP email via Brevo's HTTP REST API (port 443 HTTPS).
+ * This replaces the Nodemailer SMTP transport which is blocked on Render's free tier.
+ *
+ * Required env var: BREVO_API_KEY (from Brevo Dashboard → Settings → API Keys)
+ * Optional env var: SMTP_FROM (sender display name + email)
+ *
  * @param to Email address of recipient
  * @param otpCode 6-digit verification pin / OTP
  * @param type Type of OTP email
@@ -13,7 +16,13 @@ export async function sendOtpEmail(
   otpCode: string,
   type: EmailType = "VERIFICATION"
 ): Promise<boolean> {
-  const from = process.env.SMTP_FROM || `"Logistel Operations" <noreply@auth.logistel.com.ng>`;
+  const brevoApiKey = process.env.BREVO_API_KEY;
+  const smtpFrom = process.env.SMTP_FROM || `"Logistel Technologies" <idundunmd13@gmail.com>`;
+
+  // Parse "Display Name <email@example.com>" format
+  const fromMatch = smtpFrom.match(/^(.*?)\s*<([^>]+)>$/);
+  const senderName = fromMatch ? fromMatch[1].replace(/^"|"$/g, "").trim() : "Logistel Platform";
+  const senderEmail = fromMatch ? fromMatch[2].trim() : "idundunmd13@gmail.com";
 
   let subject = "Your Verification Code";
   let title = "Verification Required";
@@ -29,7 +38,7 @@ export async function sendOtpEmail(
     message = "Use the 6-digit security pin below to reset your password:";
   }
 
-  const htmlTemplate = `
+  const htmlContent = `
     <!DOCTYPE html>
     <html>
       <head>
@@ -64,24 +73,40 @@ export async function sendOtpEmail(
     </html>
   `;
 
-  // 1. If SMTP is configured, send real email via transporter
-  if (isMailConfigured && mailTransporter) {
+  // 1. Send via Brevo HTTP API (works on all cloud providers including Render free tier)
+  if (brevoApiKey) {
     try {
-      await mailTransporter.sendMail({
-        from,
-        to,
-        subject,
-        html: htmlTemplate,
+      const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          "accept": "application/json",
+          "api-key": brevoApiKey,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          sender: { name: senderName, email: senderEmail },
+          to: [{ email: to }],
+          subject,
+          htmlContent,
+        }),
       });
-      console.log(`✉️ Email successfully sent to ${to} (${type})`);
+
+      const data = await response.json() as any;
+
+      if (!response.ok) {
+        console.error(`❌ Brevo HTTP API error (${response.status}):`, data);
+        throw new Error(`Brevo API error: ${data?.message || JSON.stringify(data)}`);
+      }
+
+      console.log(`✉️ Email successfully sent to ${to} (${type}) via Brevo API. MessageId: ${data?.messageId}`);
       return true;
     } catch (error: any) {
-      console.error(`❌ Failed to send email via SMTP to ${to}:`, error?.message || error);
-      throw new Error(`Email delivery failed (${error?.message || error}). Please check your SMTP / Brevo sender configuration.`);
+      console.error(`❌ Failed to send email via Brevo HTTP API to ${to}:`, error?.message || error);
+      throw new Error(`Email delivery failed: ${error?.message || error}`);
     }
   }
 
-  // 2. Fallback for development mode when SMTP keys are absent
+  // 2. Fallback for development mode when BREVO_API_KEY is absent
   console.log("\n==================================================");
   console.log(`✉️ [DEV EMAIL OTP] To: ${to}`);
   console.log(`📌 Subject: ${subject}`);
