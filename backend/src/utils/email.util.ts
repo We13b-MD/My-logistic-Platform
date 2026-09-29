@@ -77,6 +77,7 @@ export async function sendOtpEmail(
       return true;
     } catch (error: any) {
       console.error(`❌ Failed to send email via SMTP to ${to}:`, error?.message || error);
+      throw new Error(`Email delivery failed (${error?.message || error}). Please check your SMTP / Brevo sender configuration.`);
     }
   }
 
