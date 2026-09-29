@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
+const smtpHost = process.env.SMTP_HOST || "smtp-relay.brevo.com";
 const smtpPort = parseInt(process.env.SMTP_PORT || "587", 10);
 const smtpUser = process.env.SMTP_USER;
 const smtpPass = process.env.SMTP_PASS;
@@ -15,6 +15,9 @@ export const mailTransporter = isMailConfigured
       host: smtpHost,
       port: smtpPort,
       secure: smtpPort === 465, // true for 465, false for 587
+      connectionTimeout: 10000, // 10s connection timeout
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
       auth: {
         user: smtpUser,
         pass: smtpPass,
