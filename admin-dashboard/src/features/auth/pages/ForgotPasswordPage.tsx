@@ -231,6 +231,8 @@ export function ForgotPasswordPage() {
                   type="text"
                   maxLength={6}
                   required
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
                   placeholder="• • • • • •"
                   value={otpCode}
                   onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ""))}
@@ -255,6 +257,7 @@ export function ForgotPasswordPage() {
                     id="newPassword"
                     type={showPassword ? "text" : "password"}
                     required
+                    autoComplete="new-password"
                     placeholder="Enter new password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
