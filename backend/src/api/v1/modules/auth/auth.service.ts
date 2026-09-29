@@ -170,9 +170,12 @@ export class AuthService {
 
   async login(data: { email: string; password: string }) {
     const { email, password } = data;
+    const normalizedEmail = email.toLowerCase().trim();
 
-    let user = await prisma.user.findUnique({
-      where: { email },
+    let user = await prisma.user.findFirst({
+      where: {
+        email: { equals: normalizedEmail, mode: "insensitive" },
+      },
       include: {
         tenant: true,
       },
