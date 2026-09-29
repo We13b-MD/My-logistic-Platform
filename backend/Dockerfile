@@ -10,7 +10,9 @@ COPY prisma ./prisma/
 # Install dependencies (including devDependencies for build)
 RUN npm ci
 
-# Copy source code files
+# Copy source code files — CACHEBUST forces Docker to invalidate cache here
+# so new code changes are always picked up on every deploy
+ARG CACHEBUST=1
 COPY . .
 
 # Generate Prisma Client
@@ -42,4 +44,5 @@ ENV PORT=3000
 ENV NODE_ENV=production
 
 # Run application server
-CMD ["npm", "start"]
+# Run migrations then start the server
+CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]
