@@ -290,6 +290,7 @@ export function ForgotPasswordPage() {
                     id="confirmPassword"
                     type={showPassword ? "text" : "password"}
                     required
+                    autoComplete="new-password"
                     placeholder="Repeat new password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
