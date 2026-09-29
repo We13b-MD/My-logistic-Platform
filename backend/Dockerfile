@@ -44,5 +44,7 @@ ENV PORT=3000
 ENV NODE_ENV=production
 
 # Run application server
-# Run migrations then start the server
-CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]
+# Run application server
+# Note: Run `prisma migrate deploy` locally or in CI — not at startup,
+# because Neon free tier cold-starts can timeout the advisory lock.
+CMD ["npm", "start"]
