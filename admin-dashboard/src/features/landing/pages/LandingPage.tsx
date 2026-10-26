@@ -5,10 +5,12 @@ import { useAuth } from "@/context/AuthContext";
 import homePageGif from "@/assets/homePagegif.gif";
 
 import { LogistelLogo } from "@/components/LogistelLogo";
+import { TelegramCommunityWidget } from "@/components/TelegramCommunityWidget";
 
 export function LandingPage() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const telegramUrl = import.meta.env.VITE_TELEGRAM_COMMUNITY_URL || "https://t.me/logistel_community";
 
   // Set page title
   useEffect(() => {
@@ -54,6 +56,16 @@ export function LandingPage() {
 
         {/* Call to Actions */}
         <div className="flex items-center gap-3">
+          <a
+            href={telegramUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Telegram Community"
+            className="w-9 h-9 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-sm"
+          >
+            <Icon icon="logos:telegram" className="text-lg" />
+          </a>
+
           <button
             onClick={() => navigate("/track")}
             className="px-3 py-1.5 rounded-xl bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 border border-teal-500/30 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
@@ -129,6 +141,8 @@ export function LandingPage() {
               <span>Join as Driver</span>
             </button>
           </div>
+
+
         </section>
 
         {/* ─── VALUE PROPOSITIONS BENTO GRID (6 Feature Cards) ─── */}
@@ -507,7 +521,7 @@ export function LandingPage() {
               </ul>
             </div>
 
-            {/* Column 4: Legal & Paystack Compliance */}
+            {/* Column 4: Legal & Security */}
             <div className="flex flex-col gap-3">
               <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">Legal & Security</h4>
               <ul className="space-y-2.5 text-xs text-slate-400">
@@ -532,6 +546,15 @@ export function LandingPage() {
             </div>
 
             <div className="flex items-center gap-4 text-slate-400">
+              <a
+                href={telegramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Join our Telegram Community"
+                className="hover:text-sky-400 transition-colors flex items-center gap-1 text-slate-300 hover:scale-110"
+              >
+                <Icon icon="logos:telegram" className="text-lg" />
+              </a>
               <a href="#" className="hover:text-teal-400 transition-colors"><Icon icon="solar:shield-check-bold-duotone" className="text-lg" /></a>
               <a href="#" className="hover:text-teal-400 transition-colors"><Icon icon="solar:lock-bold-duotone" className="text-lg" /></a>
               <a href="#" className="hover:text-teal-400 transition-colors"><Icon icon="solar:server-bold-duotone" className="text-lg" /></a>
@@ -540,6 +563,9 @@ export function LandingPage() {
 
         </div>
       </footer>
+
+      {/* Floating Interactive Telegram Academy & Community Widget */}
+      <TelegramCommunityWidget channelUrl={telegramUrl} />
 
     </div>
   );

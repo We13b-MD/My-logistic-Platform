@@ -4,7 +4,7 @@ This document acts as a repository of technical concepts, design decisions, and 
 
 ---
 
-## 1. Authentication Request Lifecycle
+## 1. Authentication Request Lifecycle 
 
 Below is the execution flow of a standard request to the Auth module:
 
@@ -13,7 +13,7 @@ graph TD
     Client[Client Request] --> Routes[Route Handler <br/> auth.routes.ts]
     Routes --> Validator[Zod Validator Middleware <br/> auth.validator.ts]
     Validator -->|Validation Fails| Res400[HTTP 400 Bad Request]
-    Validator -->|Validation Passes| Controller[Auth Controller <br/> auth.controller.ts]
+    Validator -->|Validation Passes| Controller[Auth Controller <br/> auth.controller.ts] 
     Controller --> Service[Auth Service <br/> auth.service.ts]
     Service --> Database[(Prisma / Postgres Database)]
 ```

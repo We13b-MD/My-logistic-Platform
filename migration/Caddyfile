@@ -1,0 +1,28 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Caddy Automated Reverse Proxy & Free SSL Configuration
+# ─────────────────────────────────────────────────────────────────────────────
+# Replace api.yourdomain.com with your live backend domain name (e.g. api.logistel.com.ng)
+# ─────────────────────────────────────────────────────────────────────────────
+
+api.yourdomain.com {
+    # Automatic HTTP to HTTPS redirect is handled by default by Caddy
+
+    # Compression settings
+    encode zstd gzip
+
+    # Reverse proxy API requests to backend Node.js container
+    reverse_proxy backend:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Security Headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+}

@@ -38,7 +38,7 @@ Every shipment in Logistel is pinned to geographic coordinates:
 | **Surulere Mall** | `6.5020` | `3.3580` | Central Lagos Origin |
 | **Yaba (Herbert Macaulay)** | `6.5182` | `3.3769` | Commercial Destination |
 | **Victoria Island** | `6.4281` | `3.4219` | Island Delivery Hub |
-| **Lekki Phase 1** | `6.4474` | `3.4723` | Residential Destination |
+| **Lekki Phase 1** | `6.4474` | `3.4723` | Residential Destination |    
 
 ---
 
@@ -105,7 +105,7 @@ flowchart LR
 As the simulated vehicle travels along the polyline, it automatically triggers lifecycle milestones:
 * **0% – 14%:** `PENDING` (Order Placed)
 * **15% – 34%:** `ASSIGNED` (Courier Assigned to Pickup)
-* **35% – 49%:** `PICKED_UP` (Cargo Collected)
+* **35% – 49%:** `PICKED_UP` (Cargo Collected)  
 * **50% – 99%:** `IN_TRANSIT` (Out on the Highway for Delivery)
 * **100%:** `DELIVERED` (Courier reaches Green Pin; triggers celebration toast and verified arrival state).
 
