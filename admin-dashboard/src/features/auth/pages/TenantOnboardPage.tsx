@@ -165,8 +165,8 @@ export function TenantOnboardPage() {
 
       if (data?.status === "success" && data?.data) {
         toast.success("Logistics company successfully onboarded!");
-        const { admin, token } = data.data;
-        login(admin, token);
+        const { admin, tenant, token } = data.data;
+        login({ ...admin, tenant }, token);
         navigate("/");
       } else {
         setGeneralError(data?.message || "Tenant onboarding failed. Please check inputs.");

@@ -632,8 +632,8 @@ export function TenantDashboardPage() {
             <span className="hidden sm:inline">Refresh</span>
           </button>
           <div className="hidden sm:flex flex-col text-right">
-            <span className="text-xs text-slate-200 font-semibold">
-              {user?.email}
+            <span className="text-xs text-slate-200 font-semibold" title={user?.email}>
+              {user?.tenant?.subdomain || user?.email}
             </span>
             <span className="text-[10px] text-teal-400 uppercase tracking-wider font-bold">
               Tenant Administrator
