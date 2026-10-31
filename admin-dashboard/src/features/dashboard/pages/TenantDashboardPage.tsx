@@ -60,7 +60,25 @@ const driverIcon = new L.Icon({
 
 export function TenantDashboardPage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, token, login, logout } = useAuth();
+
+  // Backfill tenant info for sessions saved before tenant was stored on the user
+  useEffect(() => {
+    if (!user || !token || user.tenant?.subdomain) return;
+    pricingApi
+      .getRules()
+      .then((res) => {
+        const d = res.data?.data;
+        if (d?.subdomain) {
+          login(
+            { ...user, tenant: { ...(user.tenant as any), companyName: d.companyName, subdomain: d.subdomain } } as any,
+            token
+          );
+        }
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, token]);
 
   // Navigation tab state: "overview" | "decisions" | "deliveries" | "drivers" | "fleet" | "dispatch" | "billing"
   const [activeTab, setActiveTab] = useState<"overview" | "decisions" | "deliveries" | "drivers" | "fleet" | "dispatch" | "billing">("overview");
