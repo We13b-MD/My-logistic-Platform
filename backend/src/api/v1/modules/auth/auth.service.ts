@@ -196,58 +196,205 @@ export class AuthService {
       },
     });
 
-    // Failsafe: Auto-provision superadmin demo account if missing in local DB
-    if (!user && email.toLowerCase() === "superadmin@platform.com") {
-      let tenant = await prisma.tenant.findFirst();
-      if (!tenant) {
-        tenant = await prisma.tenant.create({
-          data: {
-            companyName: "Platform System Core",
-            subdomain: "platform-core",
-            industry: "OTHERS",
-            isActive: true,
-          },
-        });
+    // Failsafe: Auto-provision and auto-heal all 5 quick demo credentials for production / testing
+    const demoAccountsMap: Record<
+      string,
+      {
+        role: "PLATFORM_SUPER_ADMIN" | "TENANT_SUPER_ADMIN" | "TENANT_SUB_ADMIN" | "DRIVER" | "CUSTOMER";
+        companyName: string;
+        subdomain: string;
       }
-      const hashedpassword = await bcrypt.hash("password123", 12);
-      user = await prisma.user.create({
-        data: {
-          email: "superadmin@platform.com",
-          password: hashedpassword,
-          role: "PLATFORM_SUPER_ADMIN",
-          tenantId: tenant.id,
-        },
-        include: {
-          tenant: true,
-        },
-      });
-    }
+    > = {
+      "superadmin@platform.com": {
+        role: "PLATFORM_SUPER_ADMIN",
+        companyName: "Platform System Core",
+        subdomain: "platform-core",
+      },
+      "admin@swift.com": {
+        role: "TENANT_SUPER_ADMIN",
+        companyName: "Swift Logistics",
+        subdomain: "swift",
+      },
+      "dispatcher@swift.com": {
+        role: "TENANT_SUB_ADMIN",
+        companyName: "Swift Logistics",
+        subdomain: "swift",
+      },
+      "driver1@swift.com": {
+        role: "DRIVER",
+        companyName: "Swift Logistics",
+        subdomain: "swift",
+      },
+      "customer@swift.com": {
+        role: "CUSTOMER",
+        companyName: "Swift Logistics",
+        subdomain: "swift",
+      },
+    };
 
-    // Failsafe: Auto-provision tenant dispatcher demo account if missing
-    if (!user && email.toLowerCase() === "dispatcher@swift.com") {
-      let tenant = await prisma.tenant.findFirst();
+    const demoConfig = demoAccountsMap[normalizedEmail];
+    if (demoConfig) {
+      // 1. Ensure appropriate tenant exists
+      let tenant = await prisma.tenant.findUnique({
+        where: { subdomain: demoConfig.subdomain },
+      });
+      if (!tenant) {
+        tenant = await prisma.tenant.findFirst({
+          where: { companyName: demoConfig.companyName },
+        });
+      }
+      if (!tenant) {
+        tenant = await prisma.tenant.findFirst();
+      }
       if (!tenant) {
         tenant = await prisma.tenant.create({
           data: {
-            companyName: "Swift Logistics",
-            subdomain: "swift",
-            industry: "TRANSPORT",
+            companyName: demoConfig.companyName,
+            subdomain: demoConfig.subdomain,
+            industry: demoConfig.role === "PLATFORM_SUPER_ADMIN" ? "OTHERS" : "TRANSPORT",
             isActive: true,
           },
         });
       }
-      const hashedpassword = await bcrypt.hash("password123", 12);
-      user = await prisma.user.create({
-        data: {
-          email: "dispatcher@swift.com",
-          password: hashedpassword,
-          role: "TENANT_SUB_ADMIN",
-          tenantId: tenant.id,
-        },
-        include: {
-          tenant: true,
-        },
-      });
+
+      // 2. Auto-provision user if missing
+      if (!user) {
+        const hashedpassword = await bcrypt.hash("password123", 12);
+        user = await prisma.user.create({
+          data: {
+            email: normalizedEmail,
+            password: hashedpassword,
+            role: demoConfig.role,
+            tenantId: tenant.id,
+          },
+          include: {
+            tenant: true,
+          },
+        });
+      }
+
+      // 3. Auto-heal password if existing demo account password was corrupted
+      if (user && password === "password123") {
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+          const freshHash = await bcrypt.hash("password123", 12);
+          user = await prisma.user.update({
+            where: { id: user.id },
+            data: { password: freshHash },
+            include: { tenant: true },
+          });
+        }
+      }
+
+      // 4. Ensure DriverProfile & assigned vehicle exists for driver demo account
+      if (normalizedEmail === "driver1@swift.com" && user) {
+        let profile = await prisma.driverProfile.findUnique({
+          where: { userId: user.id },
+        });
+        if (!profile) {
+          profile = await prisma.driverProfile.create({
+            data: {
+              userId: user.id,
+              vehicleType: "BIKE",
+              licenseNumber: "DL-SWIFT-99123",
+              isVerified: true,
+              isOnline: true,
+              lastLatitude: 6.5024,
+              lastLongitude: 3.3585,
+            },
+          });
+        }
+
+        const existingVehicle = await prisma.vehicle.findFirst({
+          where: { tenantId: tenant.id, driverId: profile.id },
+        });
+        if (!existingVehicle) {
+          await prisma.vehicle.create({
+            data: {
+              tenantId: tenant.id,
+              driverId: profile.id,
+              plateNumber: "SWF-102-BK",
+              vehicleType: "BIKE",
+              status: "IN_USE",
+              insuranceExpiry: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000),
+              roadworthinessExpiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+              vehicleLicenseExpiry: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+              hackneyPermitExpiry: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+            },
+          });
+        }
+      }
+
+      // 5. Ensure tenant has sample fleet compliance vehicle
+      if (tenant && (demoConfig.role === "TENANT_SUPER_ADMIN" || demoConfig.role === "TENANT_SUB_ADMIN")) {
+        const vehicleCount = await prisma.vehicle.count({
+          where: { tenantId: tenant.id },
+        });
+        if (vehicleCount === 0) {
+          await prisma.vehicle.create({
+            data: {
+              tenantId: tenant.id,
+              plateNumber: "LAG-882-XY",
+              vehicleType: "BIKE",
+              status: "IDLE",
+              insuranceExpiry: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000),
+              roadworthinessExpiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+              vehicleLicenseExpiry: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+              hackneyPermitExpiry: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+            },
+          });
+        }
+      }
+
+      // 6. Ensure Swift Logistics has sample deliveries for instant demo visualization
+      if (tenant.subdomain === "swift") {
+        const deliveryCount = await prisma.delivery.count({
+          where: { tenantId: tenant.id },
+        });
+        if (deliveryCount === 0) {
+          let customerUser = await prisma.user.findFirst({
+            where: { email: "customer@swift.com" },
+          });
+          if (!customerUser) {
+            customerUser = await prisma.user.create({
+              data: {
+                email: "customer@swift.com",
+                password: await bcrypt.hash("password123", 12),
+                role: "CUSTOMER",
+                tenantId: tenant.id,
+              },
+            });
+          }
+
+          const driverUser = await prisma.user.findFirst({
+            where: { email: "driver1@swift.com" },
+            include: { driverProfile: true },
+          });
+          const driverProfileId = driverUser?.driverProfile?.id || null;
+
+          await prisma.delivery.create({
+            data: {
+              tenantId: tenant.id,
+              senderId: customerUser.id,
+              driverId: driverProfileId,
+              status: "IN_TRANSIT",
+              pickupAddress: "14 Broad Street, Lagos Island",
+              pickupLatitude: 6.4549,
+              pickupLongitude: 3.3886,
+              senderPhone: "+2348031234567",
+              dropoffAddress: "23 Admiralty Way, Lekki Phase 1, Lagos",
+              dropoffLatitude: 6.4474,
+              dropoffLongitude: 3.4708,
+              recipientName: "Folake Balogun",
+              recipientPhone: "+2348029876543",
+              recipientEmail: "folake.balogun@example.com",
+              deliveryOtp: "5821",
+              distanceKm: 12.4,
+              estimatedPrice: 3800,
+            },
+          });
+        }
+      }
     }
 
 

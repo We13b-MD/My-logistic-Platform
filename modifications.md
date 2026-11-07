@@ -223,6 +223,19 @@ $$\text{Realistic Estimated Duration (mins)} = \text{Theoretical OSRM Duration} 
 
 ---
 
+### Section N: Production Demo Quick-Fill Credentials Auto-Provisioning & Auto-Healing
+
+* **Problem Identified:** On the live production site (`https://api.logistel.com.ng`), clicking "👑 Platform Super Admin" and "🎧 Dispatcher" succeeded, but "🏢 Tenant Owner" (`admin@swift.com`), "🏍️ Driver" (`driver1@swift.com`), and "🛍️ Customer" (`customer@swift.com`) threw `401 Unauthorized` (`Invalid credentials`).
+* **Root Cause Analysis:** In [`auth.service.ts`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/src/api/v1/modules/auth/auth.service.ts), failsafe auto-provisioning blocks were only coded for `superadmin@platform.com` and `dispatcher@swift.com`. The other 3 demo accounts were completely omitted from the failsafe. In containerized production environments where seeds were not manually run, missing demo accounts failed immediately.
+* **Resolution Implemented in [`auth.service.ts`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/src/api/v1/modules/auth/auth.service.ts):**
+  1. **Omni-Role Auto-Provisioning:** Configured `demoAccountsMap` covering all 5 roles (`PLATFORM_SUPER_ADMIN`, `TENANT_SUPER_ADMIN`, `TENANT_SUB_ADMIN`, `DRIVER`, `CUSTOMER`).
+  2. **Automatic Tenant Creation & Linking:** Automatically guarantees the `Swift Logistics` tenant exists and connects all tenant users to the same tenant.
+  3. **Password Auto-Healing:** If a demo user exists in the database but has an altered or mismatched password, attempting login with `password123` dynamically re-hashes and heals the password so demo evaluation buttons NEVER fail.
+  4. **Driver Profile & Vehicle Seeding:** Automatically provisions a verified `DriverProfile` and assigned vehicle for `driver1@swift.com` with compliance dates.
+  5. **Live Visualization Deliveries:** Automatically generates sample in-transit deliveries if none exist for `swift`, ensuring maps, waybills, and run sheets immediately display rich data upon demo login.
+
+---
+
 ## 3. Modified Files Index
 
 | File Path | Component | Changes Made |
@@ -234,6 +247,7 @@ $$\text{Realistic Estimated Duration (mins)} = \text{Theoretical OSRM Duration} 
 | [`backend/src/api/v1/modules/drivers/driver.service.ts`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/src/api/v1/modules/drivers/driver.service.ts) | Backend API | Added `recordRemittance`, `getRemittances`, and `getRemittanceSummary`. |
 | [`backend/src/api/v1/modules/drivers/driver.controller.ts`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/src/api/v1/modules/drivers/driver.controller.ts) | Backend API | Added remittance request handlers. |
 | [`backend/src/api/v1/modules/drivers/driver.routes.ts`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/src/api/v1/modules/drivers/driver.routes.ts) | Backend Routes | Registered remittance endpoints. |
+| [`backend/src/api/v1/modules/auth/auth.service.ts`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/src/api/v1/modules/auth/auth.service.ts) | Backend Auth | Multi-role demo credentials auto-provisioning, password auto-healing, and demo profile/vehicle seeding. |
 | [`admin-dashboard/src/components/WaybillModal.tsx`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/components/WaybillModal.tsx) | Frontend | A4 Consignment Note & 4x6 Thermal Label with live tracking QR code. |
 | [`admin-dashboard/src/components/DriverRunSheetModal.tsx`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/components/DriverRunSheetModal.tsx) | Frontend | Daily trip manifest with route stops, KPI summary, and depot custody sign-offs. |
 | [`admin-dashboard/src/components/RecordRemittanceModal.tsx`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/components/RecordRemittanceModal.tsx) | Frontend | Cash, Bank Transfer, and POS driver settlement modal. |
@@ -253,4 +267,5 @@ $$\text{Realistic Estimated Duration (mins)} = \text{Theoretical OSRM Duration} 
   npm run build
   # tsc exited with code 0 (0 TypeScript errors)
   ```
+
 
