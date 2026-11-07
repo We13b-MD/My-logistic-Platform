@@ -13,8 +13,12 @@ export const createVehicleSchema = z.object({
   status: z.enum(["IDLE", "IN_USE", "MAINTENANCE"], {
     errorMap: () => ({ message: "Status must be one of: IDLE, IN_USE, MAINTENANCE" }),
   }).optional(),
-  lastMaintenance: z.string().datetime({ message: "lastMaintenance must be a valid ISO date string" }).optional().nullable(),
-  nextMaintenanceDue: z.string().datetime({ message: "nextMaintenanceDue must be a valid ISO date string" }).optional().nullable(),
+  lastMaintenance: z.string().optional().nullable(),
+  nextMaintenanceDue: z.string().optional().nullable(),
+  insuranceExpiry: z.string().optional().nullable(),
+  roadworthinessExpiry: z.string().optional().nullable(),
+  vehicleLicenseExpiry: z.string().optional().nullable(),
+  hackneyPermitExpiry: z.string().optional().nullable(),
   driverId: z.string().uuid({ message: "driverId must be a valid UUID" }).optional().nullable(),
 });
 
@@ -22,8 +26,12 @@ export const updateVehicleSchema = z.object({
   plateNumber: z.string().min(3).max(20).trim().optional(),
   vehicleType: z.enum(["BIKE", "VAN", "TRUCK", "CAR"]).optional(),
   status: z.enum(["IDLE", "IN_USE", "MAINTENANCE"]).optional(),
-  lastMaintenance: z.string().datetime().optional().nullable(),
-  nextMaintenanceDue: z.string().datetime().optional().nullable(),
+  lastMaintenance: z.string().optional().nullable(),
+  nextMaintenanceDue: z.string().optional().nullable(),
+  insuranceExpiry: z.string().optional().nullable(),
+  roadworthinessExpiry: z.string().optional().nullable(),
+  vehicleLicenseExpiry: z.string().optional().nullable(),
+  hackneyPermitExpiry: z.string().optional().nullable(),
   driverId: z.string().uuid().optional().nullable(),
 });
 

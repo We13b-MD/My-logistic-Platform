@@ -7,9 +7,12 @@ import { vehicleApi } from "@/api/vehicle.api";
 import { pricingApi } from "@/api/pricing.api";
 import { trackingApi } from "@/api/tracking.api";
 import { toast } from "sonner";
-import { Delivery, DriverProfile, DashboardMetricsData, Vehicle, VehicleStatus, VehicleType } from "@/types";
+import { Delivery, DriverProfile, DashboardMetricsData, Vehicle, VehicleStatus, VehicleType, FleetRemittanceSummary } from "@/types";
 import { Icon } from "@iconify/react";
 import { LogistelLogo } from "@/components/LogistelLogo";
+import { WaybillModal } from "@/components/WaybillModal";
+import { DriverRunSheetModal } from "@/components/DriverRunSheetModal";
+import { RecordRemittanceModal } from "@/components/RecordRemittanceModal";
 
 
 
@@ -192,6 +195,10 @@ export function TenantDashboardPage() {
     driverId: string;
     lastMaintenance: string;
     nextMaintenanceDue: string;
+    insuranceExpiry: string;
+    roadworthinessExpiry: string;
+    vehicleLicenseExpiry: string;
+    hackneyPermitExpiry: string;
   }>({
     plateNumber: "",
     vehicleType: "VAN",
@@ -199,7 +206,19 @@ export function TenantDashboardPage() {
     driverId: "",
     lastMaintenance: "",
     nextMaintenanceDue: "",
+    insuranceExpiry: "",
+    roadworthinessExpiry: "",
+    vehicleLicenseExpiry: "",
+    hackneyPermitExpiry: "",
   });
+
+  // Operational Modals & Remittance Ledger state
+  const [waybillDelivery, setWaybillDelivery] = useState<Delivery | null>(null);
+  const [runSheetOpen, setRunSheetOpen] = useState(false);
+  const [runSheetDriverId, setRunSheetDriverId] = useState<string | null>(null);
+  const [remittanceModalOpen, setRemittanceModalOpen] = useState(false);
+  const [remittanceDriverId, setRemittanceDriverId] = useState<string | null>(null);
+  const [remittanceSummary, setRemittanceSummary] = useState<FleetRemittanceSummary | null>(null);
 
   // Dispatch form state
   const [dispatchForm, setDispatchForm] = useState({
@@ -241,6 +260,16 @@ export function TenantDashboardPage() {
       if (metricsRes.data?.status === "success") {
         setDecisionMetrics(metricsRes.data.data || null);
       }
+
+      // Fetch driver cash remittance & reconciliation summary
+      driverApi
+        .getRemittanceSummary()
+        .then((res) => {
+          if (res.data?.status === "success") {
+            setRemittanceSummary(res.data.data || null);
+          }
+        })
+        .catch(() => {});
     } catch (error) {
       if (!isBackground) {
         console.error("Failed to load dashboard metrics:", error);
@@ -327,6 +356,18 @@ export function TenantDashboardPage() {
         nextMaintenanceDue: vehicleForm.nextMaintenanceDue
           ? new Date(vehicleForm.nextMaintenanceDue).toISOString()
           : undefined,
+        insuranceExpiry: vehicleForm.insuranceExpiry
+          ? new Date(vehicleForm.insuranceExpiry).toISOString()
+          : undefined,
+        roadworthinessExpiry: vehicleForm.roadworthinessExpiry
+          ? new Date(vehicleForm.roadworthinessExpiry).toISOString()
+          : undefined,
+        vehicleLicenseExpiry: vehicleForm.vehicleLicenseExpiry
+          ? new Date(vehicleForm.vehicleLicenseExpiry).toISOString()
+          : undefined,
+        hackneyPermitExpiry: vehicleForm.hackneyPermitExpiry
+          ? new Date(vehicleForm.hackneyPermitExpiry).toISOString()
+          : undefined,
       };
 
       const res = await vehicleApi.create(payload);
@@ -339,6 +380,10 @@ export function TenantDashboardPage() {
           driverId: "",
           lastMaintenance: "",
           nextMaintenanceDue: "",
+          insuranceExpiry: "",
+          roadworthinessExpiry: "",
+          vehicleLicenseExpiry: "",
+          hackneyPermitExpiry: "",
         });
         setShowVehicleModal(false);
         fetchData();
@@ -1247,10 +1292,31 @@ export function TenantDashboardPage() {
           {/* TAB 2: MANAGE DELIVERIES */}
           {activeTab === "deliveries" && (
             <div className="glass-panel border-white/5 p-6 rounded-2xl space-y-6">
-              <h2 className="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
-                <Icon icon="solar:box-bold-duotone" className="text-primary text-[20px]" />
-                Deliveries Management
-              </h2>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+                <div>
+                  <h2 className="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
+                    <Icon icon="solar:box-bold-duotone" className="text-primary text-[20px]" />
+                    Deliveries Management
+                  </h2>
+                  <p className="text-xs text-on-surface-variant mt-1">
+                    Manage dispatches, print official consignment waybills, and generate daily driver run sheets.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRunSheetDriverId(null);
+                      setRunSheetOpen(true);
+                    }}
+                    className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-cyan-500/30 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                  >
+                    <Icon icon="solar:clipboard-list-bold-duotone" className="text-sm" />
+                    <span>Daily Run Sheet / Manifest</span>
+                  </button>
+                </div>
+              </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs text-on-surface-variant">
@@ -1388,6 +1454,16 @@ export function TenantDashboardPage() {
                               >
                                 <Icon icon="solar:routing-bold-duotone" className="text-[12px]" />
                                 GPS Trail
+                              </button>
+
+                              {/* Waybill / Consignment Note Button */}
+                              <button
+                                type="button"
+                                onClick={() => setWaybillDelivery(delivery)}
+                                className="text-[10px] font-bold text-cyan-400 hover:text-cyan-300 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded flex items-center gap-1 transition-all"
+                              >
+                                <Icon icon="solar:document-text-bold-duotone" className="text-[12px]" />
+                                Waybill
                               </button>
                             </div>
                           </td>
@@ -1800,22 +1876,169 @@ export function TenantDashboardPage() {
                             )}
                           </td>
                           <td className="py-4 text-right">
-                            <button
-                              onClick={() => handleVerifyToggle(driver.id, driver.isVerified)}
-                              className={`px-3 py-1 rounded text-[10px] font-bold transition-all ${
-                                driver.isVerified
-                                  ? "bg-error-container/20 border border-error/30 text-error hover:bg-error/30"
-                                  : "bg-primary-container text-on-primary-container hover:brightness-110"
-                              }`}
-                            >
-                              {driver.isVerified ? "Revoke Verification" : "Verify Driver"}
-                            </button>
+                            <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setRunSheetDriverId(driver.id);
+                                  setRunSheetOpen(true);
+                                }}
+                                className="px-2.5 py-1 rounded text-[10px] font-bold bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/25 flex items-center gap-1 transition-all cursor-pointer"
+                              >
+                                <Icon icon="solar:clipboard-list-bold-duotone" className="text-xs" />
+                                Run Sheet
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setRemittanceDriverId(driver.id);
+                                  setRemittanceModalOpen(true);
+                                }}
+                                className="px-2.5 py-1 rounded text-[10px] font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25 flex items-center gap-1 transition-all cursor-pointer"
+                              >
+                                <Icon icon="solar:wallet-money-bold-duotone" className="text-xs" />
+                                Remit Cash
+                              </button>
+                              <button
+                                onClick={() => handleVerifyToggle(driver.id, driver.isVerified)}
+                                className={`px-3 py-1 rounded text-[10px] font-bold transition-all cursor-pointer ${
+                                  driver.isVerified
+                                    ? "bg-error-container/20 border border-error/30 text-error hover:bg-error/30"
+                                    : "bg-primary-container text-on-primary-container hover:brightness-110"
+                                }`}
+                              >
+                                {driver.isVerified ? "Revoke Verification" : "Verify Driver"}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              {/* ── DRIVER CASH REMITTANCE & SETTLEMENT LEDGER ──────────────────── */}
+              <div className="mt-8 border-t border-white/10 pt-6 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
+                      <Icon icon="solar:wallet-money-bold-duotone" className="text-emerald-400 text-lg" />
+                      Cash Remittance & Daily Settlement Ledger
+                    </h3>
+                    <p className="text-xs text-on-surface-variant mt-0.5">
+                      Monitor cash/transfer collected on delivery, reconcile driver balances, and plug cash leakage.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRemittanceDriverId(null);
+                      setRemittanceModalOpen(true);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 flex items-center gap-2 transition-all cursor-pointer active:scale-95 self-start sm:self-auto"
+                  >
+                    <Icon icon="solar:wallet-bold" className="text-sm" />
+                    <span>Record Remittance</span>
+                  </button>
+                </div>
+
+                {/* Remittance KPI Strip */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="bg-surface-container-low p-4 rounded-xl border border-white/5">
+                    <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block">
+                      Total Deliveries Fare Value
+                    </span>
+                    <div className="text-xl font-bold font-mono text-on-surface mt-1">
+                      ₦{Math.round(remittanceSummary?.fleetTotalCollected || 0).toLocaleString()}
+                    </div>
+                    <span className="text-[10px] text-slate-400 mt-0.5 block">Sum of fares on completed deliveries</span>
+                  </div>
+
+                  <div className="bg-surface-container-low p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
+                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">
+                      Total Cash Remitted to Office
+                    </span>
+                    <div className="text-xl font-bold font-mono text-emerald-400 mt-1">
+                      ₦{Math.round(remittanceSummary?.fleetTotalRemitted || 0).toLocaleString()}
+                    </div>
+                    <span className="text-[10px] text-slate-400 mt-0.5 block">Reconciled with cashier to date</span>
+                  </div>
+
+                  <div className="bg-surface-container-low p-4 rounded-xl border border-amber-500/30 bg-amber-500/5">
+                    <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">
+                      Pending Cash in Circulation
+                    </span>
+                    <div className="text-xl font-bold font-mono text-amber-400 mt-1">
+                      ₦{Math.round(remittanceSummary?.fleetPendingBalance || 0).toLocaleString()}
+                    </div>
+                    <span className="text-[10px] text-slate-400 mt-0.5 block">Unremitted driver cash in transit</span>
+                  </div>
+                </div>
+
+                {/* Driver Remittance Breakdown Table */}
+                <div className="overflow-x-auto border border-white/5 rounded-xl">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-white/5 text-[10px] uppercase font-bold text-on-surface-variant border-b border-white/5">
+                      <tr>
+                        <th className="py-2.5 px-3">Carrier Email</th>
+                        <th className="py-2.5 px-3 text-center">Completed Drops</th>
+                        <th className="py-2.5 px-3 text-right">Fares Collected</th>
+                        <th className="py-2.5 px-3 text-right">Cash Remitted</th>
+                        <th className="py-2.5 px-3 text-right">Outstanding Balance</th>
+                        <th className="py-2.5 px-3 text-right">Settlement Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {!remittanceSummary || remittanceSummary.driverBreakdowns.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="py-6 text-center text-on-surface-variant opacity-60">
+                            No driver delivery records logged yet for settlement.
+                          </td>
+                        </tr>
+                      ) : (
+                        remittanceSummary.driverBreakdowns.map((item) => (
+                          <tr key={item.driverId} className="hover:bg-white/5 transition-colors">
+                            <td className="py-3 px-3 font-semibold text-on-surface">
+                              {item.driverEmail}
+                            </td>
+                            <td className="py-3 px-3 text-center font-bold text-slate-300">
+                              {item.completedDeliveries}
+                            </td>
+                            <td className="py-3 px-3 text-right font-mono font-bold text-on-surface">
+                              ₦{Math.round(item.totalCollected).toLocaleString()}
+                            </td>
+                            <td className="py-3 px-3 text-right font-mono text-emerald-400 font-bold">
+                              ₦{Math.round(item.totalRemitted).toLocaleString()}
+                            </td>
+                            <td className="py-3 px-3 text-right font-mono font-bold">
+                              {item.pendingBalance > 0 ? (
+                                <span className="text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                                  ₦{Math.round(item.pendingBalance).toLocaleString()}
+                                </span>
+                              ) : (
+                                <span className="text-emerald-400">₦0 (Cleared)</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-3 text-right">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setRemittanceDriverId(item.driverId);
+                                  setRemittanceModalOpen(true);
+                                }}
+                                className="px-2.5 py-1 rounded text-[10px] font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25 transition-all cursor-pointer"
+                              >
+                                Record Cash
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
@@ -1845,6 +2068,56 @@ export function TenantDashboardPage() {
                   Register Vehicle Asset
                 </button>
               </div>
+
+              {/* ── FLEET REGULATORY COMPLIANCE & EXPIRY SENTINEL ── */}
+              {vehicles.some((v) => v.hasExpiredDocs) && (
+                <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/40 text-rose-300 flex items-start gap-3 shadow-lg">
+                  <div className="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/40 mt-0.5">
+                    <Icon icon="solar:shield-warning-bold" className="text-xl" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="font-bold text-xs uppercase tracking-wider text-rose-200 flex items-center gap-2">
+                      <span>Critical Regulatory Warning — Expired Vehicle Papers Detected!</span>
+                      <span className="px-2 py-0.5 rounded-full bg-rose-500 text-slate-950 text-[9px] font-black uppercase">ACTION REQUIRED</span>
+                    </h4>
+                    <p className="text-xs text-rose-300/90 leading-relaxed">
+                      One or more vehicles have expired road permits, commercial carriage licenses, or insurance policies. Vehicles on public roads with expired documentation face immediate impoundment and heavy enforcement fines by LASTMA, VIO, and FRSC.
+                    </p>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {vehicles.filter(v => v.hasExpiredDocs).map(v => (
+                        <span key={v.id} className="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-200 border border-rose-500/30 text-[11px] font-mono font-bold flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping"></span>
+                          <strong>{v.plateNumber}:</strong> {v.complianceDocs?.filter(d => d.status === "EXPIRED").map(d => d.name).join(", ")}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {!vehicles.some((v) => v.hasExpiredDocs) && vehicles.some((v) => v.hasExpiringSoonDocs) && (
+                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-300 flex items-start gap-3 shadow-md">
+                  <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/40 mt-0.5">
+                    <Icon icon="solar:clock-circle-bold" className="text-xl" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="font-bold text-xs uppercase tracking-wider text-amber-200 flex items-center gap-2">
+                      <span>Fleet Document Expiry Notice — Renewals Required Within 14 Days</span>
+                      <span className="px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[9px] font-black uppercase">RENEW SOON</span>
+                    </h4>
+                    <p className="text-xs text-amber-300/90 leading-relaxed">
+                      Upcoming document expirations detected. Schedule regulatory renewals now to prevent unexpected vehicle grounding.
+                    </p>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {vehicles.filter(v => v.hasExpiringSoonDocs && !v.hasExpiredDocs).map(v => (
+                        <span key={v.id} className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-200 border border-amber-500/30 text-[11px] font-mono font-bold">
+                          <strong>{v.plateNumber}:</strong> {v.complianceDocs?.filter(d => d.status === "EXPIRING_SOON").map(d => `${d.name} (${d.daysRemaining}d left)`).join(", ")}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Fleet Summary Cards */}
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -1914,6 +2187,7 @@ export function TenantDashboardPage() {
                       <th className="py-3 pl-3">Plate & Type</th>
                       <th className="py-3">Status</th>
                       <th className="py-3">Assigned Driver</th>
+                      <th className="py-3">Compliance Papers</th>
                       <th className="py-3">Servicing Schedule</th>
                       <th className="py-3 pr-3 text-right">Actions</th>
                     </tr>
@@ -1988,6 +2262,33 @@ export function TenantDashboardPage() {
                                   </option>
                                 ))}
                               </select>
+                            </td>
+
+                            {/* Compliance Badges Cell */}
+                            <td className="py-3.5">
+                              <div className="flex flex-wrap gap-1 max-w-[220px]">
+                                {vehicle.complianceDocs && vehicle.complianceDocs.length > 0 ? (
+                                  vehicle.complianceDocs.map((doc, dIdx) => (
+                                    <span
+                                      key={dIdx}
+                                      title={`${doc.name}: ${doc.date ? new Date(doc.date).toLocaleDateString() : 'Not Set'} (${doc.status})`}
+                                      className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase border ${
+                                        doc.status === "EXPIRED"
+                                          ? "bg-rose-500/15 text-rose-400 border-rose-500/30"
+                                          : doc.status === "EXPIRING_SOON"
+                                          ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                                          : doc.status === "VALID"
+                                          ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                                          : "bg-white/5 text-slate-500 border-white/5"
+                                      }`}
+                                    >
+                                      {doc.key === "vehicleLicense" ? "LIC" : doc.key === "roadworthiness" ? "RW" : doc.key === "insurance" ? "INS" : "HCK"}: {doc.status === "EXPIRED" ? "EXP" : doc.status === "EXPIRING_SOON" ? `${doc.daysRemaining}d` : doc.status === "VALID" ? "OK" : "—"}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span className="text-[10px] text-slate-500">Not recorded</span>
+                                )}
+                              </div>
                             </td>
 
                             <td className="py-3.5">
@@ -2145,6 +2446,63 @@ export function TenantDashboardPage() {
                         onChange={(e) => setVehicleForm((p) => ({ ...p, nextMaintenanceDue: e.target.value }))}
                         className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-2 text-xs text-on-surface focus:border-primary outline-none"
                       />
+                    </div>
+                  </div>
+
+                  {/* Regulatory Compliance & Document Expiry Fields */}
+                  <div className="pt-3 border-t border-white/10 space-y-3">
+                    <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider block flex items-center gap-1.5">
+                      <Icon icon="solar:shield-warning-bold" className="text-xs" />
+                      Regulatory Compliance & Document Expiry Dates
+                    </span>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold text-on-surface-variant block uppercase">
+                          Vehicle License Expiry
+                        </label>
+                        <input
+                          type="date"
+                          value={vehicleForm.vehicleLicenseExpiry}
+                          onChange={(e) => setVehicleForm((p) => ({ ...p, vehicleLicenseExpiry: e.target.value }))}
+                          className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:border-primary outline-none"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold text-on-surface-variant block uppercase">
+                          Roadworthiness Expiry
+                        </label>
+                        <input
+                          type="date"
+                          value={vehicleForm.roadworthinessExpiry}
+                          onChange={(e) => setVehicleForm((p) => ({ ...p, roadworthinessExpiry: e.target.value }))}
+                          className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:border-primary outline-none"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold text-on-surface-variant block uppercase">
+                          Insurance Policy Expiry
+                        </label>
+                        <input
+                          type="date"
+                          value={vehicleForm.insuranceExpiry}
+                          onChange={(e) => setVehicleForm((p) => ({ ...p, insuranceExpiry: e.target.value }))}
+                          className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:border-primary outline-none"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold text-on-surface-variant block uppercase">
+                          Hackney Carriage Permit
+                        </label>
+                        <input
+                          type="date"
+                          value={vehicleForm.hackneyPermitExpiry}
+                          onChange={(e) => setVehicleForm((p) => ({ ...p, hackneyPermitExpiry: e.target.value }))}
+                          className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:border-primary outline-none"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -2747,6 +3105,40 @@ export function TenantDashboardPage() {
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Printable Waybill & Shipping Label Modal */}
+          {waybillDelivery && (
+            <WaybillModal
+              delivery={waybillDelivery}
+              companyName={user?.tenant?.companyName}
+              subdomain={user?.tenant?.subdomain}
+              onClose={() => setWaybillDelivery(null)}
+            />
+          )}
+
+          {/* Daily Driver Run Sheet & Trip Manifest Modal */}
+          {runSheetOpen && (
+            <DriverRunSheetModal
+              drivers={drivers}
+              deliveries={deliveries}
+              selectedDriverId={runSheetDriverId}
+              companyName={user?.tenant?.companyName}
+              subdomain={user?.tenant?.subdomain}
+              onClose={() => setRunSheetOpen(false)}
+            />
+          )}
+
+          {/* Record Driver Cash Remittance Settlement Modal */}
+          {remittanceModalOpen && (
+            <RecordRemittanceModal
+              drivers={drivers}
+              defaultDriverId={remittanceDriverId}
+              onSuccess={() => {
+                fetchData(true);
+              }}
+              onClose={() => setRemittanceModalOpen(false)}
+            />
           )}
         </main>
       </div>

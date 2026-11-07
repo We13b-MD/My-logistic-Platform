@@ -196,21 +196,48 @@ $$\text{Realistic Estimated Duration (mins)} = \text{Theoretical OSRM Duration} 
      * When navigation launches, `<MapRecenter />` automatically sets camera to **Zoom 17** (street-level), revealing individual driveways, roads, and street names right in front of the vehicle.
      * Rendered a dual-layer Polyline corridor: a high-contrast dark blue casing outline (`weight: 9`) under a glowing cyan driveway core (`weight: 5`), clearly visible on both street and satellite views.
 
+### M. B2B Logistics Enterprise Suite: Waybill, Run Sheet, Remittance Ledger & Regulatory Sentinel
+
+* **Architectural Scope:** Transformed Logistel from an MVP tracker into an enterprise logistics operating system for fleet owners and dispatch companies adhering strictly to SOLID principles.
+
+#### 1. Printable Waybill / Consignment Note & 4x6 Thermal Label ([`WaybillModal.tsx`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/components/WaybillModal.tsx))
+* **Format Flexibility:** Dual-mode switcher between **A4 Formal Consignment Note** and **4x6 Compact Thermal Parcel Label**.
+* **Dynamic Scannable QR Code:** Automatically points to live public GPS tracking (`/track/:id`) for quick scan verification on parcels.
+* **Chain of Custody:** Dedicated signature slots for Dispatcher Seal, Carrier Pickup, and Recipient Doorstep Confirmation.
+* **Print CSS:** Configured `@media print` styling with `-webkit-print-color-adjust: exact` so only the waybill document prints without sidebar/screen buttons.
+
+#### 2. Daily Driver Run Sheet (Trip Manifest) ([`DriverRunSheetModal.tsx`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/components/DriverRunSheetModal.tsx))
+* **Batch Shift Manifest:** Aggregates all deliveries assigned to a driver for their daily route with stop sequence numbers, recipient contacts, destinations, and estimated fares.
+* **Formal Handover Contract:** Includes morning depot departure handover verification (*"I acknowledge receipt of [N] parcels in sealed condition"*) and evening cash & returns reconciliation sign-offs.
+
+#### 3. Driver Cash Collection & Daily Remittance Ledger ([`RecordRemittanceModal.tsx`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/components/RecordRemittanceModal.tsx) & Backend)
+* **Prisma Schema Model:** Created `DriverRemittance` tracking `driverId`, `amount`, `paymentMethod` (`CASH`, `BANK_TRANSFER`, `POS`), `reference`, `notes`, `recordedBy`.
+* **Backend API:** Implemented `POST /api/v1/drivers/:id/remittance`, `GET /api/v1/drivers/remittances`, and `GET /api/v1/drivers/remittance-summary`.
+* **Dashboard Ledger:** Integrated fleet KPI summary cards (Fares Generated, Total Remitted, Pending Cash in Circulation) and per-driver settlement tables in [`TenantDashboardPage.tsx`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/features/dashboard/pages/TenantDashboardPage.tsx).
+
+#### 4. Vehicle Regulatory Compliance & Expiry Sentinel
+* **Prisma Schema Model:** Extended `Vehicle` with `insuranceExpiry`, `roadworthinessExpiry`, `vehicleLicenseExpiry`, and `hackneyPermitExpiry`.
+* **Dynamic Expiry Evaluation:** In [`vehicle.service.ts`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/src/api/v1/modules/vehicles/vehicle.service.ts), calculates days until expiration, tagging each document as `EXPIRED`, `EXPIRING_SOON` (<= 14 days), or `VALID`.
+* **Dashboard Sentinel Banners:** Renders prominent high-contrast warning alerts in the Fleet tab to prevent vehicle impoundment and traffic enforcement fines (LASTMA, VIO, FRSC).
+* **Compliance Table Column:** Shows color-coded badges (`LIC`, `RW`, `INS`, `HCK`) on every fleet vehicle with tooltip expiration dates.
+
 ---
 
 ## 3. Modified Files Index
 
 | File Path | Component | Changes Made |
 | :--- | :--- | :--- |
-| [`backend/src/api/v1/modules/deliveries/delivery.service.ts`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/src/api/v1/modules/deliveries/delivery.service.ts) | Backend API | Seeds Breadcrumb #0 upon dispatcher assignment in database transaction. |
-| [`backend/src/api/v1/modules/drivers/driver.service.ts`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/src/api/v1/modules/drivers/driver.service.ts) | Backend API | Appends coordinates to `LocationBreadcrumb` for active deliveries on incoming pings. |
-| [`backend/src/api/v1/modules/tracking/tracking.repository.ts`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/src/api/v1/modules/tracking/tracking.repository.ts) | Backend DB | Fixed Prisma query to select `id` and `email` instead of `firstName`/`lastName`. |
-| [`backend/src/api/v1/modules/tracking/tracking.service.ts`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/src/api/v1/modules/tracking/tracking.service.ts) | Backend Logic | Haversine distance geofencing, Watchdog Sentinel calculation, baseline anchor synthesis. |
-| [`admin-dashboard/src/features/dashboard/pages/DriverDashboardPage.tsx`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/features/dashboard/pages/DriverDashboardPage.tsx) | Frontend | Custom In-App OSRM Turn-by-Turn Navigator HUD, MapRecenter camera auto-follow, satellite toggle. |
-| [`admin-dashboard/src/utils/useNavigatorAudio.ts`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/utils/useNavigatorAudio.ts) | Frontend Hook | Native speech synthesis voice guidance engine & Screen Wake Lock API management. |
-| [`admin-dashboard/src/features/dashboard/pages/TenantDashboardPage.tsx`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/features/dashboard/pages/TenantDashboardPage.tsx) | Frontend | Live GPS radar modal, departure indicators in deliveries table, watchdog alert banner. |
-| [`admin-dashboard/src/utils/useOsrmRoute.ts`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/utils/useOsrmRoute.ts) | Frontend Hook | Turn-by-turn maneuver parsing (`steps=true`), Lagos Urban Traffic Multiplier, dynamic ETA ranges. |
-| [`admin-dashboard/src/features/landing/pages/LandingPage.tsx`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/features/landing/pages/LandingPage.tsx) | Frontend Landing | Updated pricing display to USD (`$`), converted monthly subscription rate from ₦100,000/mo to `$65/month`. |
+| [`backend/prisma/schema.prisma`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/prisma/schema.prisma) | Database Schema | Added `DriverRemittance` model and 4 compliance document expiry fields on `Vehicle`. |
+| [`backend/src/api/v1/modules/vehicles/vehicle.types.ts`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/src/api/v1/modules/vehicles/vehicle.types.ts) | Backend API | Declared DTOs and `ComplianceDocStatus` interfaces. |
+| [`backend/src/api/v1/modules/vehicles/vehicle.service.ts`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/src/api/v1/modules/vehicles/vehicle.service.ts) | Backend API | Evaluates days remaining for compliance documents and persists expiry dates. |
+| [`backend/src/api/v1/modules/vehicles/vehicle.validator.ts`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/src/api/v1/modules/vehicles/vehicle.validator.ts) | Backend API | Zod schemas updated for optional compliance dates. |
+| [`backend/src/api/v1/modules/drivers/driver.service.ts`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/src/api/v1/modules/drivers/driver.service.ts) | Backend API | Added `recordRemittance`, `getRemittances`, and `getRemittanceSummary`. |
+| [`backend/src/api/v1/modules/drivers/driver.controller.ts`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/src/api/v1/modules/drivers/driver.controller.ts) | Backend API | Added remittance request handlers. |
+| [`backend/src/api/v1/modules/drivers/driver.routes.ts`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/backend/src/api/v1/modules/drivers/driver.routes.ts) | Backend Routes | Registered remittance endpoints. |
+| [`admin-dashboard/src/components/WaybillModal.tsx`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/components/WaybillModal.tsx) | Frontend | A4 Consignment Note & 4x6 Thermal Label with live tracking QR code. |
+| [`admin-dashboard/src/components/DriverRunSheetModal.tsx`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/components/DriverRunSheetModal.tsx) | Frontend | Daily trip manifest with route stops, KPI summary, and depot custody sign-offs. |
+| [`admin-dashboard/src/components/RecordRemittanceModal.tsx`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/components/RecordRemittanceModal.tsx) | Frontend | Cash, Bank Transfer, and POS driver settlement modal. |
+| [`admin-dashboard/src/features/dashboard/pages/TenantDashboardPage.tsx`](file:///c:/Users/USER/Downloads/My-logistic-Platform-main/My-logistic-Platform-main/admin-dashboard/src/features/dashboard/pages/TenantDashboardPage.tsx) | Frontend | Integrated Waybill button, Run Sheet actions, Remittance Ledger, and Compliance Sentinel. |
 
 ---
 
@@ -219,10 +246,11 @@ $$\text{Realistic Estimated Duration (mins)} = \text{Theoretical OSRM Duration} 
 * **Admin Dashboard Build:**
   ```bash
   npm run build
-  # ✓ built in 4.53s (0 TypeScript errors)
+  # ✓ built in 5.07s (0 TypeScript errors)
   ```
 * **Backend Build:**
   ```bash
   npm run build
   # tsc exited with code 0 (0 TypeScript errors)
   ```
+

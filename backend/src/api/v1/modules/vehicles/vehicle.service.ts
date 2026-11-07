@@ -12,6 +12,36 @@ export class VehicleService {
       vehicle.nextMaintenanceDue && new Date(vehicle.nextMaintenanceDue) < now
     );
 
+    const evaluateDoc = (
+      name: string,
+      key: "insurance" | "roadworthiness" | "vehicleLicense" | "hackneyPermit",
+      dateVal: any
+    ) => {
+      if (!dateVal) {
+        return { name, key, date: null, status: "NOT_SET" as const, daysRemaining: null };
+      }
+      const d = new Date(dateVal);
+      const diffMs = d.getTime() - now.getTime();
+      const daysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      let status: "EXPIRED" | "EXPIRING_SOON" | "VALID" = "VALID";
+      if (daysRemaining < 0) {
+        status = "EXPIRED";
+      } else if (daysRemaining <= 14) {
+        status = "EXPIRING_SOON";
+      }
+      return { name, key, date: d, status, daysRemaining };
+    };
+
+    const complianceDocs = [
+      evaluateDoc("Vehicle License", "vehicleLicense", vehicle.vehicleLicenseExpiry),
+      evaluateDoc("Roadworthiness", "roadworthiness", vehicle.roadworthinessExpiry),
+      evaluateDoc("Insurance Policy", "insurance", vehicle.insuranceExpiry),
+      evaluateDoc("Hackney Carriage Permit", "hackneyPermit", vehicle.hackneyPermitExpiry),
+    ];
+
+    const hasExpiredDocs = complianceDocs.some((d) => d.status === "EXPIRED");
+    const hasExpiringSoonDocs = complianceDocs.some((d) => d.status === "EXPIRING_SOON");
+
     return {
       id: vehicle.id,
       tenantId: vehicle.tenantId,
@@ -21,6 +51,13 @@ export class VehicleService {
       lastMaintenance: vehicle.lastMaintenance,
       nextMaintenanceDue: vehicle.nextMaintenanceDue,
       isMaintenanceOverdue,
+      insuranceExpiry: vehicle.insuranceExpiry,
+      roadworthinessExpiry: vehicle.roadworthinessExpiry,
+      vehicleLicenseExpiry: vehicle.vehicleLicenseExpiry,
+      hackneyPermitExpiry: vehicle.hackneyPermitExpiry,
+      complianceDocs,
+      hasExpiredDocs,
+      hasExpiringSoonDocs,
       driverId: vehicle.driverId,
       driver: vehicle.driver
         ? {
@@ -75,6 +112,10 @@ export class VehicleService {
           status: data.status || VehicleStatus.IDLE,
           lastMaintenance: data.lastMaintenance ? new Date(data.lastMaintenance) : null,
           nextMaintenanceDue: data.nextMaintenanceDue ? new Date(data.nextMaintenanceDue) : null,
+          insuranceExpiry: data.insuranceExpiry ? new Date(data.insuranceExpiry) : null,
+          roadworthinessExpiry: data.roadworthinessExpiry ? new Date(data.roadworthinessExpiry) : null,
+          vehicleLicenseExpiry: data.vehicleLicenseExpiry ? new Date(data.vehicleLicenseExpiry) : null,
+          hackneyPermitExpiry: data.hackneyPermitExpiry ? new Date(data.hackneyPermitExpiry) : null,
           driverId: data.driverId || null,
         },
         include: {
@@ -198,6 +239,19 @@ export class VehicleService {
 
     if (data.nextMaintenanceDue !== undefined) {
       updateData.nextMaintenanceDue = data.nextMaintenanceDue ? new Date(data.nextMaintenanceDue) : null;
+    }
+
+    if (data.insuranceExpiry !== undefined) {
+      updateData.insuranceExpiry = data.insuranceExpiry ? new Date(data.insuranceExpiry) : null;
+    }
+    if (data.roadworthinessExpiry !== undefined) {
+      updateData.roadworthinessExpiry = data.roadworthinessExpiry ? new Date(data.roadworthinessExpiry) : null;
+    }
+    if (data.vehicleLicenseExpiry !== undefined) {
+      updateData.vehicleLicenseExpiry = data.vehicleLicenseExpiry ? new Date(data.vehicleLicenseExpiry) : null;
+    }
+    if (data.hackneyPermitExpiry !== undefined) {
+      updateData.hackneyPermitExpiry = data.hackneyPermitExpiry ? new Date(data.hackneyPermitExpiry) : null;
     }
 
     const updated = await prisma.vehicle.update({

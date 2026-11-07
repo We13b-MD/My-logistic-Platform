@@ -64,4 +64,29 @@ driverRouter.patch(
   (req, res) => driverController.verifyDriver(req, res)
 );
 
+// 7. Get fleet remittance summary (admin-only)
+driverRouter.get(
+  "/remittance-summary",
+  authenticate,
+  authorize(["TENANT_SUPER_ADMIN", "TENANT_SUB_ADMIN"]),
+  (req, res) => driverController.getRemittanceSummary(req, res)
+);
+
+// 8. Get remittance history (admin-only)
+driverRouter.get(
+  "/remittances",
+  authenticate,
+  authorize(["TENANT_SUPER_ADMIN", "TENANT_SUB_ADMIN"]),
+  (req, res) => driverController.getRemittances(req, res)
+);
+
+// 9. Record a driver cash remittance (admin-only)
+driverRouter.post(
+  "/:id/remittance",
+  authenticate,
+  authorize(["TENANT_SUPER_ADMIN", "TENANT_SUB_ADMIN"]),
+  (req, res) => driverController.recordRemittance(req, res)
+);
+
 export { driverRouter };
+

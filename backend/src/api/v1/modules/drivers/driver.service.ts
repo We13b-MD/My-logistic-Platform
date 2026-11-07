@@ -239,4 +239,123 @@ export class DriverService {
 
     return updatedProfile;
   }
+
+  /**
+   * Record a cash / POS / transfer remittance from a driver to the cashier / dispatcher.
+   */
+  async recordRemittance(
+    tenantId: string,
+    driverId: string,
+    data: { amount: number; paymentMethod?: string; reference?: string; notes?: string; recordedBy?: string }
+  ) {
+    const driver = await prisma.driverProfile.findUnique({
+      where: { id: driverId },
+      include: { user: true },
+    });
+
+    if (!driver || driver.user.tenantId !== tenantId) {
+      throw new Error("Driver not found or belongs to another tenant");
+    }
+
+    if (!data.amount || data.amount <= 0) {
+      throw new Error("Remittance amount must be greater than zero");
+    }
+
+    const remittance = await prisma.driverRemittance.create({
+      data: {
+        tenantId,
+        driverId,
+        amount: Number(data.amount),
+        paymentMethod: data.paymentMethod || "CASH",
+        reference: data.reference || null,
+        notes: data.notes || null,
+        recordedBy: data.recordedBy || null,
+      },
+      include: {
+        driver: {
+          include: {
+            user: { select: { email: true } },
+          },
+        },
+      },
+    });
+
+    return remittance;
+  }
+
+  /**
+   * Get remittance history for a tenant or specific driver.
+   */
+  async getRemittances(tenantId: string, driverId?: string) {
+    const where: any = { tenantId };
+    if (driverId) where.driverId = driverId;
+
+    return await prisma.driverRemittance.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      include: {
+        driver: {
+          include: {
+            user: { select: { id: true, email: true } },
+          },
+        },
+      },
+    });
+  }
+
+  /**
+   * Get complete cash settlement ledger summary across all tenant drivers.
+   * Calculates total completed deliveries, total cash collected (fares),
+   * total remitted, and current outstanding unremitted balance.
+   */
+  async getRemittanceSummary(tenantId: string) {
+    const drivers = await prisma.driverProfile.findMany({
+      where: { user: { tenantId } },
+      include: {
+        user: { select: { id: true, email: true } },
+        deliveries: {
+          where: { status: DeliveryStatus.DELIVERED },
+          select: { id: true, estimatedPrice: true, distanceKm: true, createdAt: true },
+        },
+        remittances: {
+          orderBy: { createdAt: "desc" },
+        },
+      },
+    });
+
+    let fleetTotalCollected = 0;
+    let fleetTotalRemitted = 0;
+
+    const driverBreakdowns = drivers.map((driver) => {
+      const completedCount = driver.deliveries.length;
+      const totalCollected = driver.deliveries.reduce((sum, d) => sum + (d.estimatedPrice || 0), 0);
+      const totalRemitted = driver.remittances.reduce((sum, r) => sum + r.amount, 0);
+      const pendingBalance = Math.max(0, totalCollected - totalRemitted);
+
+      fleetTotalCollected += totalCollected;
+      fleetTotalRemitted += totalRemitted;
+
+      return {
+        driverId: driver.id,
+        driverEmail: driver.user.email,
+        vehicleType: driver.vehicleType,
+        licenseNumber: driver.licenseNumber,
+        isOnline: driver.isOnline,
+        completedDeliveries: completedCount,
+        totalCollected,
+        totalRemitted,
+        pendingBalance,
+        recentRemittances: driver.remittances.slice(0, 5),
+      };
+    });
+
+    const fleetPendingBalance = Math.max(0, fleetTotalCollected - fleetTotalRemitted);
+
+    return {
+      fleetTotalCollected,
+      fleetTotalRemitted,
+      fleetPendingBalance,
+      driverBreakdowns,
+    };
+  }
 }

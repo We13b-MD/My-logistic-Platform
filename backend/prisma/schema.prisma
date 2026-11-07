@@ -25,6 +25,7 @@ model Tenant {
   PricingRule              PricingRule?
   users                    User[]
   vehicles                 Vehicle[]
+  driverRemittances        DriverRemittance[]
 }
 
 model User {
@@ -75,6 +76,7 @@ model DriverProfile {
   user          User                 @relation(fields: [userId], references: [id])
   vehicle       Vehicle?
   breadcrumbs   LocationBreadcrumb[] // Full GPS history trail — never overwritten
+  remittances   DriverRemittance[]   // Cash remittance & settlement records
 }
 
 model Delivery {
@@ -111,18 +113,22 @@ model Delivery {
 }
 
 model Vehicle {
-  id                 String         @id @default(uuid())
-  tenantId           String
-  plateNumber        String         @unique
-  vehicleType        VehicleType
-  status             VehicleStatus  @default(IDLE)
-  lastMaintenance    DateTime?
-  nextMaintenanceDue DateTime?
-  driverId           String?        @unique
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
-  driver             DriverProfile? @relation(fields: [driverId], references: [id])
-  tenant             Tenant         @relation(fields: [tenantId], references: [id])
+  id                   String         @id @default(uuid())
+  tenantId             String
+  plateNumber          String         @unique
+  vehicleType          VehicleType
+  status               VehicleStatus  @default(IDLE)
+  lastMaintenance      DateTime?
+  nextMaintenanceDue   DateTime?
+  insuranceExpiry      DateTime?
+  roadworthinessExpiry DateTime?
+  vehicleLicenseExpiry DateTime?
+  hackneyPermitExpiry  DateTime?
+  driverId             String?        @unique
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  driver               DriverProfile? @relation(fields: [driverId], references: [id])
+  tenant               Tenant         @relation(fields: [tenantId], references: [id])
 }
 
 model Invoice {
@@ -252,4 +258,25 @@ model PasswordResetToken {
 
   @@index([email])
   @@index([userId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DriverRemittance — Cash on Delivery (COD) & Cash Settlement Audit Trail
+// ─────────────────────────────────────────────────────────────────────────────
+model DriverRemittance {
+  id            String        @id @default(uuid())
+  tenantId      String
+  driverId      String
+  amount        Float
+  paymentMethod String        @default("CASH") // CASH, BANK_TRANSFER, POS
+  reference     String?       // Receipt / bank transfer ref
+  notes         String?
+  recordedBy    String?       // Cashier / Dispatcher name or email
+  createdAt     DateTime      @default(now())
+  driver        DriverProfile @relation(fields: [driverId], references: [id])
+  tenant        Tenant        @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+  @@index([driverId])
+  @@index([createdAt])
 }

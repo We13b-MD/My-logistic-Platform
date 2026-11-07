@@ -139,4 +139,72 @@ export class DriverController {
       });
     }
   }
+
+  /**
+   * Record a driver cash remittance (admin-only).
+   */
+  async recordRemittance(req: Request, res: Response): Promise<void> {
+    try {
+      const tenantId = req.user!.tenantId;
+      const driverId = req.params.id as string;
+      const recordedBy = req.user!.email || req.user!.id;
+
+      const remittance = await driverService.recordRemittance(tenantId, driverId, {
+        ...req.body,
+        recordedBy,
+      });
+
+      res.status(201).json({
+        status: "success",
+        data: remittance,
+        message: "Driver remittance recorded successfully",
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        status: "error",
+        message: error.message || "Failed to record remittance",
+      });
+    }
+  }
+
+  /**
+   * Get remittance history (admin-only).
+   */
+  async getRemittances(req: Request, res: Response): Promise<void> {
+    try {
+      const tenantId = req.user!.tenantId;
+      const driverId = req.query.driverId as string | undefined;
+
+      const list = await driverService.getRemittances(tenantId, driverId);
+      res.status(200).json({
+        status: "success",
+        data: list,
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        status: "error",
+        message: error.message || "Failed to fetch remittances",
+      });
+    }
+  }
+
+  /**
+   * Get fleet-wide cash reconciliation and driver balance summary (admin-only).
+   */
+  async getRemittanceSummary(req: Request, res: Response): Promise<void> {
+    try {
+      const tenantId = req.user!.tenantId;
+      const summary = await driverService.getRemittanceSummary(tenantId);
+      res.status(200).json({
+        status: "success",
+        data: summary,
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        status: "error",
+        message: error.message || "Failed to fetch remittance summary",
+      });
+    }
+  }
 }
+

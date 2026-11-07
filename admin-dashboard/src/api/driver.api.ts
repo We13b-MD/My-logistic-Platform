@@ -10,4 +10,9 @@ export const driverApi = {
   listForAdmin: (params?: object) => apiClient.get('/drivers', { params }),
   verifyDriver: (driverId: string, isVerified: boolean) =>
     apiClient.patch(`/drivers/${driverId}/verify`, { isVerified }),
+  getRemittanceSummary: () => apiClient.get('/drivers/remittance-summary'),
+  getRemittances: (params?: { driverId?: string }) => apiClient.get('/drivers/remittances', { params }),
+  recordRemittance: (driverId: string, data: { amount: number; paymentMethod: string; reference?: string; notes?: string }) =>
+    apiClient.post(`/drivers/${driverId}/remittance`, data),
 };
+
