@@ -23,6 +23,7 @@ docs/
 - [Pricing & Payments Architecture](guides/pricing_and_payments.md) — Mathematical formulas for Haversine distance, dynamic rates, and Paystack UPR engine.
 - [Security Architecture](guides/security_architecture.md) — Defense-in-depth security model and Cloudflare edge rules.
 - [Account Deletion & Regulatory Compliance](ACCOUNT_DELETION_AND_REGULATORY_COMPLIANCE.md) — Multi-jurisdiction GDPR / NDPR compliant anonymization lifecycle.
+- [Identity Verification & Anti-Fraud Strategy (Dojah Blueprint)](../README.md#️-identity-verification--anti-fraud-blueprint-dojah-integration-cac-bvn--drivers-license) — Complete architecture for company KYB (CAC & Director BVN) and carrier KYC (FRSC Driver's License & NIN).
 
 ## Getting Started
 For developers onboarding to the project:
