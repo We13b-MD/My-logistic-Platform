@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import http from 'http';
 import { Server } from 'socket.io';
 import v1Router from "./src/api/v1/router";
+import { publicApiRouter } from "./src/api/v1/modules/developer/public.routes";
 import { errorHandler } from './src/api/v1/middlewares/error.middleware';
 import { initTrackingSocket } from './src/api/v1/modules/tracking/tracking.socket';
 
@@ -19,7 +20,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
 }));
 
 app.use(express.json({ limit: '10mb' }));
@@ -30,6 +31,9 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Api versioning 
 app.use('/api/v1', v1Router);
+
+// Public Developer API (authenticated with API keys, not JWT)
+app.use('/api/public/v1', publicApiRouter);
 
 // Root endpoint — friendly healthcheck & API greeting
 app.get('/', (req, res) => {

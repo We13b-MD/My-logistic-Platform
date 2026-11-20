@@ -4,6 +4,7 @@ import { DeliveryStatus } from '@prisma/client';
 import crypto from 'crypto';
 import { deliveryQueue } from './delivery.queue';
 import { sendOtpEmail } from "../../../../utils/email.util";
+import { notifyDeliveryStatusChange } from "../developer/webhook.service";
 
 export class NearestDriverStrategy implements IDriverAssignmentStrategy {
     async findAndAssignDriver(
@@ -63,6 +64,9 @@ export class NearestDriverStrategy implements IDriverAssignmentStrategy {
                 status: DeliveryStatus.ASSIGNED,
             },
         });
+
+        // Notify merchant webhook (fire-and-forget)
+        notifyDeliveryStatusChange(deliveryId);
 
         return assignedDriverId;
     }
@@ -144,7 +148,7 @@ export class DeliveryService {
     ) {
         // Wrap in a transaction with a conditional update to prevent TOCTOU race conditions.
         // If two requests arrive simultaneously, only one will succeed — the other gets count=0.
-        return await prisma.$transaction(async (tx) => {
+        const result = await prisma.$transaction(async (tx) => {
             // Step 1: Fetch delivery and run all validation guards
             const delivery = await tx.delivery.findUnique({
                 where: { id: deliveryId }
@@ -205,8 +209,13 @@ export class DeliveryService {
 
 
             // Return the updated delivery record
-            return tx.delivery.findUnique({ where: { id: deliveryId } });
+            return await tx.delivery.findUnique({ where: { id: deliveryId } });
         });
+
+        // Notify merchant webhook AFTER commit (fire-and-forget, never blocks dispatch)
+        notifyDeliveryStatusChange(deliveryId);
+
+        return result;
     }
 
     async list(
@@ -319,7 +328,7 @@ export class DeliveryService {
             throw new Error('Driver profile not found. Please complete profile onboarding.');
         }
 
-        return await prisma.$transaction(async (tx) => {
+        const result = await prisma.$transaction(async (tx) => {
             const delivery = await tx.delivery.findUnique({
                 where: { id: deliveryId }
             });
@@ -346,6 +355,11 @@ export class DeliveryService {
                 }
             });
         });
+
+        // Notify merchant webhook (fire-and-forget)
+        notifyDeliveryStatusChange(deliveryId);
+
+        return result;
     }
 
     /**
@@ -362,7 +376,7 @@ export class DeliveryService {
             throw new Error('Driver not found or does not belong to your company fleet.');
         }
 
-        return await prisma.$transaction(async (tx) => {
+        const result = await prisma.$transaction(async (tx) => {
             const delivery = await tx.delivery.findUnique({
                 where: { id: deliveryId }
             });
@@ -405,5 +419,10 @@ export class DeliveryService {
 
             return updatedDelivery;
         });
+
+        // Notify merchant webhook (fire-and-forget)
+        notifyDeliveryStatusChange(deliveryId);
+
+        return result;
     }
 }

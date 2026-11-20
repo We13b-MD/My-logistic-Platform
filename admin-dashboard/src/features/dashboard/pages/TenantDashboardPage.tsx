@@ -13,6 +13,7 @@ import { LogistelLogo } from "@/components/LogistelLogo";
 import { WaybillModal } from "@/components/WaybillModal";
 import { DriverRunSheetModal } from "@/components/DriverRunSheetModal";
 import { RecordRemittanceModal } from "@/components/RecordRemittanceModal";
+import { DeveloperSettingsPanel } from "@/components/DeveloperSettingsPanel";
 
 
 
@@ -83,8 +84,8 @@ export function TenantDashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, token]);
 
-  // Navigation tab state: "overview" | "decisions" | "deliveries" | "drivers" | "fleet" | "dispatch" | "billing"
-  const [activeTab, setActiveTab] = useState<"overview" | "decisions" | "deliveries" | "drivers" | "fleet" | "dispatch" | "billing">("overview");
+  // Navigation tab state: "overview" | "decisions" | "deliveries" | "drivers" | "fleet" | "dispatch" | "billing" | "developer"
+  const [activeTab, setActiveTab] = useState<"overview" | "decisions" | "deliveries" | "drivers" | "fleet" | "dispatch" | "billing" | "developer">("overview");
 
   // Roster & Decision Metrics state
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
@@ -884,6 +885,19 @@ export function TenantDashboardPage() {
           >
             <Icon icon="solar:card-recive-bold-duotone" className="text-lg text-teal-400" />
             <span className="text-xs font-bold">Billing & Subscription</span>
+          </button>
+
+          <button
+            id="tab-developer-api"
+            onClick={() => setActiveTab("developer")}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all cursor-pointer ${
+              activeTab === "developer"
+                ? "bg-violet-500/10 border-violet-500/40 text-violet-300 font-bold"
+                : "bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700"
+            }`}
+          >
+            <Icon icon="solar:code-square-bold-duotone" className="text-lg text-violet-400" />
+            <span className="text-xs font-bold">Developer API & Webhooks</span>
           </button>
 
 
@@ -2740,6 +2754,9 @@ export function TenantDashboardPage() {
               </form>
             </div>
           )}
+
+          {/* TAB 7: DEVELOPER API & WEBHOOKS */}
+          {activeTab === "developer" && <DeveloperSettingsPanel />}
 
           {/* TAB 6: BILLING & SUBSCRIPTION PLAN */}
           {activeTab === "billing" && (

@@ -247,19 +247,19 @@ export function LandingPage() {
               </div>
             </div>
 
-            {/* Bento Card 6: Multi-tenant Security */}
-            <div className="glass-panel rounded-2xl p-6 flex flex-col h-[320px] group hover:border-purple-500/40 transition-all border border-slate-800 relative overflow-hidden">
+            {/* Bento Card 6: Developer REST API & Webhooks */}
+            <div className="glass-panel rounded-2xl p-6 flex flex-col h-[320px] group hover:border-violet-500/40 transition-all border border-slate-800 relative overflow-hidden">
               <div className="relative z-10 flex flex-col h-full">
-                <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center mb-5 border border-purple-500/20 group-hover:border-purple-500/50 transition-colors">
-                  <Icon icon="solar:shield-check-bold-duotone" className="text-purple-400 text-2xl" />
+                <div className="w-12 h-12 rounded-xl bg-violet-500/10 flex items-center justify-center mb-5 border border-violet-500/20 group-hover:border-violet-500/50 transition-colors">
+                  <Icon icon="solar:code-square-bold-duotone" className="text-violet-400 text-2xl" />
                 </div>
-                <h3 className="text-base font-bold text-slate-100 mb-2">Multi-Tenant Security</h3>
+                <h3 className="text-base font-bold text-slate-100 mb-2">Developer API & Webhooks</h3>
                 <p className="text-xs text-slate-400 leading-relaxed flex-grow">
-                  Enterprise tenant data isolation, role-based access control (RBAC), and Edge WAF rate-limiting protection.
+                  Let e-commerce stores, pharmacies, and marketplaces connect directly to your fleet. Automate order booking, distance pricing, and real-time status webhooks.
                 </p>
                 <div className="mt-auto flex items-center justify-between border-t border-slate-800/80 pt-4">
-                  <span className="text-[10px] font-mono text-purple-400">Enterprise Tenant Isolation</span>
-                  <Icon icon="lucide:arrow-right" className="text-slate-400 group-hover:text-purple-400 group-hover:translate-x-1 transition-all" />
+                  <span className="text-[10px] font-mono text-violet-400">REST API & Webhooks Engine</span>
+                  <Icon icon="lucide:arrow-right" className="text-slate-400 group-hover:text-violet-400 group-hover:translate-x-1 transition-all" />
                 </div>
               </div>
             </div>
@@ -367,6 +367,10 @@ export function LandingPage() {
                   <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
                   <span>Live customer map tracking links</span>
                 </li>
+                <li className="flex items-center gap-2.5 text-xs text-slate-300">
+                  <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
+                  <span>Developer API sandbox & test keys</span>
+                </li>
                 <li className="flex items-center gap-2.5 text-xs text-slate-400">
                   <Icon icon="lucide:shield-check" className="text-emerald-400 text-sm shrink-0" />
                   <span>No credit card required to start</span>
@@ -415,6 +419,10 @@ export function LandingPage() {
                   <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
                   <span>Socket.io live map tracking</span>
                 </li>
+                <li className="flex items-center gap-2.5 text-xs text-slate-300">
+                  <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
+                  <span><strong>Developer REST API & Webhooks</strong> for e-commerce</span>
+                </li>
               </ul>
               <button
                 onClick={() => navigate("/onboard")}
@@ -453,7 +461,7 @@ export function LandingPage() {
                 </li>
                 <li className="flex items-center gap-2.5 text-xs text-slate-300">
                   <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
-                  <span>Direct REST API & webhooks</span>
+                  <span>High-volume API quotas & custom webhook SLA</span>
                 </li>
               </ul>
               <button

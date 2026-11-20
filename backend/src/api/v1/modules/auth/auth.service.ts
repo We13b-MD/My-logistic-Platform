@@ -255,6 +255,11 @@ export class AuthService {
             isActive: true,
           },
         });
+      } else if (!tenant.isActive) {
+        tenant = await prisma.tenant.update({
+          where: { id: tenant.id },
+          data: { isActive: true },
+        });
       }
 
       // 2. Auto-provision user if missing

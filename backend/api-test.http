@@ -1,0 +1,90 @@
+# ==============================================================================
+# LOGISTEL DEVELOPER API — REST CLIENT TEST SUITE (.http)
+# ==============================================================================
+# Instructions:
+# 1. Paste your generated API key (from Tenant Dashboard) into @apiKey below.
+# 2. Click "Send Request" right above any request to test it in VS Code!
+# ==============================================================================
+
+@baseUrl = http://localhost:3000
+@apiKey = lgs_live_xUzuhVHNopOcKs4NKaUiYOe43Gw8On3qTJp0IrjJUXo
+
+###
+# 1. VERIFY API KEY STATUS
+# Returns key name and confirms your key is valid and active.
+GET {{baseUrl}}/api/public/v1/me
+X-API-Key: {{apiKey}}
+
+
+###
+# 2. GET INSTANT PRICE QUOTE
+# Calculates distance and fare between Surulere and Victoria Island.
+POST {{baseUrl}}/api/public/v1/quotes
+X-API-Key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "vehicleType": "BIKE",
+  "pickup": {
+    "latitude": 6.4975,
+    "longitude": 3.3644
+  },
+  "dropoff": {
+    "latitude": 6.4281,
+    "longitude": 3.4219
+  }
+}
+
+
+###
+# 3. BOOK / CREATE A SHIPMENT
+# Dispatches an order to the fleet and generates a receiver OTP code.
+# Notice: Sending the same 'reference' twice prevents duplicate billing!
+# @name createShipment
+POST {{baseUrl}}/api/public/v1/shipments
+X-API-Key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "reference": "ORDER-1001",
+  "vehicleType": "BIKE",
+  "pickup": {
+    "address": "14 Broad Street, Lagos Island, Lagos",
+    "latitude": 6.4549,
+    "longitude": 3.3886,
+    "phone": "+2348012345678"
+  },
+  "dropoff": {
+    "address": "23 Admiralty Way, Lekki Phase 1, Lagos",
+    "latitude": 6.4474,
+    "longitude": 3.4708
+  },
+  "recipient": {
+    "name": "Chidinma Okafor",
+    "phone": "+2348098765432",
+    "email": "chidinma@example.com"
+  }
+}
+
+
+###
+# 4. LIST ALL YOUR CREATED SHIPMENTS
+# Paginated list of deliveries booked under this API key.
+GET {{baseUrl}}/api/public/v1/shipments?page=1&limit=10
+X-API-Key: {{apiKey}}
+
+
+###
+# 5. GET SINGLE SHIPMENT STATUS & LIVE TRACKING
+# Shows package status, OSRM route, and live driver GPS coordinates once assigned.
+# Automatically captures the ID from request #3 (createShipment) above:
+@shipmentId = {{createShipment.response.body.data.id}}
+GET {{baseUrl}}/api/public/v1/shipments/{{shipmentId}}
+X-API-Key: {{apiKey}}
+
+
+###
+# 6. CANCEL A SHIPMENT
+# Cancels an order before it has been picked up by a driver.
+POST {{baseUrl}}/api/public/v1/shipments/{{shipmentId}}/cancel
+X-API-Key: {{apiKey}}

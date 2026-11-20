@@ -26,6 +26,7 @@ model Tenant {
   users                    User[]
   vehicles                 Vehicle[]
   driverRemittances        DriverRemittance[]
+  apiKeys                  ApiKey[]
 }
 
 model User {
@@ -41,6 +42,7 @@ model User {
   deletedAt     DateTime?
   deliveries    Delivery[]
   driverProfile DriverProfile?
+  apiKeysCreated ApiKey[]
   tenant        Tenant                 @relation(fields: [tenantId], references: [id])
 
   @@index([email])
@@ -105,11 +107,17 @@ model Delivery {
   recipientEmail          String?
   distanceKm              Float?
   estimatedPrice          Float?
+  apiKeyId                String?              // Set when created through the public Developer API
+  externalReference       String?              // Merchant's own order ID (prevents duplicate shipments on retries)
   driver                  DriverProfile?       @relation(fields: [driverId], references: [id])
   sender                  User                 @relation(fields: [senderId], references: [id])
   tenant                  Tenant               @relation(fields: [tenantId], references: [id])
+  apiKey                  ApiKey?              @relation(fields: [apiKeyId], references: [id])
   Invoice                 Invoice?
   breadcrumbs             LocationBreadcrumb[] // GPS audit trail for this delivery
+
+  @@unique([apiKeyId, externalReference])
+  @@index([apiKeyId])
 }
 
 model Vehicle {
@@ -279,4 +287,32 @@ model DriverRemittance {
   @@index([tenantId])
   @@index([driverId])
   @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ApiKey — Public Developer API credentials (merchant / e-commerce integrations)
+// ─────────────────────────────────────────────────────────────────────────────
+// SECURITY: The raw key (lgs_live_...) is shown to the admin ONCE at creation.
+// Only a SHA-256 hash is stored, so a database leak does not expose usable keys.
+// Each key only sees the deliveries it created (apiKeyId on Delivery).
+// Revocation is soft (revokedAt) to keep an audit trail.
+// ─────────────────────────────────────────────────────────────────────────────
+model ApiKey {
+  id            String     @id @default(uuid())
+  tenantId      String
+  createdById   String     // Tenant admin who created it — used as senderId on deliveries
+  name          String     // e.g. "Mama Nkechi Online Store"
+  keyPrefix     String     // First characters, for display only (e.g. lgs_live_a1B2c3)
+  keyHash       String     @unique
+  webhookUrl    String?
+  webhookSecret String?    // Used to HMAC-sign webhook payloads (shown once to the admin)
+  lastUsedAt    DateTime?
+  revokedAt     DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  tenant        Tenant     @relation(fields: [tenantId], references: [id])
+  createdBy     User       @relation(fields: [createdById], references: [id])
+  deliveries    Delivery[]
+
+  @@index([tenantId])
 }

@@ -7,6 +7,7 @@ import { dashboardRouter } from "./modules/deliveries/dashboard.routes";
 import { trackingRouter } from "./modules/tracking/tracking.routes";
 import { vehicleRouter } from "./modules/vehicles/vehicle.routes";
 import { pricingRouter } from "./modules/pricing/pricing.routes";
+import { developerRouter } from "./modules/developer/developer.routes";
 
 const v1Router = Router();
 
@@ -18,6 +19,7 @@ v1Router.use("/dashboard", dashboardRouter);
 v1Router.use("/tracking", trackingRouter);
 v1Router.use("/vehicles", vehicleRouter);
 v1Router.use("/pricing", pricingRouter);
+v1Router.use("/developer", developerRouter);
 
 export default v1Router;
 
