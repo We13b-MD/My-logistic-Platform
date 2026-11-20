@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { useTheme } from "@/context/ThemeContext";
 import { deliveryApi } from "@/api/delivery.api";
 import { driverApi } from "@/api/driver.api";
 import { vehicleApi } from "@/api/vehicle.api";
@@ -20,9 +19,20 @@ import { DeveloperSettingsPanel } from "@/components/DeveloperSettingsPanel";
 
 
 // Leaflet map imports
-import { MapContainer, TileLayer, Marker, Popup, Polyline, CircleMarker } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polyline, CircleMarker, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+
+function InvalidateMapSize() {
+  const map = useMap();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [map]);
+  return null;
+}
 
 // Resolve Leaflet marker asset path issues in React bundles
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
@@ -67,7 +77,6 @@ const driverIcon = new L.Icon({
 export function TenantDashboardPage() {
   const navigate = useNavigate();
   const { user, token, login, logout } = useAuth();
-  const { actualTheme } = useTheme();
 
   // Backfill tenant info for sessions saved before tenant was stored on the user
   useEffect(() => {
@@ -1157,13 +1166,10 @@ export function TenantDashboardPage() {
                     style={{ height: "100%", width: "100%" }}
                   >
                     <TileLayer
-                      attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                      url={
-                        actualTheme === "dark"
-                          ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                          : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                      }
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
+                    <InvalidateMapSize />
 
                     {/* Online Driver Markers */}
                     {drivers
@@ -1609,13 +1615,10 @@ export function TenantDashboardPage() {
                       style={{ height: "100%", width: "100%" }}
                     >
                       <TileLayer
-                        attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                        url={
-                          actualTheme === "dark"
-                            ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                            : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                        }
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                       />
+                      <InvalidateMapSize />
 
                       {/* Pickup Pin */}
                       <Marker

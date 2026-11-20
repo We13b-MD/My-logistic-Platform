@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { DeliveryStatus } from "@/types";
 import { Icon } from "@iconify/react";
 import { LogistelLogo } from "@/components/LogistelLogo";
-import { useTheme } from "@/context/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useOsrmRoute } from "@/utils/useOsrmRoute";
 
@@ -63,6 +62,14 @@ const liveCourierIcon = new L.DivIcon({
 // Smooth map recenter watcher component
 function MapFollower({ center, enabled }: { center: [number, number] | null; enabled: boolean }) {
   const map = useMap();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [map]);
+
   useEffect(() => {
     if (center && enabled) {
       map.panTo(center, { animate: true, duration: 0.3 });
@@ -74,7 +81,6 @@ function MapFollower({ center, enabled }: { center: [number, number] | null; ena
 export function PublicTrackingPage() {
   const { code: urlCode } = useParams<{ code?: string }>();
   const navigate = useNavigate();
-  const { actualTheme } = useTheme();
 
   const [searchInput, setSearchInput] = useState(urlCode || "");
   const [loading, setLoading] = useState(false);
@@ -490,12 +496,8 @@ export function PublicTrackingPage() {
                     className="w-full h-full rounded-xl z-0"
                   >
                     <TileLayer
-                      attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                      url={
-                        actualTheme === "dark"
-                          ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                          : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                      }
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
 
                     {/* Smooth Camera Recenter Follower */}

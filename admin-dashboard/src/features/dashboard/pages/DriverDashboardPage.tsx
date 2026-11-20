@@ -8,7 +8,6 @@ import { Delivery, DriverProfile } from "@/types";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
 import { Icon } from "@iconify/react";
 import { LogistelLogo } from "@/components/LogistelLogo";
-import { useTheme } from "@/context/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useOsrmRoute } from "@/utils/useOsrmRoute";
 import { useNavigationAudio } from "@/utils/useNavigatorAudio";
@@ -74,6 +73,14 @@ function MapRecenter({
 }) {
   const map = useMap();
 
+  // Invalidate map size on mount and navigation mode change so tiles always render
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [map, isNavigating]);
+
   // Street-level camera follow (zoom 17 shows driveways, streets, and road labels)
   useEffect(() => {
     if (lat && lng && isNavigating) {
@@ -100,7 +107,6 @@ function MapRecenter({
 export function DriverDashboardPage() {
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const { actualTheme } = useTheme();
 
 
   // Driver Profile States
@@ -1468,13 +1474,11 @@ export function DriverDashboardPage() {
                   zoomControl={false}
                 >
                   <TileLayer
-                    attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url={
                       mapLayerType === "satellite"
                         ? "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                        : actualTheme === "dark"
-                        ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                        : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                        : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     }
                   />
 

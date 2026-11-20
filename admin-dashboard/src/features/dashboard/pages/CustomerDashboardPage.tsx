@@ -7,14 +7,24 @@ import { toast } from "sonner";
 import { Delivery, DeliveryStatus } from "@/types";
 import { Icon } from "@iconify/react";
 import { LogistelLogo } from "@/components/LogistelLogo";
-import { useTheme } from "@/context/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useOsrmRoute } from "@/utils/useOsrmRoute";
 
 // Leaflet map imports
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+
+function InvalidateMapSize() {
+  const map = useMap();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [map]);
+  return null;
+}
 
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
@@ -67,7 +77,6 @@ const LAGOS_LOCATIONS = [
 export function CustomerDashboardPage() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { actualTheme } = useTheme();
 
   const [activeTab, setActiveTab] = useState<"track" | "book" | "history">("track");
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
@@ -669,13 +678,10 @@ export function CustomerDashboardPage() {
                         style={{ height: "100%", width: "100%" }}
                       >
                         <TileLayer
-                          attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                          url={
-                            actualTheme === "dark"
-                              ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                              : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                          }
+                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         />
+                        <InvalidateMapSize />
 
                         {/* Pickup Marker */}
                         <Marker
