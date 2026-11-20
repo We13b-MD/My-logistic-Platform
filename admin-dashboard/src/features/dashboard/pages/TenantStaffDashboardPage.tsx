@@ -6,6 +6,8 @@ import { driverApi } from "@/api/driver.api";
 import { toast } from "sonner";
 import { Delivery, DriverProfile, DeliveryStatus } from "@/types";
 import { LogistelLogo } from "@/components/LogistelLogo";
+import { useTheme } from "@/context/ThemeContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 // Leaflet map imports
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
@@ -53,6 +55,7 @@ const LAGOS_PRESETS = [
 export function TenantStaffDashboardPage() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { actualTheme } = useTheme();
 
   const [activeTab, setActiveTab] = useState<"dispatch" | "drivers">("dispatch");
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
@@ -189,25 +192,25 @@ export function TenantStaffDashboardPage() {
   const getStatusBadgeClass = (status: DeliveryStatus) => {
     switch (status) {
       case "DELIVERED":
-        return "bg-emerald-950/80 text-emerald-400 border-emerald-800/60";
+        return "bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-400 dark:border-emerald-800/60";
       case "IN_TRANSIT":
       case "PICKED_UP":
-        return "bg-cyan-950/80 text-cyan-400 border-cyan-800/60";
+        return "bg-cyan-50 text-cyan-800 border-cyan-300 dark:bg-cyan-950/80 dark:text-cyan-400 dark:border-cyan-800/60";
       case "ASSIGNED":
-        return "bg-indigo-950/80 text-indigo-400 border-indigo-800/60";
+        return "bg-indigo-50 text-indigo-800 border-indigo-300 dark:bg-indigo-950/80 dark:text-indigo-400 dark:border-indigo-800/60";
       case "PENDING":
-        return "bg-amber-950/80 text-amber-400 border-amber-800/60";
+        return "bg-amber-50 text-amber-900 border-amber-300 dark:bg-amber-950/80 dark:text-amber-400 dark:border-amber-800/60";
       case "CANCELLED":
-        return "bg-rose-950/80 text-rose-400 border-rose-800/60";
+        return "bg-rose-50 text-rose-800 border-rose-300 dark:bg-rose-950/80 dark:text-rose-400 dark:border-rose-800/60";
       default:
-        return "bg-slate-800 text-slate-300 border-slate-700";
+        return "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans transition-colors duration-200">
       {/* ─── Top Header Navbar ─── */}
-      <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-900/90 backdrop-blur-md px-6 py-4 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+      <header className="sticky top-0 z-30 border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-6 py-4 flex flex-wrap items-center justify-between gap-4 shadow-sm dark:shadow-xl">
         <LogistelLogo
           size="md"
           title="Dispatcher Mission Control"
@@ -223,12 +226,12 @@ export function TenantStaffDashboardPage() {
           </button>
 
           {/* User info badge */}
-          <div className="flex items-center space-x-3 bg-slate-800/80 px-3.5 py-1.5 rounded-lg border border-slate-700">
-            <div className="w-8 h-8 rounded-full bg-amber-500/20 text-amber-300 font-semibold flex items-center justify-center text-sm border border-amber-500/30">
+          <div className="flex items-center space-x-3 bg-slate-100 dark:bg-slate-800/80 px-3.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
+            <div className="w-8 h-8 rounded-full bg-amber-500/20 text-amber-500 dark:text-amber-300 font-semibold flex items-center justify-center text-sm border border-amber-500/30">
               {user?.email?.[0]?.toUpperCase() || "D"}
             </div>
             <div className="text-left hidden sm:block">
-              <div className="text-xs font-semibold text-slate-200 truncate max-w-[140px]">
+              <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[140px]">
                 {user?.email}
               </div>
               <div className="text-[10px] text-amber-400 font-mono tracking-wider">
@@ -237,10 +240,12 @@ export function TenantStaffDashboardPage() {
             </div>
           </div>
 
+          <ThemeToggle variant="compact" />
+
           <button
             onClick={() => fetchData()}
             disabled={loading}
-            className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors border border-slate-700"
+            className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors border border-slate-200 dark:border-slate-700"
             title="Refresh Orders"
           >
             <svg
@@ -264,7 +269,7 @@ export function TenantStaffDashboardPage() {
               logout();
               navigate("/login");
             }}
-            className="px-3 py-2 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/50 text-xs font-semibold transition-all"
+            className="px-3 py-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-300 dark:border-rose-800/50 text-xs font-semibold transition-all cursor-pointer"
           >
             Logout
           </button>
@@ -275,13 +280,13 @@ export function TenantStaffDashboardPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Desk Phone Dispatch Drawer/Form */}
         {showDeskDispatch && (
-          <div className="bg-slate-900 p-6 rounded-2xl border border-amber-500/40 shadow-2xl space-y-4 animate-fadeIn">
-            <h3 className="text-base font-bold text-amber-300 flex items-center space-x-2">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-amber-500/40 shadow-xl space-y-4 animate-fadeIn">
+            <h3 className="text-base font-bold text-amber-600 dark:text-amber-300 flex items-center space-x-2">
               <span>📞 Phone-In Desk Order Entry</span>
             </h3>
             <form onSubmit={handleDeskDispatchSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="text-xs text-slate-300 block mb-1">Recipient Name</label>
+                <label className="text-xs text-slate-600 dark:text-slate-300 block mb-1">Recipient Name</label>
                 <input
                   type="text"
                   required
@@ -290,12 +295,12 @@ export function TenantStaffDashboardPage() {
                   onChange={(e) =>
                     setDispatchForm({ ...dispatchForm, recipientName: e.target.value })
                   }
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-100 focus:outline-none focus:border-amber-400"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-amber-400"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-slate-300 block mb-1">Recipient Phone</label>
+                <label className="text-xs text-slate-600 dark:text-slate-300 block mb-1">Recipient Phone</label>
                 <input
                   type="tel"
                   required
@@ -304,7 +309,7 @@ export function TenantStaffDashboardPage() {
                   onChange={(e) =>
                     setDispatchForm({ ...dispatchForm, recipientPhone: e.target.value })
                   }
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-100 focus:outline-none focus:border-amber-400"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -323,7 +328,7 @@ export function TenantStaffDashboardPage() {
                       });
                     }
                   }}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-100 focus:outline-none focus:border-amber-400"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-amber-400"
                 >
                   {LAGOS_PRESETS.map((p) => (
                     <option key={p.name} value={p.name}>
@@ -375,14 +380,14 @@ export function TenantStaffDashboardPage() {
         {activeTab === "dispatch" && (
           <div className="space-y-6">
             {/* Search & Status Filter */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
               <div className="md:col-span-8">
                 <input
                   type="text"
                   placeholder="Search by order ID, recipient name, or address..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-lg text-slate-100 text-sm focus:outline-none focus:border-amber-400"
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -390,7 +395,7 @@ export function TenantStaffDashboardPage() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-lg text-slate-200 text-sm focus:outline-none focus:border-amber-400"
+                  className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-200 text-sm focus:outline-none focus:border-amber-400"
                 >
                   <option value="ALL">All Statuses</option>
                   <option value="PENDING">Pending Assignment</option>
@@ -403,15 +408,15 @@ export function TenantStaffDashboardPage() {
             </div>
 
             {/* Dispatch Table */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm dark:shadow-xl">
               {loading ? (
                 <div className="p-8 text-center text-slate-400">Loading order queue...</div>
               ) : filteredDeliveries.length === 0 ? (
                 <div className="p-8 text-center text-slate-500">No shipments found</div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm text-slate-300">
-                    <thead className="bg-slate-950/80 text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-800">
+                  <table className="w-full text-left text-sm text-slate-700 dark:text-slate-300">
+                    <thead className="bg-slate-100 dark:bg-slate-950/80 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                       <tr>
                         <th className="px-6 py-4">Shipment ID</th>
                         <th className="px-6 py-4">Recipient</th>
@@ -421,25 +426,25 @@ export function TenantStaffDashboardPage() {
                         <th className="px-6 py-4 text-right">Emergency Override</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60">
+                    <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
                       {filteredDeliveries.map((del) => (
-                        <tr key={del.id} className="hover:bg-slate-800/40 transition-colors">
-                          <td className="px-6 py-4 font-mono text-amber-300 font-semibold">
+                        <tr key={del.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                          <td className="px-6 py-4 font-mono text-amber-600 dark:text-amber-300 font-semibold">
                             #{del.id.slice(0, 8)}
                           </td>
                           <td className="px-6 py-4">
-                            <div className="font-semibold text-white">{del.recipientName}</div>
+                            <div className="font-semibold text-slate-900 dark:text-white">{del.recipientName}</div>
                             <div className="text-xs text-slate-400">{del.recipientPhone}</div>
                           </td>
                           <td className="px-6 py-4 text-xs space-y-1">
-                            <div className="text-slate-300 truncate max-w-xs">
+                            <div className="text-slate-700 dark:text-slate-300 truncate max-w-xs font-medium">
                               📍 {del.pickupAddress}
                             </div>
-                            <div className="text-slate-400 truncate max-w-xs">
+                            <div className="text-slate-600 dark:text-slate-400 truncate max-w-xs">
                               🏁 {del.dropoffAddress}
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-center font-mono font-bold text-emerald-400">
+                          <td className="px-6 py-4 text-center font-mono font-bold text-emerald-700 dark:text-emerald-400">
                             {del.deliveryOtp}
                           </td>
                           <td className="px-6 py-4 text-center">
@@ -458,7 +463,7 @@ export function TenantStaffDashboardPage() {
                               onChange={(e) =>
                                 handleStatusOverride(del.id, e.target.value as DeliveryStatus)
                               }
-                              className="px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-amber-400"
+                              className="px-2.5 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-amber-400"
                             >
                               <option value="PENDING">Set PENDING</option>
                               <option value="ASSIGNED">Set ASSIGNED</option>
@@ -482,13 +487,13 @@ export function TenantStaffDashboardPage() {
         {activeTab === "drivers" && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Drivers List */}
-            <div className="lg:col-span-5 bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
-              <h3 className="text-base font-bold text-white">Roster Drivers ({drivers.length})</h3>
-              <div className="divide-y divide-slate-800 border border-slate-800 rounded-xl overflow-hidden bg-slate-950">
+            <div className="lg:col-span-5 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">Roster Drivers ({drivers.length})</h3>
+              <div className="divide-y divide-slate-200 dark:divide-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-950">
                 {drivers.map((drv) => (
                   <div key={drv.id} className="p-4 flex items-center justify-between text-xs">
                     <div>
-                      <div className="font-semibold text-slate-200">{drv.user?.email}</div>
+                      <div className="font-semibold text-slate-800 dark:text-slate-200">{drv.user?.email}</div>
                       <div className="text-slate-400 mt-0.5">
                         Vehicle: <span className="text-amber-400 font-mono">{drv.vehicleType}</span>
                       </div>
@@ -510,15 +515,19 @@ export function TenantStaffDashboardPage() {
             </div>
 
             {/* Interactive Fleet Map */}
-            <div className="lg:col-span-7 bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-xl h-[500px]">
+            <div className="lg:col-span-7 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm dark:shadow-xl h-[500px]">
               <MapContainer
                 center={[6.502, 3.358]}
                 zoom={12}
                 style={{ height: "100%", width: "100%" }}
               >
                 <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                  url={
+                    actualTheme === "dark"
+                      ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                      : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                  }
                 />
 
                 {drivers

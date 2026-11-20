@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 import { deliveryApi } from "@/api/delivery.api";
 import { driverApi } from "@/api/driver.api";
 import { vehicleApi } from "@/api/vehicle.api";
@@ -10,6 +11,7 @@ import { toast } from "sonner";
 import { Delivery, DriverProfile, DashboardMetricsData, Vehicle, VehicleStatus, VehicleType, FleetRemittanceSummary } from "@/types";
 import { Icon } from "@iconify/react";
 import { LogistelLogo } from "@/components/LogistelLogo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { WaybillModal } from "@/components/WaybillModal";
 import { DriverRunSheetModal } from "@/components/DriverRunSheetModal";
 import { RecordRemittanceModal } from "@/components/RecordRemittanceModal";
@@ -65,6 +67,7 @@ const driverIcon = new L.Icon({
 export function TenantDashboardPage() {
   const navigate = useNavigate();
   const { user, token, login, logout } = useAuth();
+  const { actualTheme } = useTheme();
 
   // Backfill tenant info for sessions saved before tenant was stored on the user
   useEffect(() => {
@@ -636,28 +639,28 @@ export function TenantDashboardPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#080d1a] text-slate-100 flex flex-col relative overflow-x-hidden selection:bg-teal-500 selection:text-slate-950">
+    <div className="min-h-screen w-full bg-slate-50 text-slate-900 dark:bg-[#080d1a] dark:text-slate-100 flex flex-col relative overflow-x-hidden selection:bg-teal-500 selection:text-slate-950 transition-colors duration-200">
       {/* Top Navigation Bar */}
-      <header className="glass-panel border-b border-slate-800 px-6 py-4 flex items-center justify-between z-20">
+      <header className="glass-panel border-b border-slate-200 dark:border-slate-800 px-6 py-4 flex items-center justify-between z-20">
         <div className="flex items-center gap-2.5">
           {user?.tenant?.logoUrl ? (
             <div className="flex items-center gap-2.5">
               <img
                 src={user.tenant.logoUrl}
                 alt={user.tenant.companyName}
-                className="w-10 h-10 rounded-xl object-cover border border-[#6bd8cb]/40 shadow-md shrink-0 bg-slate-900"
+                className="w-10 h-10 rounded-xl object-cover border border-[#6bd8cb]/40 shadow-md shrink-0 bg-white dark:bg-slate-900"
               />
               <div>
-                <h1 className="font-display text-xl text-[#6bd8cb] font-bold tracking-tight leading-none">
+                <h1 className="font-display text-xl text-teal-600 dark:text-[#6bd8cb] font-bold tracking-tight leading-none">
                   {user.tenant.companyName}
                 </h1>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-widest font-mono">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-mono">
                     Dispatcher Console
                   </span>
                   {user?.tenant?.subdomain && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold bg-teal-500/10 text-teal-300 border border-teal-500/30 px-2 py-0.5 rounded">
-                      <span className="text-slate-400">Subdomain:</span> {user.tenant.subdomain}
+                    <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-500/30 px-2 py-0.5 rounded">
+                      <span className="text-slate-500 dark:text-slate-400">Subdomain:</span> {user.tenant.subdomain}
                     </span>
                   )}
                 </div>
@@ -669,12 +672,12 @@ export function TenantDashboardPage() {
                 size="md"
                 title={user?.tenant?.companyName || "Logistel"}
                 subtext="Dispatcher Console"
-                titleClassName="text-[#6bd8cb]"
+                titleClassName="text-teal-600 dark:text-[#6bd8cb]"
               />
               {user?.tenant?.subdomain && (
                 <div className="mt-1 flex items-center gap-1.5 pl-1">
-                  <span className="text-[10px] text-slate-400 font-mono">Company Subdomain:</span>
-                  <span className="text-[10px] font-mono font-bold bg-teal-500/10 text-teal-300 border border-teal-500/30 px-2 py-0.5 rounded">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">Company Subdomain:</span>
+                  <span className="text-[10px] font-mono font-bold bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-500/30 px-2 py-0.5 rounded">
                     {user.tenant.subdomain}
                   </span>
                 </div>
@@ -683,29 +686,32 @@ export function TenantDashboardPage() {
           )}
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
+          {/* Light / Dark Mode Toggle */}
+          <ThemeToggle variant="compact" />
+
           <button
             onClick={() => {
               fetchData();
               toast.info("Refreshed fleet data.");
             }}
             title="Refresh fleet data"
-            className="flex items-center gap-1.5 bg-slate-900 border border-slate-700/80 hover:bg-teal-500/10 hover:border-teal-500/30 text-slate-300 hover:text-teal-400 transition-all py-1.5 px-3 rounded-xl text-xs font-semibold cursor-pointer"
+            className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700/80 hover:bg-teal-500/10 hover:border-teal-500/30 text-slate-700 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 transition-all py-1.5 px-3 rounded-xl text-xs font-semibold cursor-pointer shadow-xs"
           >
             <Icon icon="lucide:refresh-cw" className={`text-sm ${loadingMetrics ? "animate-spin text-teal-400" : ""}`} />
             <span className="hidden sm:inline">Refresh</span>
           </button>
           <div className="hidden sm:flex flex-col text-right">
-            <span className="text-xs text-slate-200 font-semibold" title={user?.email}>
+            <span className="text-xs text-slate-700 dark:text-slate-200 font-semibold" title={user?.email}>
               {user?.tenant?.subdomain || user?.email}
             </span>
-            <span className="text-[10px] text-teal-400 uppercase tracking-wider font-bold">
+            <span className="text-[10px] text-teal-600 dark:text-teal-400 uppercase tracking-wider font-bold">
               Tenant Administrator
             </span>
           </div>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-1.5 bg-slate-900 border border-slate-700/80 hover:bg-rose-500/10 hover:border-rose-500/30 text-slate-300 hover:text-rose-400 transition-all py-1.5 px-3 rounded-xl text-xs font-semibold cursor-pointer"
+            className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700/80 hover:bg-rose-500/10 hover:border-rose-500/30 text-slate-700 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 transition-all py-1.5 px-3 rounded-xl text-xs font-semibold cursor-pointer shadow-xs"
           >
             <Icon icon="lucide:log-out" className="text-sm" />
             Logout
@@ -716,23 +722,23 @@ export function TenantDashboardPage() {
       {/* 30-Day Free Trial Notice Banner (Urgency & Industry Standard Paywall) */}
       {!isSuperAdmin && isTrialExpired && (
         <div className="max-w-[1400px] w-full mx-auto px-6 pt-6 z-10">
-          <div className="border border-rose-500/50 bg-rose-950/40 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-lg shadow-rose-950/50">
+          <div className="border border-rose-300 dark:border-rose-500/50 bg-rose-50 dark:bg-rose-950/40 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-sm dark:shadow-lg dark:shadow-rose-950/50">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center font-bold text-lg border border-rose-500/40 shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400 flex items-center justify-center font-bold text-lg border border-rose-200 dark:border-rose-500/40 shrink-0">
                 <Icon icon="lucide:alert-triangle" />
               </div>
               <div>
-                <h4 className="text-xs font-bold text-rose-200 uppercase tracking-wider flex items-center gap-2">
+                <h4 className="text-xs font-bold text-rose-800 dark:text-rose-200 uppercase tracking-wider flex items-center gap-2">
                   30-Day Free Trial Elapsed • New Dispatches Paused
                 </h4>
-                <p className="text-[12px] text-slate-300">
+                <p className="text-[12px] text-slate-700 dark:text-slate-300">
                   Your 30-day pilot has completed. Active in-transit deliveries remain fully accessible, but new cargo dispatches require an active subscription.
                 </p>
               </div>
             </div>
             <button
               onClick={() => setActiveTab("billing")}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-slate-950 text-xs font-bold transition-all shadow-md cursor-pointer flex items-center gap-2"
+              className="px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold transition-all shadow-sm cursor-pointer flex items-center gap-2 border border-teal-700 active:scale-[0.98]"
             >
               <Icon icon="solar:card-transfer-bold-duotone" className="text-base" />
               Activate Subscription ($65/mo)
@@ -743,23 +749,23 @@ export function TenantDashboardPage() {
 
       {!isSuperAdmin && !isTrialExpired && tenantSubscriptionStatus === "TRIAL" && trialDaysRemaining <= 7 && (
         <div className="max-w-[1400px] w-full mx-auto px-6 pt-6 z-10">
-          <div className="border border-amber-500/40 bg-amber-950/25 rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-4">
+          <div className="border border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-950/25 rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-4 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center font-bold text-sm border border-amber-500/40 shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300 flex items-center justify-center font-bold text-sm border border-amber-200 dark:border-amber-500/40 shrink-0">
                 ⏳
               </div>
               <div>
-                <h4 className="text-xs font-bold text-amber-200 uppercase tracking-wider">
+                <h4 className="text-xs font-bold text-amber-900 dark:text-amber-200 uppercase tracking-wider">
                   Trial Ending Soon — {trialDaysRemaining} Day{trialDaysRemaining === 1 ? "" : "s"} Remaining
                 </h4>
-                <p className="text-[11px] text-slate-300">
+                <p className="text-[11px] text-slate-700 dark:text-slate-300">
                   Your complimentary 30-day logistics trial is expiring soon. Subscribe now to maintain continuous dispatch access.
                 </p>
               </div>
             </div>
             <button
               onClick={() => setActiveTab("billing")}
-              className="px-3.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-semibold transition-all cursor-pointer"
+              className="px-3.5 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 dark:bg-amber-500/20 dark:hover:bg-amber-500/30 dark:text-amber-300 dark:border-amber-500/40 text-xs font-semibold transition-all cursor-pointer"
             >
               View Plans & Renew
             </button>
@@ -769,33 +775,33 @@ export function TenantDashboardPage() {
 
       {/* Onboarding Quick-Start Progress Tracker (Time-To-Value < 60s) */}
       <div className="max-w-[1400px] w-full mx-auto px-6 pt-6 z-10">
-        <div className="glass-panel border border-teal-500/30 bg-teal-950/20 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+        <div className="glass-panel border border-teal-200 dark:border-teal-500/30 bg-teal-50/70 dark:bg-teal-950/20 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-teal-500/20 text-teal-300 flex items-center justify-center font-bold text-sm border border-teal-500/40 shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-teal-500/20 text-teal-700 dark:text-teal-300 flex items-center justify-center font-bold text-sm border border-teal-500/30 shrink-0">
               🚀
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-100 uppercase tracking-wider">
+              <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
                 Logistics Hub Setup (1 of 3 Steps Completed)
               </h4>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-600 dark:text-slate-400">
                 Complete quick setup to activate live fleet dispatch & tracking.
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-semibold flex items-center gap-1">
+            <span className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/40 text-[11px] font-semibold flex items-center gap-1">
               ✓ Hub Created
             </span>
             <button
               onClick={() => setActiveTab("drivers")}
-              className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 hover:border-teal-400 text-slate-300 text-[11px] font-semibold transition-all cursor-pointer"
+              className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:border-teal-500 text-slate-700 dark:text-slate-300 text-[11px] font-semibold transition-all cursor-pointer"
             >
               + Driver Roster
             </button>
             <button
               onClick={() => setActiveTab("billing")}
-              className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 hover:border-teal-400 text-slate-300 text-[11px] font-semibold transition-all cursor-pointer"
+              className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:border-teal-500 text-slate-700 dark:text-slate-300 text-[11px] font-semibold transition-all cursor-pointer"
             >
               ⚙️ Set Base Rates
             </button>
@@ -810,93 +816,93 @@ export function TenantDashboardPage() {
         <aside className="lg:col-span-1 flex flex-col gap-2">
           <button
             onClick={() => setActiveTab("overview")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all cursor-pointer ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all cursor-pointer shadow-xs ${
               activeTab === "overview"
-                ? "bg-teal-500/10 border-teal-500/40 text-teal-300 font-bold"
-                : "bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700"
+                ? "bg-teal-500/10 border-teal-500/50 text-teal-700 dark:text-teal-300 font-bold"
+                : "bg-white dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700"
             }`}
           >
-            <Icon icon="solar:widget-5-bold-duotone" className="text-lg text-teal-400" />
+            <Icon icon="solar:widget-5-bold-duotone" className="text-lg text-teal-600 dark:text-teal-400" />
             <span className="text-xs font-bold">Overview & Live Map</span>
           </button>
           <button
             onClick={() => setActiveTab("decisions")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all cursor-pointer ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all cursor-pointer shadow-xs ${
               activeTab === "decisions"
-                ? "bg-amber-500/10 border-amber-500/40 text-amber-300 font-bold"
-                : "bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700"
+                ? "bg-amber-500/10 border-amber-500/50 text-amber-700 dark:text-amber-300 font-bold"
+                : "bg-white dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700"
             }`}
           >
-            <Icon icon="solar:cpu-bold-duotone" className="text-lg text-amber-400" />
+            <Icon icon="solar:cpu-bold-duotone" className="text-lg text-amber-600 dark:text-amber-400" />
             <span className="text-xs font-bold">Decision & Risk Center</span>
           </button>
           <button
             onClick={() => setActiveTab("deliveries")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all cursor-pointer ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all cursor-pointer shadow-xs ${
               activeTab === "deliveries"
-                ? "bg-teal-500/10 border-teal-500/40 text-teal-300 font-bold"
-                : "bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700"
+                ? "bg-teal-500/10 border-teal-500/50 text-teal-700 dark:text-teal-300 font-bold"
+                : "bg-white dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700"
             }`}
           >
-            <Icon icon="solar:box-bold-duotone" className="text-lg text-teal-400" />
+            <Icon icon="solar:box-bold-duotone" className="text-lg text-teal-600 dark:text-teal-400" />
             <span className="text-xs font-bold">Manage Deliveries</span>
           </button>
           <button
             onClick={() => setActiveTab("drivers")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all cursor-pointer ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all cursor-pointer shadow-xs ${
               activeTab === "drivers"
-                ? "bg-teal-500/10 border-teal-500/40 text-teal-300 font-bold"
-                : "bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700"
+                ? "bg-teal-500/10 border-teal-500/50 text-teal-700 dark:text-teal-300 font-bold"
+                : "bg-white dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700"
             }`}
           >
-            <Icon icon="solar:users-group-two-rounded-bold-duotone" className="text-lg text-teal-400" />
+            <Icon icon="solar:users-group-two-rounded-bold-duotone" className="text-lg text-teal-600 dark:text-teal-400" />
             <span className="text-xs font-bold">Driver Roster</span>
           </button>
           <button
             onClick={() => setActiveTab("fleet")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all cursor-pointer ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all cursor-pointer shadow-xs ${
               activeTab === "fleet"
-                ? "bg-teal-500/10 border-teal-500/40 text-teal-300 font-bold"
-                : "bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700"
+                ? "bg-teal-500/10 border-teal-500/50 text-teal-700 dark:text-teal-300 font-bold"
+                : "bg-white dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700"
             }`}
           >
-            <Icon icon="solar:delivery-bold-duotone" className="text-lg text-teal-400" />
+            <Icon icon="solar:delivery-bold-duotone" className="text-lg text-teal-600 dark:text-teal-400" />
             <span className="text-xs font-bold">Fleet Assets & Maintenance</span>
           </button>
           <button
             onClick={() => setActiveTab("dispatch")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all cursor-pointer ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all cursor-pointer shadow-xs ${
               activeTab === "dispatch"
-                ? "bg-teal-500/10 border-teal-500/40 text-teal-300 font-bold"
-                : "bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700"
+                ? "bg-teal-500/10 border-teal-500/50 text-teal-700 dark:text-teal-300 font-bold"
+                : "bg-white dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700"
             }`}
           >
-            <Icon icon="solar:map-point-wave-bold-duotone" className="text-lg text-teal-400" />
+            <Icon icon="solar:map-point-wave-bold-duotone" className="text-lg text-teal-600 dark:text-teal-400" />
             <span className="text-xs font-bold">Quick Dispatch Form</span>
           </button>
           
           <button
             onClick={() => setActiveTab("billing")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all cursor-pointer ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all cursor-pointer shadow-xs ${
               activeTab === "billing"
-                ? "bg-teal-500/10 border-teal-500/40 text-teal-300 font-bold"
-                : "bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700"
+                ? "bg-teal-500/10 border-teal-500/50 text-teal-700 dark:text-teal-300 font-bold"
+                : "bg-white dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700"
             }`}
           >
-            <Icon icon="solar:card-recive-bold-duotone" className="text-lg text-teal-400" />
+            <Icon icon="solar:card-recive-bold-duotone" className="text-lg text-teal-600 dark:text-teal-400" />
             <span className="text-xs font-bold">Billing & Subscription</span>
           </button>
 
           <button
             id="tab-developer-api"
             onClick={() => setActiveTab("developer")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all cursor-pointer ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all cursor-pointer shadow-xs ${
               activeTab === "developer"
-                ? "bg-violet-500/10 border-violet-500/40 text-violet-300 font-bold"
-                : "bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700"
+                ? "bg-violet-500/10 border-violet-500/50 text-violet-700 dark:text-violet-300 font-bold"
+                : "bg-white dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700"
             }`}
           >
-            <Icon icon="solar:code-square-bold-duotone" className="text-lg text-violet-400" />
+            <Icon icon="solar:code-square-bold-duotone" className="text-lg text-violet-600 dark:text-violet-400" />
             <span className="text-xs font-bold">Developer API & Webhooks</span>
           </button>
 
@@ -967,17 +973,17 @@ export function TenantDashboardPage() {
 
           {/* PRESCRIPTIVE DECISION ALERTS BANNER */}
           {activeTab === "overview" && decisionMetrics?.alerts && decisionMetrics.alerts.length > 0 && (
-            <div className="bg-slate-900/90 border border-amber-500/40 rounded-2xl p-5 shadow-2xl space-y-3 relative overflow-hidden">
-              <div className="flex items-center justify-between border-b border-amber-500/20 pb-3">
+            <div className="bg-amber-50/70 dark:bg-slate-900/90 border border-amber-300 dark:border-amber-500/40 rounded-2xl p-5 shadow-sm dark:shadow-2xl space-y-3 relative overflow-hidden">
+              <div className="flex items-center justify-between border-b border-amber-200 dark:border-amber-500/20 pb-3">
                 <div className="flex items-center space-x-2">
-                  <span className="w-3 h-3 rounded-full bg-amber-400 animate-pulse"></span>
-                  <h3 className="text-sm font-bold text-amber-300 uppercase tracking-wider">
+                  <span className="w-3 h-3 rounded-full bg-amber-500 animate-pulse"></span>
+                  <h3 className="text-sm font-bold text-amber-900 dark:text-amber-300 uppercase tracking-wider">
                     🧠 Active Prescriptive Decision Alerts ({decisionMetrics.alerts.length})
                   </h3>
                 </div>
                 <button
                   onClick={() => setActiveTab("decisions")}
-                  className="text-xs text-amber-400 hover:text-amber-300 font-bold underline"
+                  className="text-xs text-amber-800 hover:text-amber-950 dark:text-amber-400 dark:hover:text-amber-300 font-bold underline cursor-pointer"
                 >
                   View Decision Desk →
                 </button>
@@ -988,7 +994,7 @@ export function TenantDashboardPage() {
 
                   <div
                     key={idx}
-                    className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 flex flex-col justify-between space-y-2"
+                    className="p-3 bg-white dark:bg-slate-950/80 rounded-xl border border-amber-200/80 dark:border-slate-800 flex flex-col justify-between space-y-2 shadow-sm"
                   >
                     <div className="flex items-start space-x-2">
                       <span className="text-base">
@@ -1001,10 +1007,10 @@ export function TenantDashboardPage() {
                           : "🟡"}
                       </span>
                       <div>
-                        <span className="text-xs font-semibold text-slate-200 block">
+                        <span className="text-xs font-semibold text-slate-900 dark:text-slate-200 block">
                           {alert.message}
                         </span>
-                        <span className="text-[10px] text-slate-400 font-mono">
+                        <span className="text-[10px] text-slate-600 dark:text-slate-400 font-mono font-medium">
                           SEVERITY: {alert.severity}
                         </span>
                       </div>
@@ -1024,7 +1030,7 @@ export function TenantDashboardPage() {
                           toast.success(`Safety ping dispatched to ${alert.message.split(" ")[1]}`);
                         }
                       }}
-                      className="w-full py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[11px] font-bold transition-colors"
+                      className="w-full py-2 px-3 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 dark:bg-amber-500/20 dark:hover:bg-amber-500/30 dark:text-amber-300 dark:border-amber-500/40 text-[11px] font-bold transition-colors cursor-pointer"
                     >
                       {alert.type === "DELIVERY_DELAY"
                         ? "⚡ Execute Reassignment"
@@ -1044,33 +1050,33 @@ export function TenantDashboardPage() {
           {/* TAB: PRESCRIPTIVE DECISION & RISK CENTER */}
           {activeTab === "decisions" && (
             <div className="space-y-6">
-              <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-amber-950/50 p-6 rounded-2xl border border-amber-500/30 shadow-xl space-y-4">
+              <div className="bg-gradient-to-r from-amber-50/70 via-white to-amber-50/40 dark:from-slate-900 dark:via-slate-900 dark:to-amber-950/50 p-6 rounded-2xl border border-amber-200 dark:border-amber-500/30 shadow-sm dark:shadow-xl space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
-                    <h2 className="text-xl font-bold text-white flex items-center space-x-2">
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center space-x-2">
                       <span>🧠 Prescriptive Decision & SLA Intelligence</span>
                     </h2>
-                    <p className="text-xs text-slate-400 mt-1">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                       Real-time decision engine analyzing delay risks, preventive vehicle maintenance, and driver safety sentinels.
                     </p>
                   </div>
 
-                  <div className="bg-slate-950 p-4 rounded-xl border border-amber-500/40 text-center">
-                    <span className="text-xs text-slate-400 uppercase tracking-wider block">
+                  <div className="bg-white dark:bg-slate-950 p-4 rounded-xl border border-amber-300 dark:border-amber-500/40 text-center shadow-sm">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                       On-Time SLA Guarantee Rate
                     </span>
-                    <span className="text-3xl font-extrabold text-amber-400 font-mono">
+                    <span className="text-3xl font-extrabold text-amber-600 dark:text-amber-400 font-mono">
                       {decisionMetrics?.onTimeRate?.percentage ?? 94}%
                     </span>
-                    <span className="text-[10px] text-emerald-400 font-semibold block mt-0.5">
+                    <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold block mt-0.5">
                       {decisionMetrics?.onTimeRate?.trend || "+1.8% vs last week"}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
-                <h3 className="text-base font-bold text-white">Active Real-World Decision Recommendations</h3>
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">Active Real-World Decision Recommendations</h3>
 
                 {decisionMetrics?.alerts && decisionMetrics.alerts.length > 0 ? (
                   <div className="space-y-3">
@@ -1078,23 +1084,23 @@ export function TenantDashboardPage() {
 
                       <div
                         key={idx}
-                        className="p-4 bg-slate-950 rounded-xl border border-slate-800 flex flex-wrap items-center justify-between gap-4"
+                        className="p-4 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4"
                       >
                         <div className="flex items-center space-x-3">
-                          <div className="p-2.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xl">
+                          <div className="p-2.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xl">
                             {alert.type === "DELIVERY_DELAY" ? "🚨" : alert.type === "MAINTENANCE_DUE" ? "🔧" : alert.type === "LOW_FUEL" ? "⛽" : "📡"}
                           </div>
 
                           <div>
-                            <div className="text-sm font-bold text-white">{alert.message}</div>
-                            <div className="text-xs text-slate-400">
-                              Recommendation Category: <span className="text-amber-400 font-mono">{alert.type}</span>
+                            <div className="text-sm font-bold text-slate-900 dark:text-white">{alert.message}</div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400">
+                              Recommendation Category: <span className="text-amber-700 dark:text-amber-400 font-mono font-semibold">{alert.type}</span>
                             </div>
                           </div>
                         </div>
 
                         <div className="flex items-center space-x-3">
-                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-950 text-amber-400 border border-amber-800">
+                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-950 dark:text-amber-400 dark:border-amber-800">
                             Severity: {alert.severity}
                           </span>
                           <button
@@ -1118,7 +1124,7 @@ export function TenantDashboardPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="p-8 text-center text-slate-500 bg-slate-950 rounded-xl border border-slate-800">
+                  <div className="p-8 text-center text-slate-500 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
                     ✅ All operations running optimally! No critical decision alerts detected.
                   </div>
                 )}
@@ -1151,8 +1157,12 @@ export function TenantDashboardPage() {
                     style={{ height: "100%", width: "100%" }}
                   >
                     <TileLayer
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                      url={
+                        actualTheme === "dark"
+                          ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                          : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                      }
                     />
 
                     {/* Online Driver Markers */}
@@ -1324,7 +1334,7 @@ export function TenantDashboardPage() {
                       setRunSheetDriverId(null);
                       setRunSheetOpen(true);
                     }}
-                    className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-cyan-500/30 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                    className="px-3.5 py-2 rounded-xl bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-cyan-400 dark:border-cyan-500/30 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
                   >
                     <Icon icon="solar:clipboard-list-bold-duotone" className="text-sm" />
                     <span>Daily Run Sheet / Manifest</span>
@@ -1575,16 +1585,16 @@ export function TenantDashboardPage() {
 
                   {/* Watchdog Alert Banner if Signal Lost */}
                   {trailMeta?.telemetry?.status === 'SIGNAL_LOST' && (
-                    <div className="bg-red-950/60 border border-red-500/40 p-3 rounded-xl flex items-center justify-between text-xs text-red-200">
+                    <div className="bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-500/40 p-3 rounded-xl flex items-center justify-between text-xs text-rose-900 dark:text-rose-200 shadow-sm">
                       <div className="flex items-center gap-2">
-                        <Icon icon="solar:danger-triangle-bold" className="text-red-400 text-lg shrink-0" />
+                        <Icon icon="solar:danger-triangle-bold" className="text-rose-600 dark:text-rose-400 text-lg shrink-0" />
                         <span>
                           <strong>Watchdog Sentinel Alert:</strong> Telemetry ping from assigned carrier has not been received for {Math.floor(trailMeta.telemetry.secondsSinceLastPing / 60)} minutes.
                         </span>
                       </div>
                       <button
                         onClick={() => toast.info(`Safety ping requested for ${trailDelivery.driver?.user?.email || "driver"}`)}
-                        className="bg-red-500/20 hover:bg-red-500/30 text-red-300 px-2.5 py-1 rounded-lg border border-red-500/40 font-bold shrink-0 ml-2 cursor-pointer"
+                        className="bg-rose-100 hover:bg-rose-200 text-rose-950 border border-rose-300 dark:bg-rose-500/20 dark:hover:bg-rose-500/30 dark:text-rose-300 dark:border-rose-500/40 px-2.5 py-1 rounded-lg font-bold shrink-0 ml-2 cursor-pointer transition-colors"
                       >
                         📡 Send Safety Ping
                       </button>
@@ -1599,8 +1609,12 @@ export function TenantDashboardPage() {
                       style={{ height: "100%", width: "100%" }}
                     >
                       <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                        url={
+                          actualTheme === "dark"
+                            ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                            : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                        }
                       />
 
                       {/* Pickup Pin */}
@@ -1778,19 +1792,19 @@ export function TenantDashboardPage() {
               </div>
 
               {/* Onboard Fleet Drivers & Registration Link Card */}
-              <div className="bg-gradient-to-r from-teal-950/40 via-slate-900 to-slate-900 p-5 rounded-2xl border border-teal-500/30 space-y-3 relative overflow-hidden shadow-lg">
+              <div className="bg-gradient-to-r from-teal-50 via-white to-slate-50 dark:from-teal-950/40 dark:via-slate-900 dark:to-slate-900 p-5 rounded-2xl border border-teal-200 dark:border-teal-500/30 space-y-3 relative overflow-hidden shadow-sm dark:shadow-lg">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 z-10 relative">
                   <div className="space-y-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-teal-400 flex items-center gap-1.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-teal-700 dark:text-teal-400 flex items-center gap-1.5">
                       <Icon icon="solar:user-plus-bold" className="text-sm" />
                       Driver Recruitment & Onboarding
                     </span>
-                    <h3 className="text-sm font-bold text-white">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                       Invite Drivers to Join {user?.tenant?.companyName || "Your Fleet"}
                     </h3>
-                    <p className="text-xs text-slate-400 max-w-xl">
-                      Share your direct registration links with your drivers and customers. Your company subdomain (<span className="font-mono text-amber-400 font-bold">{user?.tenant?.subdomain || "your-subdomain"}</span>) will be pre-filled automatically.
+                    <p className="text-xs text-slate-600 dark:text-slate-400 max-w-xl">
+                      Share your direct registration links with your drivers and customers. Your company subdomain (<span className="font-mono text-amber-800 dark:text-amber-400 font-bold">{user?.tenant?.subdomain || "your-subdomain"}</span>) will be pre-filled automatically.
                     </p>
                   </div>
 
@@ -1803,7 +1817,7 @@ export function TenantDashboardPage() {
                         navigator.clipboard.writeText(url);
                         toast.success("📋 Driver invite link copied to clipboard!");
                       }}
-                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-teal-500/20 flex items-center gap-2 transition-all cursor-pointer active:scale-95 whitespace-nowrap"
+                      className="px-4 py-2 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs border border-teal-700 shadow-sm flex items-center gap-2 transition-all cursor-pointer active:scale-[0.98] whitespace-nowrap"
                     >
                       <Icon icon="solar:copy-bold" className="text-sm" />
                       <span>Copy Driver Link</span>
@@ -1817,7 +1831,7 @@ export function TenantDashboardPage() {
                         navigator.clipboard.writeText(url);
                         toast.success("📋 Customer invite link copied to clipboard!");
                       }}
-                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-400 hover:to-indigo-400 text-white font-extrabold text-xs shadow-lg shadow-blue-500/20 flex items-center gap-2 transition-all cursor-pointer active:scale-95 whitespace-nowrap"
+                      className="px-4 py-2 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-semibold text-xs border border-slate-300 dark:border-slate-600 shadow-sm flex items-center gap-2 transition-all cursor-pointer active:scale-[0.98] whitespace-nowrap"
                     >
                       <Icon icon="solar:copy-bold" className="text-sm" />
                       <span>Copy Customer Link</span>
@@ -1827,7 +1841,7 @@ export function TenantDashboardPage() {
                       href={`/register?subdomain=${user?.tenant?.subdomain || ""}&role=CUSTOMER`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-3 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap"
+                      className="px-3 py-2 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shadow-sm"
                     >
                       <Icon icon="solar:link-bold" className="text-sm" />
                       <span>Open Link ↗</span>
@@ -2357,8 +2371,8 @@ export function TenantDashboardPage() {
           {/* REGISTER VEHICLE MODAL */}
           {showVehicleModal && (
             <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-              <div className="glass-panel border border-white/10 bg-[#0B1326] p-6 rounded-2xl w-full max-w-lg space-y-6 shadow-2xl">
-                <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="glass-panel border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0B1326] p-6 rounded-2xl w-full max-w-lg space-y-6 shadow-2xl">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-4">
                   <h3 className="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
                     <Icon icon="solar:bus-bold-duotone" className="text-primary text-[20px]" />
                     Register New Fleet Asset
@@ -3034,8 +3048,8 @@ export function TenantDashboardPage() {
           {/* POD INSPECTION CERTIFICATE MODAL */}
           {selectedPodDelivery && (
             <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
-              <div className="glass-panel border border-white/10 bg-[#0B1326] p-6 rounded-2xl w-full max-w-xl space-y-6 shadow-2xl overflow-y-auto max-h-[90vh]">
-                <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="glass-panel border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0B1326] p-6 rounded-2xl w-full max-w-xl space-y-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-4">
                   <div>
                     <h3 className="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
                       <Icon icon="solar:verified-check-bold" className="text-primary text-[20px]" />
@@ -3053,7 +3067,7 @@ export function TenantDashboardPage() {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 bg-surface-container-lowest p-4 rounded-xl border border-white/5 text-xs">
+                <div className="grid grid-cols-2 gap-4 bg-surface-container-lowest p-4 rounded-xl border border-slate-200 dark:border-white/5 text-xs">
                   <div>
                     <span className="text-[10px] font-bold text-on-surface-variant uppercase block">Recipient</span>
                     <div className="font-semibold text-on-surface text-sm mt-0.5">{selectedPodDelivery.recipientName}</div>
@@ -3063,7 +3077,7 @@ export function TenantDashboardPage() {
                   <div>
                     <span className="text-[10px] font-bold text-on-surface-variant uppercase block">Handoff Verification</span>
                     <div className="font-mono font-bold text-primary text-sm mt-0.5">OTP: {selectedPodDelivery.deliveryOtp}</div>
-                    <div className="text-emerald-400 font-bold uppercase text-[10px] flex items-center gap-1 mt-0.5">
+                    <div className="text-emerald-500 font-bold uppercase text-[10px] flex items-center gap-1 mt-0.5">
                       <Icon icon="solar:verified-check-bold" className="text-[14px]" />
                       Verified Handoff
                     </div>
@@ -3077,7 +3091,7 @@ export function TenantDashboardPage() {
                     Recipient Digital Signature Canvas
                   </span>
                   {selectedPodDelivery.signaturePhotoUrl ? (
-                    <div className="bg-[#070D1B] border border-primary/30 p-4 rounded-xl flex items-center justify-center min-h-[120px]">
+                    <div className="bg-slate-50 dark:bg-[#070D1B] border border-slate-200 dark:border-primary/30 p-4 rounded-xl flex items-center justify-center min-h-[120px]">
                       <img
                         src={selectedPodDelivery.signaturePhotoUrl}
                         alt="Recipient Signature"
@@ -3085,7 +3099,7 @@ export function TenantDashboardPage() {
                       />
                     </div>
                   ) : (
-                    <div className="bg-surface-container-low border border-white/5 p-4 rounded-xl text-center text-on-surface-variant/60 text-xs italic">
+                    <div className="bg-surface-container-low border border-slate-200 dark:border-white/5 p-4 rounded-xl text-center text-on-surface-variant/60 text-xs italic">
                       Digital signature capture not attached for this legacy order.
                     </div>
                   )}
@@ -3098,7 +3112,7 @@ export function TenantDashboardPage() {
                     Cargo Delivery Photo Proof
                   </span>
                   {selectedPodDelivery.proofOfDeliveryPhotoUrl ? (
-                    <div className="bg-[#070D1B] border border-white/10 rounded-xl overflow-hidden max-h-[260px] flex items-center justify-center">
+                    <div className="bg-slate-50 dark:bg-[#070D1B] border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden max-h-[260px] flex items-center justify-center">
                       <img
                         src={selectedPodDelivery.proofOfDeliveryPhotoUrl}
                         alt="Cargo POD"
@@ -3106,7 +3120,7 @@ export function TenantDashboardPage() {
                       />
                     </div>
                   ) : (
-                    <div className="bg-surface-container-low border border-white/5 p-4 rounded-xl text-center text-on-surface-variant/60 text-xs italic">
+                    <div className="bg-surface-container-low border border-slate-200 dark:border-white/5 p-4 rounded-xl text-center text-on-surface-variant/60 text-xs italic">
                       No photo proof attached for this shipment.
                     </div>
                   )}

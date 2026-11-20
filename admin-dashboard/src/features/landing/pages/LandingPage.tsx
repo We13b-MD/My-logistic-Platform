@@ -6,6 +6,7 @@ import homePageGif from "@/assets/homePagegif.gif";
 
 import { LogistelLogo } from "@/components/LogistelLogo";
 import { TelegramCommunityWidget } from "@/components/TelegramCommunityWidget";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function LandingPage() {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ export function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen w-full bg-[#080d1a] text-slate-100 font-sans relative overflow-x-hidden selection:bg-teal-500 selection:text-slate-950">
+    <div className="min-h-screen w-full bg-slate-50 text-slate-900 dark:bg-[#080d1a] dark:text-slate-100 font-sans relative overflow-x-hidden selection:bg-teal-500 selection:text-slate-950 transition-colors duration-200">
 
       {/* ─── Dynamic Visual Canvas ─── */}
       <div className="absolute top-0 left-0 w-full h-[640px] z-0 overflow-hidden pointer-events-none opacity-40">
@@ -26,28 +27,28 @@ export function LandingPage() {
         <img
           src={homePageGif}
           alt="Logistel Hero Background"
-          className="w-full h-full object-cover object-center filter saturate-[1.2] brightness-75 contrast-125"
+          className="w-full h-full object-cover object-center filter saturate-[1.2] brightness-90 dark:brightness-75 contrast-125"
         />
-        {/* Subtle, crisp gradient overlay that keeps GIF clear in Hero while fading cleanly into dark theme below */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#080d1a]/30 via-[#080d1a]/40 to-[#080d1a]"></div>
+        {/* Crisp gradient overlay that fades into theme below */}
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-50/60 via-slate-50/80 to-slate-50 dark:from-[#080d1a]/30 dark:via-[#080d1a]/40 dark:to-[#080d1a]"></div>
       </div>
 
       {/* Ambient Radial Color Blobs */}
-      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-teal-500/20 rounded-full blur-[120px] -z-10 pointer-events-none mix-blend-screen"></div>
-      <div className="absolute top-96 right-1/4 w-[400px] h-[400px] bg-sky-500/15 rounded-full blur-[100px] -z-10 pointer-events-none mix-blend-screen"></div>
+      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-teal-500/15 dark:bg-teal-500/20 rounded-full blur-[120px] -z-10 pointer-events-none mix-blend-multiply dark:mix-blend-screen"></div>
+      <div className="absolute top-96 right-1/4 w-[400px] h-[400px] bg-sky-500/10 dark:bg-sky-500/15 rounded-full blur-[100px] -z-10 pointer-events-none mix-blend-multiply dark:mix-blend-screen"></div>
 
       {/* ─── TOP APP BAR NAVIGATION ─── */}
-      <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 md:px-12 h-16 bg-[#080d1a]/85 backdrop-blur-xl border-b border-slate-800/80">
-        <LogistelLogo size="md" onClick={() => navigate("/")} titleClassName="text-teal-400" />
+      <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 md:px-12 h-16 bg-white/80 dark:bg-[#080d1a]/85 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800/80 transition-colors duration-200">
+        <LogistelLogo size="md" onClick={() => navigate("/")} titleClassName="text-teal-600 dark:text-teal-400" />
 
         {/* Navigation Links */}
         <div className="hidden md:flex items-center gap-8">
-          <a href="#features" className="text-xs font-semibold text-slate-400 hover:text-teal-400 uppercase tracking-widest transition-colors">Features</a>
-          <a href="#solutions" className="text-xs font-semibold text-slate-400 hover:text-teal-400 uppercase tracking-widest transition-colors">Solutions</a>
-          <a href="#pricing" className="text-xs font-semibold text-slate-400 hover:text-teal-400 uppercase tracking-widest transition-colors">Pricing</a>
+          <a href="#features" className="text-xs font-semibold text-slate-600 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 uppercase tracking-widest transition-colors">Features</a>
+          <a href="#solutions" className="text-xs font-semibold text-slate-600 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 uppercase tracking-widest transition-colors">Solutions</a>
+          <a href="#pricing" className="text-xs font-semibold text-slate-600 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 uppercase tracking-widest transition-colors">Pricing</a>
           <button
             onClick={() => navigate("/track")}
-            className="text-xs font-semibold text-teal-400 hover:text-teal-300 uppercase tracking-widest transition-colors cursor-pointer flex items-center gap-1.5"
+            className="text-xs font-semibold text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 uppercase tracking-widest transition-colors cursor-pointer flex items-center gap-1.5"
           >
             <Icon icon="solar:map-point-wave-bold" className="text-sm" />
             <span>Track Shipment</span>
@@ -55,29 +56,32 @@ export function LandingPage() {
         </div>
 
         {/* Call to Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          {/* Light / Dark Mode Toggle */}
+          <ThemeToggle variant="compact" />
+
           <a
             href={telegramUrl}
             target="_blank"
             rel="noopener noreferrer"
             title="Telegram Community"
-            className="w-9 h-9 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-sm"
+            className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900/90 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-sm"
           >
             <Icon icon="logos:telegram" className="text-lg" />
           </a>
 
           <button
             onClick={() => navigate("/track")}
-            className="px-3 py-1.5 rounded-xl bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 border border-teal-500/30 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+            className="px-3 py-1.5 rounded-xl bg-teal-500/10 hover:bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-500/30 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
           >
-            <Icon icon="solar:map-point-wave-bold" className="text-sm text-teal-400 animate-pulse" />
+            <Icon icon="solar:map-point-wave-bold" className="text-sm text-teal-600 dark:text-teal-400 animate-pulse" />
             <span className="hidden sm:inline">Track</span> Order
           </button>
 
           {isAuthenticated ? (
             <button
               onClick={() => navigate("/dashboard")}
-              className="bg-teal-400 hover:bg-teal-300 text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
+              className="bg-teal-500 hover:bg-teal-400 text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
             >
               <span>Dashboard</span>
               <Icon icon="lucide:arrow-right" className="text-sm text-slate-950" />
@@ -86,13 +90,13 @@ export function LandingPage() {
             <>
               <button
                 onClick={() => navigate("/login")}
-                className="text-slate-300 hover:text-teal-400 text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer"
+                className="text-slate-700 hover:text-teal-600 dark:text-slate-300 dark:hover:text-teal-400 text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer"
               >
                 Sign In
               </button>
               <button
                 onClick={() => navigate("/onboard")}
-                className="bg-teal-400 hover:bg-teal-300 text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-sm"
+                className="bg-teal-500 hover:bg-teal-400 text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-sm"
               >
                 Get Started
               </button>
@@ -106,16 +110,16 @@ export function LandingPage() {
 
         {/* HERO HEADER SECTION */}
         <section className="flex flex-col items-center justify-center text-center py-16 md:py-24 relative">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-900 border border-slate-800 mb-6 shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse shadow-[0_0_8px_rgba(45,212,191,0.8)]"></span>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Logistel OS v2.4 Live</span>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 mb-6 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-teal-500 dark:bg-teal-400 animate-pulse shadow-[0_0_8px_rgba(45,212,191,0.8)]"></span>
+            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Logistel OS v2.4 Live</span>
           </div>
 
-          <h1 className="font-display text-4xl md:text-6xl text-slate-100 font-bold tracking-tight mb-6 max-w-4xl leading-tight">
+          <h1 className="font-display text-4xl md:text-6xl text-slate-900 dark:text-slate-100 font-bold tracking-tight mb-6 max-w-4xl leading-tight">
             Next-Gen Autonomous Freight Telematics & Route Dispatch
           </h1>
 
-          <p className="text-sm md:text-base text-slate-400 max-w-2xl mb-10 leading-relaxed">
+          <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 max-w-2xl mb-10 leading-relaxed">
             Transform chaotic global supply chain data into a streamlined, executable interface. Achieve unprecedented technical precision, reduce operational bloat, and unlock massive cost-savings across your entire fleet ecosystem.
           </p>
 
@@ -123,38 +127,36 @@ export function LandingPage() {
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
             <button
               onClick={() => navigate("/track")}
-              className="glass-panel border border-teal-500/60 bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 backdrop-blur-xl px-8 py-4 rounded-xl text-sm font-bold transition-all shadow-xl shadow-teal-500/15 flex items-center justify-center gap-2 cursor-pointer active:scale-95 hover:border-teal-400"
+              className="glass-panel border border-teal-500/50 bg-teal-500/10 dark:bg-teal-500/20 hover:bg-teal-500/20 dark:hover:bg-teal-500/30 text-teal-700 dark:text-teal-300 backdrop-blur-xl px-8 py-4 rounded-xl text-sm font-bold transition-all shadow-xl shadow-teal-500/10 flex items-center justify-center gap-2 cursor-pointer active:scale-95 hover:border-teal-400"
             >
-              <Icon icon="solar:map-point-wave-bold" className="text-teal-400 text-lg" />
+              <Icon icon="solar:map-point-wave-bold" className="text-teal-600 dark:text-teal-400 text-lg" />
               <span>Track a Shipment</span>
             </button>
             <button
               onClick={() => navigate("/onboard")}
-              className="glass-panel border border-teal-500/50 bg-teal-500/15 hover:bg-teal-500/25 text-white backdrop-blur-xl px-8 py-4 rounded-xl text-sm font-bold transition-all shadow-xl shadow-teal-500/10 flex items-center justify-center cursor-pointer active:scale-95 hover:border-teal-400"
+              className="glass-panel border border-teal-500/40 bg-teal-600/10 dark:bg-teal-500/15 hover:bg-teal-600/20 dark:hover:bg-teal-500/25 text-teal-800 dark:text-white backdrop-blur-xl px-8 py-4 rounded-xl text-sm font-bold transition-all shadow-xl shadow-teal-500/10 flex items-center justify-center cursor-pointer active:scale-95 hover:border-teal-400"
             >
               <span>Register Company</span>
             </button>
             <button
               onClick={() => navigate("/register")}
-              className="glass-panel border border-slate-700/80 bg-slate-900/60 hover:bg-slate-800/80 text-white backdrop-blur-xl px-8 py-4 rounded-xl text-sm font-bold transition-all cursor-pointer flex items-center justify-center active:scale-95 hover:border-slate-500"
+              className="glass-panel border border-slate-300 dark:border-slate-700/80 bg-white/70 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-800 dark:text-white backdrop-blur-xl px-8 py-4 rounded-xl text-sm font-bold transition-all cursor-pointer flex items-center justify-center active:scale-95 hover:border-slate-400 dark:hover:border-slate-500"
             >
               <span>Join as Driver</span>
             </button>
           </div>
-
-
         </section>
 
         {/* ─── VALUE PROPOSITIONS BENTO GRID (6 Feature Cards) ─── */}
         <section id="features" className="py-8 scroll-mt-20">
           <div className="text-center mb-16">
-            <span className="text-[10px] font-bold text-teal-400 uppercase tracking-widest bg-slate-900/90 px-3.5 py-1.5 rounded-full border border-slate-800 shadow-sm">
+            <span className="text-[10px] font-bold text-teal-700 dark:text-teal-400 uppercase tracking-widest bg-white dark:bg-slate-900/90 px-3.5 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 shadow-sm">
               Full Logistics Platform Capabilities
             </span>
-            <h2 className="font-display text-2xl md:text-4xl text-slate-100 font-bold mt-4 mb-4">
+            <h2 className="font-display text-2xl md:text-4xl text-slate-900 dark:text-slate-100 font-bold mt-4 mb-4">
               Engineered for Operational Excellence
             </h2>
-            <p className="text-xs md:text-sm text-slate-400 max-w-xl mx-auto leading-relaxed">
+            <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 max-w-xl mx-auto leading-relaxed">
               Real-road routing, tamper-proof GPS telemetry audits, and automated dynamic pricing built for modern carrier fleets.
             </p>
           </div>
@@ -162,104 +164,104 @@ export function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
             {/* Bento Card 1: OSRM Real-Road Engine */}
-            <div className="glass-panel rounded-2xl p-6 flex flex-col h-[320px] group hover:border-teal-500/40 transition-all border border-slate-800 relative overflow-hidden">
+            <div className="glass-panel rounded-2xl p-6 flex flex-col h-[320px] group hover:border-teal-500/40 transition-all border border-slate-200 dark:border-slate-800 relative overflow-hidden">
               <div className="absolute inset-0 opacity-5 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(45,52,73,0.4)_1px,transparent_1px)] bg-[size:16px_16px]"></div>
               <div className="relative z-10 flex flex-col h-full">
                 <div className="w-12 h-12 rounded-xl bg-teal-500/10 flex items-center justify-center mb-5 border border-teal-500/20 group-hover:border-teal-500/50 transition-colors">
-                  <Icon icon="solar:routing-bold-duotone" className="text-teal-400 text-2xl" />
+                  <Icon icon="solar:routing-bold-duotone" className="text-teal-600 dark:text-teal-400 text-2xl" />
                 </div>
-                <h3 className="text-base font-bold text-slate-100 mb-2">OSRM Real-Road Engine</h3>
-                <p className="text-xs text-slate-400 leading-relaxed flex-grow">
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-2">OSRM Real-Road Engine</h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed flex-grow">
                   Turn-by-turn road geometry, accurate drive-time ETAs, and interactive polyline maps snapped directly to actual transport highways.
                 </p>
-                <div className="mt-auto flex items-center justify-between border-t border-slate-800/80 pt-4">
-                  <span className="text-[10px] font-mono text-teal-400">OpenSource Routing Engine</span>
-                  <Icon icon="lucide:arrow-right" className="text-slate-400 group-hover:text-teal-400 group-hover:translate-x-1 transition-all" />
+                <div className="mt-auto flex items-center justify-between border-t border-slate-200 dark:border-slate-800/80 pt-4">
+                  <span className="text-[10px] font-mono text-teal-600 dark:text-teal-400">OpenSource Routing Engine</span>
+                  <Icon icon="lucide:arrow-right" className="text-slate-400 group-hover:text-teal-500 group-hover:translate-x-1 transition-all" />
                 </div>
               </div>
             </div>
 
             {/* Bento Card 2: GPS Breadcrumb Audit Trail */}
-            <div className="glass-panel rounded-2xl p-6 flex flex-col h-[320px] group hover:border-orange-500/40 transition-all border border-slate-800 relative overflow-hidden">
+            <div className="glass-panel rounded-2xl p-6 flex flex-col h-[320px] group hover:border-orange-500/40 transition-all border border-slate-200 dark:border-slate-800 relative overflow-hidden">
               <div className="relative z-10 flex flex-col h-full">
                 <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center mb-5 border border-orange-500/20 group-hover:border-orange-500/50 transition-colors">
-                  <Icon icon="solar:map-point-wave-bold-duotone" className="text-orange-400 text-2xl" />
+                  <Icon icon="solar:map-point-wave-bold-duotone" className="text-orange-500 dark:text-orange-400 text-2xl" />
                 </div>
-                <h3 className="text-base font-bold text-slate-100 mb-2">GPS Breadcrumb Audit</h3>
-                <p className="text-xs text-slate-400 leading-relaxed flex-grow">
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-2">GPS Breadcrumb Audit</h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed flex-grow">
                   Anti-cargo diversion & transloading fraud prevention. Every driver location update is permanently logged for complete map replay.
                 </p>
-                <div className="mt-auto flex items-center justify-between border-t border-slate-800/80 pt-4">
-                  <span className="text-[10px] font-mono text-orange-400">Append-Only Audit Ledger</span>
-                  <Icon icon="lucide:arrow-right" className="text-slate-400 group-hover:text-orange-400 group-hover:translate-x-1 transition-all" />
+                <div className="mt-auto flex items-center justify-between border-t border-slate-200 dark:border-slate-800/80 pt-4">
+                  <span className="text-[10px] font-mono text-orange-500 dark:text-orange-400">Append-Only Audit Ledger</span>
+                  <Icon icon="lucide:arrow-right" className="text-slate-400 group-hover:text-orange-500 group-hover:translate-x-1 transition-all" />
                 </div>
               </div>
             </div>
 
             {/* Bento Card 3: Dynamic Distance Pricing */}
-            <div className="glass-panel rounded-2xl p-6 flex flex-col h-[320px] group hover:border-emerald-500/40 transition-all border border-slate-800 relative overflow-hidden">
+            <div className="glass-panel rounded-2xl p-6 flex flex-col h-[320px] group hover:border-emerald-500/40 transition-all border border-slate-200 dark:border-slate-800 relative overflow-hidden">
               <div className="relative z-10 flex flex-col h-full">
                 <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-5 border border-emerald-500/20 group-hover:border-emerald-500/50 transition-colors">
-                  <Icon icon="solar:calculator-minimalistic-bold-duotone" className="text-emerald-400 text-2xl" />
+                  <Icon icon="solar:calculator-minimalistic-bold-duotone" className="text-emerald-600 dark:text-emerald-400 text-2xl" />
                 </div>
-                <h3 className="text-base font-bold text-slate-100 mb-2">Dynamic Fare Engine</h3>
-                <p className="text-xs text-slate-400 leading-relaxed flex-grow">
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-2">Dynamic Fare Engine</h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed flex-grow">
                   Automated pricing rules based on road distance (km), base fares, and vehicle type multipliers (Bike, Car, Van, Truck).
                 </p>
-                <div className="mt-auto flex items-center justify-between border-t border-slate-800/80 pt-4">
-                  <span className="text-[10px] font-mono text-emerald-400">Real-time Rate Calculator</span>
-                  <Icon icon="lucide:arrow-right" className="text-slate-400 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" />
+                <div className="mt-auto flex items-center justify-between border-t border-slate-200 dark:border-slate-800/80 pt-4">
+                  <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400">Real-time Rate Calculator</span>
+                  <Icon icon="lucide:arrow-right" className="text-slate-400 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
                 </div>
               </div>
             </div>
 
             {/* Bento Card 4: Digital Proof of Delivery */}
-            <div className="glass-panel rounded-2xl p-6 flex flex-col h-[320px] group hover:border-sky-500/40 transition-all border border-slate-800 relative overflow-hidden">
+            <div className="glass-panel rounded-2xl p-6 flex flex-col h-[320px] group hover:border-sky-500/40 transition-all border border-slate-200 dark:border-slate-800 relative overflow-hidden">
               <div className="relative z-10 flex flex-col h-full">
                 <div className="w-12 h-12 rounded-xl bg-sky-500/10 flex items-center justify-center mb-5 border border-sky-500/20 group-hover:border-sky-500/50 transition-colors">
-                  <Icon icon="solar:verified-check-bold-duotone" className="text-sky-400 text-2xl" />
+                  <Icon icon="solar:verified-check-bold-duotone" className="text-sky-600 dark:text-sky-400 text-2xl" />
                 </div>
-                <h3 className="text-base font-bold text-slate-100 mb-2">Proof of Delivery (POD)</h3>
-                <p className="text-xs text-slate-400 leading-relaxed flex-grow">
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-2">Proof of Delivery (POD)</h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed flex-grow">
                   Digital signature canvas capture, photo proof uploads, and secure OTP handoff codes to guarantee delivery fulfillment.
                 </p>
-                <div className="mt-auto flex items-center justify-between border-t border-slate-800/80 pt-4">
-                  <span className="text-[10px] font-mono text-sky-400">OTP & Signature Verification</span>
-                  <Icon icon="lucide:arrow-right" className="text-slate-400 group-hover:text-sky-400 group-hover:translate-x-1 transition-all" />
+                <div className="mt-auto flex items-center justify-between border-t border-slate-200 dark:border-slate-800/80 pt-4">
+                  <span className="text-[10px] font-mono text-sky-600 dark:text-sky-400">OTP & Signature Verification</span>
+                  <Icon icon="lucide:arrow-right" className="text-slate-400 group-hover:text-sky-500 group-hover:translate-x-1 transition-all" />
                 </div>
               </div>
             </div>
 
             {/* Bento Card 5: Real-time Socket Dispatch */}
-            <div className="glass-panel rounded-2xl p-6 flex flex-col h-[320px] group hover:border-indigo-500/40 transition-all border border-slate-800 relative overflow-hidden">
+            <div className="glass-panel rounded-2xl p-6 flex flex-col h-[320px] group hover:border-indigo-500/40 transition-all border border-slate-200 dark:border-slate-800 relative overflow-hidden">
               <div className="relative z-10 flex flex-col h-full">
                 <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center mb-5 border border-indigo-500/20 group-hover:border-indigo-500/50 transition-colors">
-                  <Icon icon="solar:transmission-bold-duotone" className="text-indigo-400 text-2xl" />
+                  <Icon icon="solar:transmission-bold-duotone" className="text-indigo-600 dark:text-indigo-400 text-2xl" />
                 </div>
-                <h3 className="text-base font-bold text-slate-100 mb-2">Live Socket Dispatch</h3>
-                <p className="text-xs text-slate-400 leading-relaxed flex-grow">
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-2">Live Socket Dispatch</h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed flex-grow">
                   Bi-directional Socket.io telemetry streaming driver coordinates live to dispatchers and end customers with sub-50ms latency.
                 </p>
-                <div className="mt-auto flex items-center justify-between border-t border-slate-800/80 pt-4">
-                  <span className="text-[10px] font-mono text-indigo-400">WebSocket Live Telemetry</span>
-                  <Icon icon="lucide:arrow-right" className="text-slate-400 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
+                <div className="mt-auto flex items-center justify-between border-t border-slate-200 dark:border-slate-800/80 pt-4">
+                  <span className="text-[10px] font-mono text-indigo-600 dark:text-indigo-400">WebSocket Live Telemetry</span>
+                  <Icon icon="lucide:arrow-right" className="text-slate-400 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" />
                 </div>
               </div>
             </div>
 
             {/* Bento Card 6: Developer REST API & Webhooks */}
-            <div className="glass-panel rounded-2xl p-6 flex flex-col h-[320px] group hover:border-violet-500/40 transition-all border border-slate-800 relative overflow-hidden">
+            <div className="glass-panel rounded-2xl p-6 flex flex-col h-[320px] group hover:border-violet-500/40 transition-all border border-slate-200 dark:border-slate-800 relative overflow-hidden">
               <div className="relative z-10 flex flex-col h-full">
                 <div className="w-12 h-12 rounded-xl bg-violet-500/10 flex items-center justify-center mb-5 border border-violet-500/20 group-hover:border-violet-500/50 transition-colors">
-                  <Icon icon="solar:code-square-bold-duotone" className="text-violet-400 text-2xl" />
+                  <Icon icon="solar:code-square-bold-duotone" className="text-violet-600 dark:text-violet-400 text-2xl" />
                 </div>
-                <h3 className="text-base font-bold text-slate-100 mb-2">Developer API & Webhooks</h3>
-                <p className="text-xs text-slate-400 leading-relaxed flex-grow">
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-2">Developer API & Webhooks</h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed flex-grow">
                   Let e-commerce stores, pharmacies, and marketplaces connect directly to your fleet. Automate order booking, distance pricing, and real-time status webhooks.
                 </p>
-                <div className="mt-auto flex items-center justify-between border-t border-slate-800/80 pt-4">
-                  <span className="text-[10px] font-mono text-violet-400">REST API & Webhooks Engine</span>
-                  <Icon icon="lucide:arrow-right" className="text-slate-400 group-hover:text-violet-400 group-hover:translate-x-1 transition-all" />
+                <div className="mt-auto flex items-center justify-between border-t border-slate-200 dark:border-slate-800/80 pt-4">
+                  <span className="text-[10px] font-mono text-violet-600 dark:text-violet-400">REST API & Webhooks Engine</span>
+                  <Icon icon="lucide:arrow-right" className="text-slate-400 group-hover:text-violet-500 group-hover:translate-x-1 transition-all" />
                 </div>
               </div>
             </div>
@@ -268,49 +270,49 @@ export function LandingPage() {
         </section>
 
         {/* ─── SOLUTIONS SECTION ─── */}
-        <section id="solutions" className="py-16 scroll-mt-20 border-t border-slate-900/60">
+        <section id="solutions" className="py-16 scroll-mt-20 border-t border-slate-200 dark:border-slate-900/60">
           <div className="text-center mb-16">
-            <span className="text-[10px] font-bold text-teal-400 uppercase tracking-widest bg-slate-900/80 px-3.5 py-1.5 rounded-full border border-slate-800">
+            <span className="text-[10px] font-bold text-teal-700 dark:text-teal-400 uppercase tracking-widest bg-white dark:bg-slate-900/80 px-3.5 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 shadow-sm">
               Ecosystem Roles
             </span>
-            <h2 className="font-display text-2xl md:text-3xl text-slate-100 font-bold mt-4 mb-4">
+            <h2 className="font-display text-2xl md:text-3xl text-slate-900 dark:text-slate-100 font-bold mt-4 mb-4">
               Unified Solutions for Every Stakeholder
             </h2>
-            <p className="text-xs text-slate-400 max-w-lg mx-auto leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-slate-400 max-w-lg mx-auto leading-relaxed">
               Logistel brings dispatchers, drivers, and customers together in one seamless, real-time environment.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-stretch">
             {/* Solution 1: Dispatchers */}
-            <div className="glass-panel rounded-2xl p-6 border border-slate-800/80 flex flex-col hover:border-teal-500/30 transition-all duration-300">
+            <div className="glass-panel rounded-2xl p-6 border border-slate-200 dark:border-slate-800/80 flex flex-col hover:border-teal-500/40 transition-all duration-300">
               <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center mb-5">
-                <Icon icon="solar:user-speak-bold-duotone" className="text-teal-400 text-xl" />
+                <Icon icon="solar:user-speak-bold-duotone" className="text-teal-600 dark:text-teal-400 text-xl" />
               </div>
-              <h3 className="text-base font-bold text-slate-100 mb-2">For Fleet Dispatchers</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-2">For Fleet Dispatchers</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                 Complete visibility of your operations. Manage your fleet, assign shipments, and monitor delivery earnings with real-time maps.
               </p>
             </div>
 
             {/* Solution 2: Drivers */}
-            <div className="glass-panel rounded-2xl p-6 border border-slate-800/80 flex flex-col hover:border-amber-500/30 transition-all duration-300">
+            <div className="glass-panel rounded-2xl p-6 border border-slate-200 dark:border-slate-800/80 flex flex-col hover:border-amber-500/40 transition-all duration-300">
               <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-5">
-                <Icon icon="solar:transmission-bold-duotone" className="text-amber-400 text-xl" />
+                <Icon icon="solar:transmission-bold-duotone" className="text-amber-600 dark:text-amber-400 text-xl" />
               </div>
-              <h3 className="text-base font-bold text-slate-100 mb-2">For Delivery Drivers</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-2">For Delivery Drivers</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                 A simple mobile companion desk. Access active shipments, coordinate routes, and upload instant digital proof of delivery (POD).
               </p>
             </div>
 
             {/* Solution 3: Customers */}
-            <div className="glass-panel rounded-2xl p-6 border border-slate-800/80 flex flex-col hover:border-sky-500/30 transition-all duration-300">
+            <div className="glass-panel rounded-2xl p-6 border border-slate-200 dark:border-slate-800/80 flex flex-col hover:border-sky-500/40 transition-all duration-300">
               <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center mb-5">
-                <Icon icon="solar:bill-list-bold-duotone" className="text-sky-400 text-xl" />
+                <Icon icon="solar:bill-list-bold-duotone" className="text-sky-600 dark:text-sky-400 text-xl" />
               </div>
-              <h3 className="text-base font-bold text-slate-100 mb-2">For End Customers</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-2">For End Customers</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                 Zero friction package tracking. Book orders directly through your portal and watch package movements in real-time.
               </p>
             </div>
@@ -318,12 +320,12 @@ export function LandingPage() {
         </section>
 
         {/* ─── PRICING SECTION ─── */}
-        <section id="pricing" className="py-12 scroll-mt-20 border-t border-slate-900/60 pt-16">
+        <section id="pricing" className="py-12 scroll-mt-20 border-t border-slate-200 dark:border-slate-900/60 pt-16">
           <div className="text-center mb-16">
-            <h2 className="font-display text-2xl md:text-3xl text-slate-100 font-bold mb-4">
+            <h2 className="font-display text-2xl md:text-3xl text-slate-900 dark:text-slate-100 font-bold mb-4">
               Flexible Plans Built for Growth
             </h2>
-            <p className="text-xs text-slate-400 max-w-lg mx-auto leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-slate-400 max-w-lg mx-auto leading-relaxed">
               No hidden fees, no credit card required to start. Select a tier that fits your fleet's delivery volume.
             </p>
           </div>
@@ -331,142 +333,142 @@ export function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-stretch">
 
             {/* Tier 1: 30-Day Free Pilot */}
-            <div className="glass-panel rounded-2xl p-8 flex flex-col border border-slate-800 relative hover:border-slate-700 transition-all">
+            <div className="glass-panel rounded-2xl p-8 flex flex-col border border-slate-200 dark:border-slate-800 relative hover:border-slate-300 dark:hover:border-slate-700 transition-all">
               <div className="mb-6">
-                <span className="text-[10px] font-bold text-teal-400 uppercase tracking-widest bg-slate-900 px-3 py-1 rounded-full border border-slate-800">
+                <span className="text-[10px] font-bold text-teal-700 dark:text-teal-400 uppercase tracking-widest bg-white dark:bg-slate-900 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-800 shadow-sm">
                   30-Day Free Pilot
                 </span>
-                <h3 className="text-xl font-bold text-slate-100 mt-4">Starter Pilot</h3>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-4">Starter Pilot</h3>
                 <p className="text-xs text-slate-500 mt-1">Full enterprise access for 30 days with zero upfront payment.</p>
               </div>
               <div className="mb-6 flex flex-col">
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-3xl font-bold text-slate-100">$0</span>
-                  <span className="text-xs text-teal-400 font-semibold">/ first 30 days</span>
+                  <span className="text-3xl font-bold text-slate-900 dark:text-slate-100">$0</span>
+                  <span className="text-xs text-teal-600 dark:text-teal-400 font-semibold">/ first 30 days</span>
                 </div>
-                <span className="text-[11px] text-slate-400 mt-1">Renews at $65/month after trial</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Renews at $65/month after trial</span>
               </div>
               <ul className="space-y-3.5 mb-8 flex-grow">
-                <li className="flex items-center gap-2.5 text-xs text-slate-300">
-                  <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
+                <li className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+                  <Icon icon="lucide:check" className="text-teal-500 dark:text-teal-400 text-sm shrink-0" />
                   <span><strong>30 days</strong> unrestricted pilot access</span>
                 </li>
-                <li className="flex items-center gap-2.5 text-xs text-slate-300">
-                  <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
+                <li className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+                  <Icon icon="lucide:check" className="text-teal-500 dark:text-teal-400 text-sm shrink-0" />
                   <span>Up to 1,000 deliveries during trial</span>
                 </li>
-                <li className="flex items-center gap-2.5 text-xs text-slate-300">
-                  <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
+                <li className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+                  <Icon icon="lucide:check" className="text-teal-500 dark:text-teal-400 text-sm shrink-0" />
                   <span>1 dispatcher dashboard seat</span>
                 </li>
-                <li className="flex items-center gap-2.5 text-xs text-slate-300">
-                  <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
+                <li className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+                  <Icon icon="lucide:check" className="text-teal-500 dark:text-teal-400 text-sm shrink-0" />
                   <span>Distance-based quoting engine</span>
                 </li>
-                <li className="flex items-center gap-2.5 text-xs text-slate-300">
-                  <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
+                <li className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+                  <Icon icon="lucide:check" className="text-teal-500 dark:text-teal-400 text-sm shrink-0" />
                   <span>Live customer map tracking links</span>
                 </li>
-                <li className="flex items-center gap-2.5 text-xs text-slate-300">
-                  <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
+                <li className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+                  <Icon icon="lucide:check" className="text-teal-500 dark:text-teal-400 text-sm shrink-0" />
                   <span>Developer API sandbox & test keys</span>
                 </li>
-                <li className="flex items-center gap-2.5 text-xs text-slate-400">
-                  <Icon icon="lucide:shield-check" className="text-emerald-400 text-sm shrink-0" />
+                <li className="flex items-center gap-2.5 text-xs text-slate-500 dark:text-slate-400">
+                  <Icon icon="lucide:shield-check" className="text-emerald-500 dark:text-emerald-400 text-sm shrink-0" />
                   <span>No credit card required to start</span>
                 </li>
               </ul>
               <button
                 onClick={() => navigate("/onboard")}
-                className="w-full bg-slate-900 hover:bg-teal-500 hover:text-slate-950 text-slate-100 py-3 rounded-xl text-xs font-bold transition-all border border-slate-800 cursor-pointer text-center"
+                className="w-full bg-slate-100 hover:bg-teal-500 hover:text-slate-950 text-slate-800 dark:bg-slate-900 dark:hover:bg-teal-500 dark:hover:text-slate-950 dark:text-slate-100 py-3 rounded-xl text-xs font-bold transition-all border border-slate-200 dark:border-slate-800 cursor-pointer text-center"
               >
                 Start 30-Day Free Trial
               </button>
             </div>
 
             {/* Tier 2: Pro */}
-            <div className="glass-panel rounded-2xl p-8 flex flex-col border border-teal-500/30 relative shadow-[0_0_30px_rgba(45,212,191,0.05)]">
+            <div className="glass-panel rounded-2xl p-8 flex flex-col border border-teal-500/40 relative shadow-xl shadow-teal-500/5">
               <div className="absolute -top-3 right-6 bg-teal-500 text-slate-950 text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full shadow-sm">
                 Most Popular
               </div>
               <div className="mb-6">
-                <span className="text-[10px] font-bold text-teal-400 uppercase tracking-widest bg-slate-900 px-3 py-1 rounded-full border border-slate-800">Growth</span>
-                <h3 className="text-xl font-bold text-slate-100 mt-4">Fleet Hub</h3>
+                <span className="text-[10px] font-bold text-teal-700 dark:text-teal-400 uppercase tracking-widest bg-white dark:bg-slate-900 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-800 shadow-sm">Growth</span>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-4">Fleet Hub</h3>
                 <p className="text-xs text-slate-500 mt-1">For expanding carriers managing regular drivers.</p>
               </div>
               <div className="mb-6 flex items-baseline gap-1">
-                <span className="text-3xl font-bold text-slate-100">$65</span>
+                <span className="text-3xl font-bold text-slate-900 dark:text-slate-100">$65</span>
                 <span className="text-xs text-slate-500">/ month</span>
               </div>
               <ul className="space-y-3.5 mb-8 flex-grow">
-                <li className="flex items-center gap-2.5 text-xs text-slate-300">
-                  <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
+                <li className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+                  <Icon icon="lucide:check" className="text-teal-500 dark:text-teal-400 text-sm shrink-0" />
                   <span>Up to 25,000 deliveries / month</span>
                 </li>
-                <li className="flex items-center gap-2.5 text-xs text-slate-300">
-                  <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
+                <li className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+                  <Icon icon="lucide:check" className="text-teal-500 dark:text-teal-400 text-sm shrink-0" />
                   <span>5 dispatcher dashboard seats</span>
                 </li>
-                <li className="flex items-center gap-2.5 text-xs text-slate-300">
-                  <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
+                <li className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+                  <Icon icon="lucide:check" className="text-teal-500 dark:text-teal-400 text-sm shrink-0" />
                   <span>Automated driver matching queue</span>
                 </li>
-                <li className="flex items-center gap-2.5 text-xs text-slate-300">
-                  <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
+                <li className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+                  <Icon icon="lucide:check" className="text-teal-500 dark:text-teal-400 text-sm shrink-0" />
                   <span>OTP delivery handoff & signatures</span>
                 </li>
-                <li className="flex items-center gap-2.5 text-xs text-slate-300">
-                  <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
+                <li className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+                  <Icon icon="lucide:check" className="text-teal-500 dark:text-teal-400 text-sm shrink-0" />
                   <span>Socket.io live map tracking</span>
                 </li>
-                <li className="flex items-center gap-2.5 text-xs text-slate-300">
-                  <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
+                <li className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+                  <Icon icon="lucide:check" className="text-teal-500 dark:text-teal-400 text-sm shrink-0" />
                   <span><strong>Developer REST API & Webhooks</strong> for e-commerce</span>
                 </li>
               </ul>
               <button
                 onClick={() => navigate("/onboard")}
-                className="w-full bg-[#29a195] hover:bg-[#22877d] text-slate-950 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm text-center"
+                className="w-full bg-[#29a195] hover:bg-[#22877d] text-slate-950 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md text-center"
               >
                 Upgrade Hub
               </button>
             </div>
 
             {/* Tier 3: Enterprise */}
-            <div className="glass-panel rounded-2xl p-8 flex flex-col border border-slate-800 relative">
+            <div className="glass-panel rounded-2xl p-8 flex flex-col border border-slate-200 dark:border-slate-800 relative hover:border-slate-300 dark:hover:border-slate-700 transition-all">
               <div className="mb-6">
-                <span className="text-[10px] font-bold text-teal-400 uppercase tracking-widest bg-slate-900 px-3 py-1 rounded-full border border-slate-800">Custom</span>
-                <h3 className="text-xl font-bold text-slate-100 mt-4">Enterprise</h3>
+                <span className="text-[10px] font-bold text-teal-700 dark:text-teal-400 uppercase tracking-widest bg-white dark:bg-slate-900 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-800 shadow-sm">Custom</span>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-4">Enterprise</h3>
                 <p className="text-xs text-slate-500 mt-1">For national and global shipping networks.</p>
               </div>
               <div className="mb-6 flex items-baseline gap-1">
-                <span className="text-3xl font-bold text-slate-100">Custom</span>
+                <span className="text-3xl font-bold text-slate-900 dark:text-slate-100">Custom</span>
               </div>
               <ul className="space-y-3.5 mb-8 flex-grow">
-                <li className="flex items-center gap-2.5 text-xs text-slate-300">
-                  <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
+                <li className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+                  <Icon icon="lucide:check" className="text-teal-500 dark:text-teal-400 text-sm shrink-0" />
                   <span>Unlimited delivery volume</span>
                 </li>
-                <li className="flex items-center gap-2.5 text-xs text-slate-300">
-                  <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
+                <li className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+                  <Icon icon="lucide:check" className="text-teal-500 dark:text-teal-400 text-sm shrink-0" />
                   <span>Unlimited dispatcher seats</span>
                 </li>
-                <li className="flex items-center gap-2.5 text-xs text-slate-300">
-                  <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
+                <li className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+                  <Icon icon="lucide:check" className="text-teal-500 dark:text-teal-400 text-sm shrink-0" />
                   <span>White-label customer portals</span>
                 </li>
-                <li className="flex items-center gap-2.5 text-xs text-slate-300">
-                  <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
+                <li className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+                  <Icon icon="lucide:check" className="text-teal-500 dark:text-teal-400 text-sm shrink-0" />
                   <span>Dedicated support & custom SLA</span>
                 </li>
-                <li className="flex items-center gap-2.5 text-xs text-slate-300">
-                  <Icon icon="lucide:check" className="text-teal-400 text-sm shrink-0" />
+                <li className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+                  <Icon icon="lucide:check" className="text-teal-500 dark:text-teal-400 text-sm shrink-0" />
                   <span>High-volume API quotas & custom webhook SLA</span>
                 </li>
               </ul>
               <button
                 onClick={() => window.location.href = "mailto:sales@logistel.com"}
-                className="w-full bg-slate-900 hover:bg-slate-800 text-slate-100 py-3 rounded-xl text-xs font-bold transition-all border border-slate-800 cursor-pointer text-center"
+                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800 dark:text-slate-100 py-3 rounded-xl text-xs font-bold transition-all border border-slate-200 dark:border-slate-800 cursor-pointer text-center"
               >
                 Contact Sales
               </button>
@@ -481,62 +483,62 @@ export function LandingPage() {
       <style>{`html { scroll-behavior: smooth; }`}</style>
 
       {/* ─── RICH ENTERPRISE FOOTER ─── */}
-      <footer className="border-t border-slate-800/80 mt-20 pt-16 pb-12 bg-slate-950/80 backdrop-blur-2xl relative z-10">
+      <footer className="border-t border-slate-200 dark:border-slate-800/80 mt-20 pt-16 pb-12 bg-white/90 dark:bg-slate-950/80 backdrop-blur-2xl relative z-10 transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           
           {/* Top Grid Section */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-10 pb-12 border-b border-slate-800/80">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-10 pb-12 border-b border-slate-200 dark:border-slate-800/80">
             
             {/* Column 1: Brand & Bio */}
             <div className="md:col-span-1 flex flex-col gap-4">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400 font-bold text-sm">
+                <div className="w-8 h-8 rounded-lg bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-600 dark:text-teal-400 font-bold text-sm">
                   L
                 </div>
-                <span className="font-display font-bold text-base text-slate-100 tracking-tight">
-                  LOGISTEL <span className="text-teal-400 font-normal">SYSTEMS</span>
+                <span className="font-display font-bold text-base text-slate-900 dark:text-slate-100 tracking-tight">
+                  LOGISTEL <span className="text-teal-600 dark:text-teal-400 font-normal">SYSTEMS</span>
                 </span>
               </div>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                 Next-generation multi-tenant logistics & dispatch management platform engineered for real-road routing, telemetry audits, and automated pricing.
               </p>
-              <div className="flex items-center gap-3 text-xs text-slate-400 mt-2">
-                <Icon icon="solar:letter-bold-duotone" className="text-teal-400 text-sm" />
+              <div className="flex items-center gap-3 text-xs text-slate-600 dark:text-slate-400 mt-2">
+                <Icon icon="solar:letter-bold-duotone" className="text-teal-600 dark:text-teal-400 text-sm" />
                 <span>support@logistel.com</span>
               </div>
             </div>
 
             {/* Column 2: Platform Capabilities */}
             <div className="flex flex-col gap-3">
-              <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">Capabilities</h4>
-              <ul className="space-y-2.5 text-xs text-slate-400">
-                <li><a href="#features" className="hover:text-teal-400 transition-colors">OSRM Real-Road Engine</a></li>
-                <li><a href="#features" className="hover:text-teal-400 transition-colors">GPS Breadcrumb Audit</a></li>
-                <li><a href="#features" className="hover:text-teal-400 transition-colors">Dynamic Fare Calculator</a></li>
-                <li><a href="#features" className="hover:text-teal-400 transition-colors">Proof of Delivery (POD)</a></li>
-                <li><a href="#features" className="hover:text-teal-400 transition-colors">Live Socket Telemetry</a></li>
+              <h4 className="text-xs font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider">Capabilities</h4>
+              <ul className="space-y-2.5 text-xs text-slate-600 dark:text-slate-400">
+                <li><a href="#features" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">OSRM Real-Road Engine</a></li>
+                <li><a href="#features" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">GPS Breadcrumb Audit</a></li>
+                <li><a href="#features" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">Dynamic Fare Calculator</a></li>
+                <li><a href="#features" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">Proof of Delivery (POD)</a></li>
+                <li><a href="#features" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">Live Socket Telemetry</a></li>
               </ul>
             </div>
 
             {/* Column 3: Ecosystem Portals */}
             <div className="flex flex-col gap-3">
-              <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">Ecosystem</h4>
-              <ul className="space-y-2.5 text-xs text-slate-400">
-                <li><button onClick={() => navigate("/onboard")} className="hover:text-teal-400 transition-colors text-left cursor-pointer">Fleet Admin Portal</button></li>
-                <li><button onClick={() => navigate("/register")} className="hover:text-teal-400 transition-colors text-left cursor-pointer">Driver Onboarding</button></li>
-                <li><button onClick={() => navigate("/login")} className="hover:text-teal-400 transition-colors text-left cursor-pointer">Customer Dashboard</button></li>
-                <li><button onClick={() => navigate("/track")} className="hover:text-teal-400 transition-colors text-left cursor-pointer">Public Shipment Tracker</button></li>
+              <h4 className="text-xs font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider">Ecosystem</h4>
+              <ul className="space-y-2.5 text-xs text-slate-600 dark:text-slate-400">
+                <li><button onClick={() => navigate("/onboard")} className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors text-left cursor-pointer">Fleet Admin Portal</button></li>
+                <li><button onClick={() => navigate("/register")} className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors text-left cursor-pointer">Driver Onboarding</button></li>
+                <li><button onClick={() => navigate("/login")} className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors text-left cursor-pointer">Customer Dashboard</button></li>
+                <li><button onClick={() => navigate("/track")} className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors text-left cursor-pointer">Public Shipment Tracker</button></li>
               </ul>
             </div>
 
             {/* Column 4: Legal & Security */}
             <div className="flex flex-col gap-3">
-              <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">Legal & Security</h4>
-              <ul className="space-y-2.5 text-xs text-slate-400">
-                <li><a href="#" className="hover:text-teal-400 transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-teal-400 transition-colors">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-teal-400 transition-colors">Refund & Return Policy</a></li>
-                <li><a href="#" className="hover:text-teal-400 transition-colors">Security Architecture</a></li>
+              <h4 className="text-xs font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider">Legal & Security</h4>
+              <ul className="space-y-2.5 text-xs text-slate-600 dark:text-slate-400">
+                <li><a href="#" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">Privacy Policy</a></li>
+                <li><a href="#" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">Terms of Service</a></li>
+                <li><a href="#" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">Refund & Return Policy</a></li>
+                <li><a href="#" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">Security Architecture</a></li>
               </ul>
             </div>
 
@@ -545,7 +547,7 @@ export function LandingPage() {
           {/* Bottom Bar */}
           <div className="pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse"></span>
               <span className="font-mono text-[11px]">All Systems Operational (99.98% Uptime)</span>
             </div>
 
@@ -553,19 +555,19 @@ export function LandingPage() {
               © {new Date().getFullYear()} Logistel Systems Inc. All rights reserved.
             </div>
 
-            <div className="flex items-center gap-4 text-slate-400">
+            <div className="flex items-center gap-4 text-slate-500 dark:text-slate-400">
               <a
                 href={telegramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Join our Telegram Community"
-                className="hover:text-sky-400 transition-colors flex items-center gap-1 text-slate-300 hover:scale-110"
+                className="hover:text-sky-500 dark:hover:text-sky-400 transition-colors flex items-center gap-1 text-slate-600 dark:text-slate-300 hover:scale-110"
               >
                 <Icon icon="logos:telegram" className="text-lg" />
               </a>
-              <a href="#" className="hover:text-teal-400 transition-colors"><Icon icon="solar:shield-check-bold-duotone" className="text-lg" /></a>
-              <a href="#" className="hover:text-teal-400 transition-colors"><Icon icon="solar:lock-bold-duotone" className="text-lg" /></a>
-              <a href="#" className="hover:text-teal-400 transition-colors"><Icon icon="solar:server-bold-duotone" className="text-lg" /></a>
+              <a href="#" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors"><Icon icon="solar:shield-check-bold-duotone" className="text-lg" /></a>
+              <a href="#" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors"><Icon icon="solar:lock-bold-duotone" className="text-lg" /></a>
+              <a href="#" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors"><Icon icon="solar:server-bold-duotone" className="text-lg" /></a>
             </div>
           </div>
 

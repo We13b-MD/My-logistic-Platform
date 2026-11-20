@@ -72,7 +72,7 @@ export const LogistelLogo: React.FC<LogistelLogoProps> = ({
       >
         {logoImage}
         {subtext && (
-          <p className={`text-slate-400 mt-1.5 font-mono uppercase tracking-widest font-semibold ${currentSize.subText}`}>
+          <p className={`text-slate-500 dark:text-slate-400 mt-1.5 font-mono uppercase tracking-widest font-semibold ${currentSize.subText}`}>
             {subtext}
           </p>
         )}
@@ -87,8 +87,8 @@ export const LogistelLogo: React.FC<LogistelLogoProps> = ({
     >
       {logoImage}
       {subtext && (
-        <div className="flex flex-col justify-center border-l border-slate-700/80 pl-3">
-          <span className={`text-slate-300 font-mono uppercase tracking-widest font-semibold ${currentSize.subText}`}>
+        <div className="flex flex-col justify-center border-l border-slate-300 dark:border-slate-700/80 pl-3">
+          <span className={`text-slate-600 dark:text-slate-300 font-mono uppercase tracking-widest font-semibold ${currentSize.subText}`}>
             {subtext}
           </span>
         </div>

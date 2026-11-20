@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Icon } from "@iconify/react";
 import { LogistelLogo } from "@/components/LogistelLogo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { toast } from "sonner";
 import { authApi } from "@/api/auth.api";
 
@@ -125,10 +126,22 @@ export function ForgotPasswordPage() {
   };
 
   return (
-    <div className="bg-[#0b1326] text-[#dae2fd] font-body-md min-h-screen flex items-center justify-center p-6 relative overflow-hidden selection:bg-[#6bd8cb]/30">
+    <div className="bg-slate-50 text-slate-900 dark:bg-[#0b1326] dark:text-[#dae2fd] font-body-md min-h-screen flex items-center justify-center p-6 relative overflow-hidden selection:bg-teal-500/30 transition-colors duration-200">
+      {/* Top Bar with Theme Toggle & Return to Home */}
+      <div className="absolute top-6 right-6 z-20 flex items-center gap-3">
+        <ThemeToggle variant="compact" />
+        <button
+          onClick={() => navigate("/")}
+          className="text-xs font-semibold text-slate-600 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 transition-colors flex items-center gap-1 cursor-pointer"
+        >
+          <Icon icon="lucide:arrow-left" className="text-sm" />
+          <span>Home</span>
+        </button>
+      </div>
+
       {/* Ambient Background Glow Shader */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-[#29a195]/10 rounded-full blur-[120px]" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-teal-500/10 rounded-full blur-[120px]" />
       </div>
 
       {/* Main Content Canvas */}
@@ -139,15 +152,15 @@ export function ForgotPasswordPage() {
           layout="stacked"
           subtext="Global Logistics Intelligence"
           className="mb-6"
-          titleClassName="text-[#6bd8cb]"
+          titleClassName="text-teal-600 dark:text-[#6bd8cb]"
         />
 
         {/* ── STAGE 1: ENTER EMAIL FOR VERIFICATION ───────────────────────────────── */}
         {step === "EMAIL" && (
-          <div className="bg-[#131b2e]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl transition-all duration-500 ease-out space-y-6">
+          <div className="glass-panel border border-slate-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl transition-all duration-500 ease-out space-y-6">
             <div className="space-y-1.5 text-center">
-              <h2 className="text-xl font-bold text-[#dae2fd]">Reset Password</h2>
-              <p className="text-xs text-[#bcc9c6]">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-[#dae2fd]">Reset Password</h2>
+              <p className="text-xs text-slate-600 dark:text-[#bcc9c6]">
                 Enter your registered email address. We'll verify your account credentials before dispatching your recovery code.
               </p>
             </div>

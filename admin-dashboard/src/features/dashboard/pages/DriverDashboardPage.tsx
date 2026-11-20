@@ -8,6 +8,8 @@ import { Delivery, DriverProfile } from "@/types";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
 import { Icon } from "@iconify/react";
 import { LogistelLogo } from "@/components/LogistelLogo";
+import { useTheme } from "@/context/ThemeContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useOsrmRoute } from "@/utils/useOsrmRoute";
 import { useNavigationAudio } from "@/utils/useNavigatorAudio";
 
@@ -98,6 +100,7 @@ function MapRecenter({
 export function DriverDashboardPage() {
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { actualTheme } = useTheme();
 
 
   // Driver Profile States
@@ -812,28 +815,24 @@ export function DriverDashboardPage() {
   if (!driverProfile) {
     return (
       <div
-        className="min-h-screen w-full text-on-surface flex flex-col items-center justify-center p-gutter relative overflow-x-hidden"
-        style={{
-          backgroundColor: "#0B1326",
-          backgroundImage: "radial-gradient(at 0% 0%, rgba(13, 148, 136, 0.15) 0px, transparent 50%)",
-        }}
+        className="min-h-screen w-full bg-slate-50 text-slate-900 dark:bg-[#0B1326] dark:text-slate-100 flex flex-col items-center justify-center p-gutter relative overflow-x-hidden transition-colors duration-200"
       >
-        <main className="w-full max-w-[440px] glass-panel rounded-2xl p-6 md:p-8 space-y-6 z-10">
+        <main className="w-full max-w-[440px] bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-white/10 rounded-2xl p-6 md:p-8 space-y-6 z-10 shadow-xl">
           <div className="text-center">
-            <Icon icon="solar:delivery-bold-duotone" className="text-[48px] text-primary mx-auto" />
-            <h1 className="font-headline-md text-headline-md text-on-surface mt-2">Driver Onboarding</h1>
-            <p className="text-xs text-on-surface-variant mt-1">
+            <Icon icon="solar:delivery-bold-duotone" className="text-[48px] text-teal-600 dark:text-teal-400 mx-auto" />
+            <h1 className="font-headline-md text-headline-md text-slate-900 dark:text-white mt-2">Driver Onboarding</h1>
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
               Complete your fleet registry details to unlock the dispatch queue.
             </p>
           </div>
 
           <form onSubmit={handleProfileSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="font-label-md text-label-md text-on-surface-variant block" htmlFor="vehicleType">
+              <label className="font-label-md text-label-md text-slate-700 dark:text-slate-300 block font-semibold text-xs" htmlFor="vehicleType">
                 VEHICLE TYPE
               </label>
               <select
-                className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 font-body-md focus:border-primary outline-none transition-all text-on-surface text-xs"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-3 font-body-md focus:border-teal-500 outline-none transition-all text-slate-900 dark:text-slate-100 text-xs"
                 id="vehicleType"
                 value={profileForm.vehicleType}
                 onChange={(e) => setProfileForm((p) => ({ ...p, vehicleType: e.target.value }))}
@@ -846,11 +845,11 @@ export function DriverDashboardPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="font-label-md text-label-md text-on-surface-variant block" htmlFor="licenseNumber">
+              <label className="font-label-md text-label-md text-slate-700 dark:text-slate-300 block font-semibold text-xs" htmlFor="licenseNumber">
                 DRIVERS LICENSE NUMBER
               </label>
               <input
-                className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 font-body-md focus:border-primary outline-none transition-all text-on-surface font-mono"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-3 font-body-md focus:border-teal-500 outline-none transition-all text-slate-900 dark:text-slate-100 font-mono text-sm"
                 id="licenseNumber"
                 placeholder="DL-XXXXXXXXX"
                 value={profileForm.licenseNumber}
@@ -862,7 +861,7 @@ export function DriverDashboardPage() {
 
             <button
               disabled={submittingProfile}
-              className="w-full bg-[#29a195] hover:bg-[#22877d] text-slate-950 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm"
+              className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md border border-teal-700 disabled:opacity-50"
               type="submit"
             >
               {submittingProfile && <Icon icon="lucide:loader-2" className="animate-spin text-lg" />}
@@ -873,7 +872,7 @@ export function DriverDashboardPage() {
           <button
             disabled={loggingOut}
             onClick={handleLogout}
-            className="w-full text-center text-xs text-on-surface-variant/60 hover:underline disabled:opacity-50"
+            className="w-full text-center text-xs text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:underline disabled:opacity-50 transition-colors"
           >
             {loggingOut ? "Logging out..." : "Logout"}
           </button>
@@ -886,28 +885,24 @@ export function DriverDashboardPage() {
   if (!driverProfile.isVerified) {
     return (
       <div
-        className="min-h-screen w-full text-on-surface flex flex-col items-center justify-center p-gutter relative overflow-x-hidden"
-        style={{
-          backgroundColor: "#0B1326",
-          backgroundImage: "radial-gradient(at 0% 0%, rgba(13, 148, 136, 0.15) 0px, transparent 50%)",
-        }}
+        className="min-h-screen w-full bg-slate-50 text-slate-900 dark:bg-[#0B1326] dark:text-slate-100 flex flex-col items-center justify-center p-gutter relative overflow-x-hidden transition-colors duration-200"
       >
-        <main className="w-full max-w-[440px] glass-panel rounded-2xl p-6 md:p-8 text-center space-y-6 z-10">
+        <main className="w-full max-w-[440px] bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-white/10 rounded-2xl p-6 md:p-8 text-center space-y-6 z-10 shadow-xl">
           <Icon icon="solar:lock-password-unlocked-bold-duotone" className="text-[64px] text-amber-500 animate-pulse mx-auto" />
           <div className="space-y-2">
-            <h1 className="font-headline-md text-headline-md text-on-surface">Registration Pending</h1>
-            <p className="text-xs text-on-surface-variant">
+            <h1 className="font-headline-md text-headline-md text-slate-900 dark:text-white">Registration Pending</h1>
+            <p className="text-xs text-slate-600 dark:text-slate-400">
               Your driver profile has been successfully saved, but requires verification from your company administrator.
             </p>
           </div>
-          <div className="bg-amber-500/10 border border-amber-500/20 p-3.5 rounded-xl text-[11px] text-amber-500 text-left space-y-1">
+          <div className="bg-amber-50 border border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/20 p-3.5 rounded-xl text-[11px] text-amber-900 dark:text-amber-300 text-left space-y-1">
             <p><strong>License:</strong> {driverProfile.licenseNumber}</p>
             <p><strong>Vehicle:</strong> {driverProfile.vehicleType}</p>
           </div>
           <button
             disabled={loggingOut}
             onClick={handleLogout}
-            className="w-full bg-surface-container-high border border-outline-variant hover:bg-white/10 text-on-surface py-3 rounded-lg text-xs font-semibold disabled:opacity-50"
+            className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-700 dark:text-slate-200 py-3 rounded-xl text-xs font-semibold disabled:opacity-50 transition-all cursor-pointer"
           >
             {loggingOut ? "Logging out..." : "Logout & Exit"}
           </button>
@@ -919,17 +914,10 @@ export function DriverDashboardPage() {
   // SCREEN C: Verified Driver Console
   return (
     <div
-      className="min-h-screen w-full text-on-surface flex flex-col font-body-md relative overflow-x-hidden"
-      style={{
-        backgroundColor: "#0B1326",
-        backgroundImage: `
-          radial-gradient(at 0% 0%, rgba(13, 148, 136, 0.08) 0px, transparent 50%),
-          radial-gradient(at 100% 100%, rgba(3, 181, 211, 0.06) 0px, transparent 50%)
-        `,
-      }}
+      className="min-h-screen w-full bg-slate-50 text-slate-900 dark:bg-[#0B1326] dark:text-on-surface flex flex-col font-body-md relative overflow-x-hidden transition-colors duration-200"
     >
       {/* Driver Header */}
-      <header className="glass-panel border-b border-white/10 px-6 py-4 flex items-center justify-between z-20">
+      <header className="glass-panel border-b border-slate-200 dark:border-white/10 px-6 py-4 flex items-center justify-between z-20">
         <LogistelLogo
           size="md"
           title="Logistel Express"
@@ -937,29 +925,33 @@ export function DriverDashboardPage() {
           titleClassName="text-primary"
         />
 
-        <button
-          disabled={loggingOut}
-          onClick={handleLogout}
-          className="flex items-center gap-1.5 hover:bg-error/20 text-on-surface-variant hover:text-error transition-all py-1.5 px-3 rounded-lg text-xs font-semibold disabled:opacity-50"
-        >
-          <Icon icon="solar:logout-2-bold" className="text-[16px]" />
-          {loggingOut ? "Logging out..." : "Logout"}
-        </button>
+        <div className="flex items-center gap-3">
+          <ThemeToggle variant="compact" />
+
+          <button
+            disabled={loggingOut}
+            onClick={handleLogout}
+            className="flex items-center gap-1.5 bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 dark:bg-slate-800/80 dark:border-white/10 dark:text-slate-200 dark:hover:bg-error/20 dark:hover:text-error transition-all py-1.5 px-3 rounded-lg text-xs font-semibold disabled:opacity-50"
+          >
+            <Icon icon="solar:logout-2-bold" className="text-[16px]" />
+            {loggingOut ? "Logging out..." : "Logout"}
+          </button>
+        </div>
       </header>
 
       {/* Main Container */}
       <main className="flex-grow max-w-[800px] w-full mx-auto px-4 py-6 space-y-6 z-10">
 
         {/* Driver Status Panel */}
-        <div className="glass-panel border-white/5 p-4 rounded-2xl flex items-center justify-between">
+        <div className="glass-panel border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-900/50 p-4 rounded-2xl flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-3">
             <span
-              className={`w-3.5 h-3.5 rounded-full border border-white/10 ${isOnline ? "bg-green-500 shadow-[0_0_8px_#10B981]" : "bg-on-surface-variant/20"
+              className={`w-3.5 h-3.5 rounded-full border border-white/10 ${isOnline ? "bg-emerald-500 shadow-[0_0_8px_#10B981]" : "bg-slate-300 dark:bg-on-surface-variant/20"
                 }`}
             ></span>
             <div>
-              <span className="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold block">Duty Status</span>
-              <span className="font-semibold text-sm">
+              <span className="text-[10px] text-slate-500 dark:text-on-surface-variant uppercase tracking-wider font-bold block">Duty Status</span>
+              <span className="font-semibold text-sm text-slate-900 dark:text-white">
                 {activeDelivery
                   ? "On Active Cargo Dispatch (Telemetry Enforced)"
                   : isOnline
@@ -973,10 +965,10 @@ export function DriverDashboardPage() {
             onClick={handleToggleOnline}
             disabled={togglingOnline || Boolean(activeDelivery)}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeDelivery
-              ? "bg-teal-500/20 text-teal-300 border border-teal-500/40 cursor-not-allowed"
+              ? "bg-teal-50 text-teal-800 border border-teal-200 dark:bg-teal-500/20 dark:text-teal-300 dark:border-teal-500/40 cursor-not-allowed"
               : isOnline
-                ? "bg-error/15 border border-error/30 text-error hover:bg-error/30 cursor-pointer"
-                : "bg-primary-container text-on-primary-container hover:brightness-110 shadow-lg shadow-primary/10 cursor-pointer"
+                ? "bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:border-rose-500/30 dark:text-rose-300 cursor-pointer shadow-sm"
+                : "bg-teal-600 hover:bg-teal-700 text-white shadow-md border border-teal-700 cursor-pointer"
               }`}
           >
             {togglingOnline ? (
@@ -996,21 +988,21 @@ export function DriverDashboardPage() {
 
         {/* Cargo Transit Telemetry Notice */}
         {activeDelivery && (
-          <div className="bg-teal-950/40 border border-teal-500/30 p-4 rounded-2xl flex items-center justify-between gap-3 shadow-lg">
+          <div className="bg-teal-50/80 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-500/30 p-4 rounded-2xl flex items-center justify-between gap-3 shadow-sm">
             <div className="flex items-center gap-3">
-              <span className="w-2.5 h-2.5 rounded-full bg-teal-400 animate-ping shrink-0"></span>
+              <span className="w-2.5 h-2.5 rounded-full bg-teal-500 animate-ping shrink-0"></span>
               <div>
-                <h4 className="text-xs font-bold text-teal-300 uppercase tracking-wide flex items-center gap-1.5">
-                  <Icon icon="solar:shield-check-bold" className="text-sm" />
+                <h4 className="text-xs font-bold text-teal-900 dark:text-teal-300 uppercase tracking-wide flex items-center gap-1.5">
+                  <Icon icon="solar:shield-check-bold" className="text-sm text-teal-700 dark:text-teal-400" />
                   Cargo Transit Security Telemetry Active
                 </h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">
+                <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
                   Your device is automatically streaming real-time GPS telemetry to the admin dispatch radar. No manual broadcast needed.
                 </p>
               </div>
             </div>
             <div className="hidden sm:flex flex-col items-end shrink-0 font-mono text-[10px]">
-              <span className="text-teal-300 font-bold bg-teal-500/20 px-2 py-0.5 rounded border border-teal-500/30">
+              <span className="text-teal-800 dark:text-teal-300 font-bold bg-teal-100 dark:bg-teal-500/20 px-2 py-0.5 rounded border border-teal-200 dark:border-teal-500/30">
                 10s AUTO-STREAM
               </span>
             </div>
@@ -1018,21 +1010,21 @@ export function DriverDashboardPage() {
         )}
 
         {/* FUEL & TELEMATICS CONSOLE */}
-        <div className="glass-panel border-white/5 p-5 rounded-2xl space-y-4 bg-slate-900/60 relative overflow-hidden">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/5 pb-3">
+        <div className="glass-panel border border-slate-200 dark:border-white/5 p-5 rounded-2xl space-y-4 bg-white/80 dark:bg-slate-900/60 relative overflow-hidden shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-white/5 pb-3">
             <div className="flex items-center space-x-2">
               <span className="text-xl">⛽</span>
               <div>
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <span>Vehicle Fuel & Telematics</span>
                   {fuelLevel <= 20 && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-500/20 text-red-500 border border-red-500/30 animate-pulse">
                       🚨 LOW FUEL ALERT
                     </span>
                   )}
                 </h3>
-                <span className="text-[11px] text-slate-400">
-                  Lagos Petrol Benchmark: <strong className="text-amber-400">₦1,205/Liter</strong>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Lagos Petrol Benchmark: <strong className="text-amber-800 dark:text-amber-400 font-bold">₦1,205/Liter</strong>
                 </span>
               </div>
             </div>
@@ -1041,13 +1033,13 @@ export function DriverDashboardPage() {
               <button
                 onClick={handleRequestVoucher}
                 disabled={requestingVoucher}
-                className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 text-amber-300 text-xs font-bold transition-all"
+                className="px-3 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 dark:bg-amber-500/20 dark:hover:bg-amber-500/30 dark:text-amber-300 dark:border-amber-500/30 text-xs font-bold transition-all shadow-sm"
               >
                 {requestingVoucher ? "Requesting..." : "⛽ Request Voucher"}
               </button>
               <button
                 onClick={() => setShowRefuelModal(true)}
-                className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-300 text-xs font-bold transition-all"
+                className="px-3 py-1.5 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-950 border border-emerald-300 dark:bg-emerald-500/20 dark:hover:bg-emerald-500/30 dark:text-emerald-300 dark:border-emerald-500/30 text-xs font-bold transition-all shadow-sm"
               >
                 🔧 Log Top-Up
               </button>
@@ -1057,12 +1049,12 @@ export function DriverDashboardPage() {
           {/* Visual Tank Progress Bar */}
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs font-semibold">
-              <span className="text-slate-300">Current Tank Level</span>
-              <span className={fuelLevel <= 20 ? "text-red-400 font-bold font-mono" : "text-emerald-400 font-bold font-mono"}>
+              <span className="text-slate-600 dark:text-slate-300">Current Tank Level</span>
+              <span className={fuelLevel <= 20 ? "text-rose-600 dark:text-red-400 font-bold font-mono" : "text-emerald-700 dark:text-emerald-400 font-bold font-mono"}>
                 {fuelLevel}% {fuelLevel <= 20 ? "(Refuel Needed)" : "(Optimal)"}
               </span>
             </div>
-            <div className="w-full bg-slate-950 rounded-full h-3 p-0.5 border border-slate-800">
+            <div className="w-full bg-slate-100 dark:bg-slate-950 rounded-full h-3 p-0.5 border border-slate-200 dark:border-slate-800">
               <div
                 className={`h-full rounded-full transition-all duration-500 ${fuelLevel <= 20 ? "bg-red-500 shadow-[0_0_10px_#EF4444]" : fuelLevel <= 50 ? "bg-amber-500" : "bg-emerald-500 shadow-[0_0_8px_#10B981]"
                   }`}
@@ -1074,15 +1066,15 @@ export function DriverDashboardPage() {
 
         {/* GAS STATION TOP-UP MODAL */}
         {showRefuelModal && (
-          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-6 space-y-5 shadow-2xl">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 className="text-base font-bold text-white flex items-center space-x-2">
+          <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-2xl p-6 space-y-5 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center space-x-2">
                   <span>⛽ Log Gas Station Refuel</span>
                 </h3>
                 <button
                   onClick={() => setShowRefuelModal(false)}
-                  className="text-slate-400 hover:text-white text-lg font-bold"
+                  className="text-slate-400 hover:text-slate-700 dark:hover:text-white text-lg font-bold"
                 >
                   ✕
                 </button>
@@ -1090,7 +1082,7 @@ export function DriverDashboardPage() {
 
               <form onSubmit={handleCompleteRefuel} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs text-slate-300 font-semibold block">LITERS PUMPED</label>
+                  <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">LITERS PUMPED</label>
                   <input
                     type="number"
                     step="0.5"
@@ -1098,19 +1090,19 @@ export function DriverDashboardPage() {
                     max="50"
                     value={refuelLiters}
                     onChange={(e) => setRefuelLiters(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-mono text-base focus:border-amber-500 outline-none"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white font-mono text-base focus:border-amber-500 outline-none"
                     required
                   />
                 </div>
 
-                <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs space-y-1 text-slate-300">
+                <div className="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-xs space-y-1 text-slate-700 dark:text-slate-300">
                   <div className="flex justify-between">
                     <span>Lagos Petrol Rate:</span>
-                    <span className="font-mono text-amber-400">₦1,205 / Liter</span>
+                    <span className="font-mono text-amber-800 dark:text-amber-400 font-bold">₦1,205 / Liter</span>
                   </div>
-                  <div className="flex justify-between font-bold text-sm text-white pt-1 border-t border-slate-800">
+                  <div className="flex justify-between font-bold text-sm text-slate-900 dark:text-white pt-1 border-t border-slate-200 dark:border-slate-800">
                     <span>Total Refuel Cost:</span>
-                    <span className="font-mono text-emerald-400">
+                    <span className="font-mono text-emerald-700 dark:text-emerald-400">
                       ₦{((parseFloat(refuelLiters) || 0) * 1205).toLocaleString()}
                     </span>
                   </div>
@@ -1118,7 +1110,7 @@ export function DriverDashboardPage() {
 
                 <button
                   type="submit"
-                  className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl shadow-lg transition-all text-sm"
+                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all text-sm cursor-pointer"
                 >
                   Submit Top-Up & Reset Tank (100%)
                 </button>
@@ -1135,19 +1127,19 @@ export function DriverDashboardPage() {
           </div>
         ) : activeDelivery ? (
           <div className="space-y-4">
-            <div className="glass-panel border-white/5 p-6 rounded-2xl space-y-6">
+            <div className="glass-panel border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-900/50 p-6 rounded-2xl space-y-6 shadow-sm">
 
               {/* Task Header */}
-              <div className="flex justify-between items-start border-b border-white/5 pb-4">
+              <div className="flex justify-between items-start border-b border-slate-200 dark:border-white/5 pb-4">
                 <div>
-                  <span className="text-[9px] bg-secondary/10 border border-secondary/20 text-secondary font-bold uppercase tracking-wider px-2 py-0.5 rounded">
+                  <span className="text-[9px] bg-teal-50 dark:bg-secondary/10 border border-teal-200 dark:border-secondary/20 text-teal-800 dark:text-secondary font-bold uppercase tracking-wider px-2 py-0.5 rounded">
                     ACTIVE ROUTE IN PROGRESS
                   </span>
-                  <h2 className="font-headline-md text-headline-md mt-1.5 text-on-surface">
+                  <h2 className="font-headline-md text-headline-md mt-1.5 text-slate-900 dark:text-white">
                     Deliver to {activeDelivery.recipientName}
                   </h2>
                 </div>
-                <span className="text-xs font-bold text-primary bg-primary/15 border border-primary/20 px-3 py-1 rounded-full uppercase tracking-wider">
+                <span className="text-xs font-bold text-teal-800 dark:text-teal-300 bg-teal-50 dark:bg-teal-500/15 border border-teal-200 dark:border-teal-500/20 px-3 py-1 rounded-full uppercase tracking-wider">
                   {activeDelivery.status}
                 </span>
               </div>
@@ -1156,29 +1148,29 @@ export function DriverDashboardPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 {/* 1. PICKUP WAREHOUSE */}
                 <div className={`p-4 rounded-xl border transition-all ${activeDelivery.status === "ASSIGNED"
-                  ? "bg-cyan-500/10 border-cyan-500/40 text-white shadow-lg shadow-cyan-500/5"
-                  : "bg-slate-900/60 border-slate-800 text-slate-300"
+                  ? "bg-cyan-50 dark:bg-cyan-500/10 border-cyan-300 dark:border-cyan-500/40 text-slate-900 dark:text-white shadow-sm"
+                  : "bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300"
                   }`}>
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
+                    <span className="text-[10px] text-cyan-700 dark:text-cyan-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-cyan-500"></span>
                       1. PICKUP WAREHOUSE
                     </span>
                     {activeDelivery.status === "ASSIGNED" && (
-                      <span className="text-[9px] px-2 py-0.5 rounded-full font-extrabold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 animate-pulse">
+                      <span className="text-[9px] px-2 py-0.5 rounded-full font-extrabold bg-cyan-100 text-cyan-900 border border-cyan-300 dark:bg-cyan-500/20 dark:text-cyan-300 dark:border-cyan-500/30 animate-pulse">
                         CURRENT TARGET
                       </span>
                     )}
                   </div>
-                  <p className="font-semibold text-sm text-slate-100 mt-2">{activeDelivery.pickupAddress}</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Contact: {activeDelivery.senderPhone || "Warehouse Dispatch"}</p>
+                  <p className="font-semibold text-sm text-slate-900 dark:text-slate-100 mt-2">{activeDelivery.pickupAddress}</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Contact: {activeDelivery.senderPhone || "Warehouse Dispatch"}</p>
 
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <a
                       href={`https://www.google.com/maps/dir/?api=1&destination=${activeDelivery.pickupLatitude},${activeDelivery.pickupLongitude}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-cyan-500 hover:bg-cyan-400 text-slate-950 flex items-center gap-1.5 shadow transition-all cursor-pointer"
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-cyan-600 hover:bg-cyan-700 text-white flex items-center gap-1.5 shadow transition-all cursor-pointer"
                     >
                       <Icon icon="solar:routing-bold" className="text-sm" />
                       <span>GPS to Pickup</span>
@@ -1186,9 +1178,9 @@ export function DriverDashboardPage() {
                     {activeDelivery.senderPhone && (
                       <a
                         href={`tel:${activeDelivery.senderPhone}`}
-                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition-all"
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 flex items-center gap-1.5 transition-all"
                       >
-                        <Icon icon="solar:phone-calling-bold" className="text-xs text-emerald-400" />
+                        <Icon icon="solar:phone-calling-bold" className="text-xs text-emerald-600 dark:text-emerald-400" />
                         <span>Call Pickup</span>
                       </a>
                     )}
@@ -1197,29 +1189,29 @@ export function DriverDashboardPage() {
 
                 {/* 2. DROPOFF DESTINATION */}
                 <div className={`p-4 rounded-xl border transition-all ${activeDelivery.status === "IN_TRANSIT" || activeDelivery.status === "PICKED_UP"
-                  ? "bg-emerald-500/10 border-emerald-500/40 text-white shadow-lg shadow-emerald-500/5"
-                  : "bg-slate-900/60 border-slate-800 text-slate-300"
+                  ? "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/40 text-slate-900 dark:text-white shadow-sm"
+                  : "bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300"
                   }`}>
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span className="text-[10px] text-emerald-800 dark:text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                       2. DROPOFF DESTINATION
                     </span>
                     {(activeDelivery.status === "IN_TRANSIT" || activeDelivery.status === "PICKED_UP") && (
-                      <span className="text-[9px] px-2 py-0.5 rounded-full font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse">
+                      <span className="text-[9px] px-2 py-0.5 rounded-full font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30 animate-pulse">
                         CURRENT TARGET
                       </span>
                     )}
                   </div>
-                  <p className="font-semibold text-sm text-slate-100 mt-2">{activeDelivery.dropoffAddress}</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Recipient: {activeDelivery.recipientName} ({activeDelivery.recipientPhone})</p>
+                  <p className="font-semibold text-sm text-slate-900 dark:text-slate-100 mt-2">{activeDelivery.dropoffAddress}</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Recipient: {activeDelivery.recipientName} ({activeDelivery.recipientPhone})</p>
 
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <a
                       href={`https://www.google.com/maps/dir/?api=1&destination=${activeDelivery.dropoffLatitude},${activeDelivery.dropoffLongitude}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 flex items-center gap-1.5 shadow transition-all cursor-pointer"
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 shadow transition-all cursor-pointer"
                     >
                       <Icon icon="solar:routing-bold" className="text-sm" />
                       <span>GPS to Dropoff</span>
@@ -1227,9 +1219,9 @@ export function DriverDashboardPage() {
                     {activeDelivery.recipientPhone && (
                       <a
                         href={`tel:${activeDelivery.recipientPhone}`}
-                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition-all"
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 flex items-center gap-1.5 transition-all"
                       >
-                        <Icon icon="solar:phone-calling-bold" className="text-xs text-emerald-400" />
+                        <Icon icon="solar:phone-calling-bold" className="text-xs text-emerald-600 dark:text-emerald-400" />
                         <span>Call Recipient</span>
                       </a>
                     )}
@@ -1238,14 +1230,14 @@ export function DriverDashboardPage() {
               </div>
 
               {/* ─── Custom In-App Turn-by-Turn Navigation Cockpit ─── */}
-              <div className="bg-gradient-to-r from-slate-900 via-slate-900/90 to-teal-950/40 border border-teal-500/30 rounded-2xl p-4 shadow-xl flex flex-col gap-3 relative overflow-hidden">
+              <div className="bg-slate-50 dark:bg-gradient-to-r dark:from-slate-900 dark:via-slate-900/90 dark:to-teal-950/40 border border-teal-200 dark:border-teal-500/30 rounded-2xl p-4 shadow-sm flex flex-col gap-3 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-48 h-48 bg-teal-500/5 rounded-full blur-2xl pointer-events-none" />
 
                 {/* Target Toggle Tabs (Dropoff vs Pickup) */}
-                <div className="flex items-center justify-between gap-2 border-b border-white/5 pb-2.5 z-10">
+                <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-white/5 pb-2.5 z-10">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Navigate To:</span>
-                    <div className="flex bg-slate-950/80 p-0.5 rounded-xl border border-white/10 gap-1">
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Navigate To:</span>
+                    <div className="flex bg-slate-200 dark:bg-slate-950/80 p-0.5 rounded-xl border border-slate-300 dark:border-white/10 gap-1">
                       <button
                         type="button"
                         onClick={() => {
@@ -1253,8 +1245,8 @@ export function DriverDashboardPage() {
                           setCurrentStepIndex(0);
                         }}
                         className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${navTarget === "dropoff"
-                          ? "bg-teal-500 text-slate-950 shadow"
-                          : "text-slate-400 hover:text-white"
+                          ? "bg-teal-600 text-white shadow-sm"
+                          : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
                           }`}
                       >
                         <Icon icon="solar:flag-2-bold" />
@@ -1267,8 +1259,8 @@ export function DriverDashboardPage() {
                           setCurrentStepIndex(0);
                         }}
                         className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${navTarget === "pickup"
-                          ? "bg-teal-500 text-slate-950 shadow"
-                          : "text-slate-400 hover:text-white"
+                          ? "bg-teal-600 text-white shadow-sm"
+                          : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
                           }`}
                       >
                         <Icon icon="solar:box-minimalistic-bold" />
@@ -1280,25 +1272,25 @@ export function DriverDashboardPage() {
 
                 <div className="flex flex-wrap items-center justify-between gap-4 z-10">
                   <div className="flex items-center gap-3.5">
-                    <div className="w-12 h-12 rounded-xl bg-teal-500/20 text-teal-300 border border-teal-500/40 flex items-center justify-center text-2xl shadow-inner shrink-0">
+                    <div className="w-12 h-12 rounded-xl bg-teal-100 text-teal-800 border border-teal-200 dark:bg-teal-500/20 dark:text-teal-300 dark:border-teal-500/40 flex items-center justify-center text-2xl shadow-inner shrink-0">
                       <Icon icon={navTarget === "dropoff" ? "solar:flag-2-bold" : "solar:box-minimalistic-bold-duotone"} />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] uppercase tracking-widest font-extrabold px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 border border-teal-500/30">
+                        <span className="text-[10px] uppercase tracking-widest font-extrabold px-2 py-0.5 rounded bg-teal-100 text-teal-800 border border-teal-200 dark:bg-teal-500/20 dark:text-teal-300 dark:border-teal-500/30">
                           {navTarget === "dropoff" ? "Target: Customer Dropoff" : "Target: Pickup Hub"}
                         </span>
-                        <span className="text-xs text-slate-400 font-mono">
+                        <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
                           {distanceKm ? `${distanceKm} km` : "Routing..."} • {durationRange ? `~${durationRange}` : durationMins ? `~${durationMins} mins` : "Calculating ETA..."}
                         </span>
                       </div>
-                      <h3 className="text-sm font-bold text-slate-100 mt-1 truncate max-w-sm sm:max-w-md">
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-1 truncate max-w-sm sm:max-w-md">
                         {navTarget === "dropoff" ? activeDelivery.dropoffAddress : activeDelivery.pickupAddress}
                       </h3>
                     </div>
                   </div>
 
-                  {/* Primary Action Button: Launch In-App Navigator */}
+                  {/* Primary Action Button: Launch In-App Navigator (Solid Enterprise Button) */}
                   <div className="flex items-center gap-2 z-10 w-full sm:w-auto">
                     <button
                       type="button"
@@ -1313,23 +1305,23 @@ export function DriverDashboardPage() {
                           setLiveMetersToTurn(null);
                         }
                       }}
-                      className={`flex-1 sm:flex-initial px-5 py-3 rounded-xl font-extrabold text-xs shadow-lg flex items-center justify-center gap-2.5 transition-all cursor-pointer active:scale-95 ${isNavigatingInApp
-                        ? "bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20"
-                        : "bg-gradient-to-r from-teal-500 via-emerald-500 to-teal-400 hover:from-teal-400 hover:to-emerald-400 text-slate-950 shadow-teal-500/25"
+                      className={`flex-1 sm:flex-initial px-5 py-3 rounded-xl font-bold text-xs shadow-md flex items-center justify-center gap-2.5 transition-all cursor-pointer active:scale-95 border ${isNavigatingInApp
+                        ? "bg-amber-600 hover:bg-amber-700 text-white border-amber-700"
+                        : "bg-teal-600 hover:bg-teal-700 text-white border-teal-700"
                         }`}
                     >
                       <Icon icon={isNavigatingInApp ? "solar:close-circle-bold" : "solar:compass-bold"} className="text-lg" />
                       <span>{isNavigatingInApp ? "Exit Navigator HUD" : "Start In-App Navigation"}</span>
                     </button>
 
-                    {/* Secondary Emergency Fallback to External Maps */}
+                    {/* Secondary Fallback to External Maps */}
                     <button
                       type="button"
                       onClick={() => launchSmartNavigation("smart")}
                       title="Emergency Backup: Open Google/Apple Maps"
-                      className="px-3 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
+                      className="px-3 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-700 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
                     >
-                      <Icon icon="solar:map-point-wave-bold" className="text-base text-cyan-400" />
+                      <Icon icon="solar:map-point-wave-bold" className="text-base text-cyan-600 dark:text-cyan-400" />
                       <span className="hidden sm:inline">External Maps</span>
                     </button>
                   </div>
@@ -1338,13 +1330,13 @@ export function DriverDashboardPage() {
 
               {/* ─── LIVE PHONE GPS STATUS & DIAGNOSTICS BAR ─── */}
               <div className={`p-3 rounded-xl border flex flex-wrap items-center justify-between gap-3 text-xs transition-all ${liveCoords
-                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                ? "bg-emerald-50 text-emerald-900 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-emerald-300"
                 : gpsError
-                  ? "bg-red-500/10 border-red-500/30 text-red-300"
-                  : "bg-amber-500/10 border-amber-500/30 text-amber-300"
+                  ? "bg-rose-50 text-rose-900 border-rose-200 dark:bg-red-500/10 dark:border-red-500/30 dark:text-red-300"
+                  : "bg-amber-50 text-amber-950 border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300"
                 }`}>
                 <div className="flex items-center gap-2.5">
-                  <div className={`w-2.5 h-2.5 rounded-full ${liveCoords ? "bg-emerald-400 animate-pulse" : "bg-amber-400 animate-ping"
+                  <div className={`w-2.5 h-2.5 rounded-full ${liveCoords ? "bg-emerald-500 animate-pulse" : "bg-amber-500 animate-ping"
                     }`} />
                   <div>
                     <div className="font-bold flex items-center gap-2">
@@ -1356,13 +1348,13 @@ export function DriverDashboardPage() {
                             : "Connecting to Phone GPS (Mende)..."}
                       </span>
                       {gpsAccuracy && (
-                        <span className="text-[10px] text-slate-400 font-mono">
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
                           ±{gpsAccuracy}m precision
                         </span>
                       )}
                     </div>
                     {!liveCoords && !gpsError && (
-                      <p className="text-[11px] text-slate-400 mt-0.5">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                         Please ensure Location Services are allowed in your mobile browser.
                       </p>
                     )}
@@ -1374,7 +1366,7 @@ export function DriverDashboardPage() {
                     type="button"
                     onClick={requestGpsFix}
                     disabled={requestingGps}
-                    className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow transition-all cursor-pointer"
+                    className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-1.5 shadow transition-all cursor-pointer border border-amber-700"
                   >
                     <Icon icon={requestingGps ? "lucide:loader-2" : "solar:gps-bold"} className={requestingGps ? "animate-spin text-sm" : "text-sm"} />
                     <span>{requestingGps ? "Connecting GPS..." : "📡 Connect My Phone GPS"}</span>
@@ -1383,7 +1375,7 @@ export function DriverDashboardPage() {
               </div>
 
               {/* ─── LIVE MAP WITH IN-APP TURN-BY-TURN HUD ─── */}
-              <div className={`rounded-xl overflow-hidden border border-white/10 relative z-0 shadow-lg transition-all ${isNavigatingInApp ? "h-[450px] ring-2 ring-teal-500/40" : "h-[300px]"
+              <div className={`rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 relative z-0 shadow-lg transition-all ${isNavigatingInApp ? "h-[450px] ring-2 ring-teal-500/40" : "h-[300px]"
                 }`}>
                 {/* IN-APP TURN MANEUVER BANNER (When Navigating) */}
                 {isNavigatingInApp && steps.length > 0 && steps[currentStepIndex] && (
@@ -1476,11 +1468,13 @@ export function DriverDashboardPage() {
                   zoomControl={false}
                 >
                   <TileLayer
-                    attribution='&copy; OpenStreetMap contributors'
+                    attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                     url={
                       mapLayerType === "satellite"
                         ? "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                        : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        : actualTheme === "dark"
+                        ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                        : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
                     }
                   />
 
@@ -1547,12 +1541,12 @@ export function DriverDashboardPage() {
               </div>
 
               {/* Route status flow controls */}
-              <div className="pt-2 border-t border-white/5 space-y-4">
+              <div className="pt-2 border-t border-slate-200 dark:border-white/5 space-y-4">
                 {activeDelivery.status === "ASSIGNED" && (
                   <button
                     disabled={updatingStatus}
                     onClick={() => handleStatusChange("PICKED_UP")}
-                    className="w-full bg-[#0D9488] hover:bg-[#0F766E] text-white font-headline-md py-3 rounded-xl flex items-center justify-center gap-2 transition-all font-semibold"
+                    className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md border border-teal-700 cursor-pointer disabled:opacity-50"
                   >
                     {updatingStatus && <Icon icon="lucide:loader-2" className="animate-spin text-[16px]" />}
                     Confirm Package Pickup
@@ -1563,7 +1557,7 @@ export function DriverDashboardPage() {
                   <button
                     disabled={updatingStatus}
                     onClick={() => handleStatusChange("IN_TRANSIT")}
-                    className="w-full bg-[#0D9488] hover:bg-[#0F766E] text-white font-headline-md py-3 rounded-xl flex items-center justify-center gap-2 transition-all font-semibold"
+                    className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md border border-teal-700 cursor-pointer disabled:opacity-50"
                   >
                     {updatingStatus && <Icon icon="lucide:loader-2" className="animate-spin text-[16px]" />}
                     Depart to Route (In Transit)
@@ -1571,16 +1565,16 @@ export function DriverDashboardPage() {
                 )}
 
                 {activeDelivery.status === "IN_TRANSIT" && (
-                  <div className="space-y-3 bg-surface-container-low p-4 rounded-xl border border-white/5">
+                  <div className="space-y-3 bg-slate-50 dark:bg-surface-container-low p-4 rounded-xl border border-slate-200 dark:border-white/5">
                     <div className="space-y-1">
-                      <label className="text-[10px] text-primary font-bold uppercase tracking-wider block" htmlFor="otp">
+                      <label className="text-[10px] text-teal-700 dark:text-teal-400 font-bold uppercase tracking-wider block" htmlFor="otp">
                         RECIPIENT CONFIRMATION OTP
                       </label>
-                      <span className="text-[10px] text-on-surface-variant block pb-1">
+                      <span className="text-[10px] text-slate-600 dark:text-slate-400 block pb-1">
                         Collect the 6-digit confirmation pin from the recipient to deliver packages.
                       </span>
                       <input
-                        className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-2.5 font-mono text-center text-lg tracking-widest text-on-surface focus:border-primary outline-none transition-all"
+                        className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 font-mono text-center text-lg tracking-widest text-slate-900 dark:text-white font-bold focus:border-teal-600 outline-none transition-all"
                         id="otp"
                         maxLength={6}
                         onChange={(e) => setOtpInput(e.target.value)}
@@ -1594,7 +1588,7 @@ export function DriverDashboardPage() {
                     <button
                       disabled={updatingStatus}
                       onClick={() => handleStatusChange("DELIVERED")}
-                      className="w-full bg-[#0D9488] hover:bg-[#0F766E] text-white font-headline-md py-3 rounded-xl flex items-center justify-center gap-2 transition-all font-semibold"
+                      className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md border border-teal-700 cursor-pointer disabled:opacity-50"
                     >
                       {updatingStatus && <Icon icon="lucide:loader-2" className="animate-spin text-[16px]" />}
                       Submit OTP & Complete Delivery
@@ -1610,10 +1604,10 @@ export function DriverDashboardPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-emerald-400 animate-ping" />
-                  <h2 className="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-emerald-500 animate-ping" />
+                  <h2 className="font-headline-md text-headline-md text-slate-900 dark:text-white flex items-center gap-2">
                     <span>Available Dispatches Near You</span>
-                    <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-mono">
+                    <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 font-mono">
                       {availableJobs.length} Ready
                     </span>
                   </h2>
@@ -1622,7 +1616,7 @@ export function DriverDashboardPage() {
                   type="button"
                   onClick={fetchAvailableJobs}
                   disabled={loadingAvailable}
-                  className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-slate-300 border border-white/10 flex items-center gap-1.5 transition-all cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 dark:bg-white/5 dark:hover:bg-white/10 dark:text-slate-300 dark:border-white/10 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
                 >
                   <Icon icon="solar:restart-bold" className={`text-sm ${loadingAvailable ? "animate-spin" : ""}`} />
                   <span>Refresh</span>
@@ -1633,50 +1627,50 @@ export function DriverDashboardPage() {
                 {availableJobs.map((job) => (
                   <div
                     key={job.id}
-                    className="glass-panel border-white/10 hover:border-teal-500/50 p-5 rounded-2xl bg-gradient-to-r from-slate-900/90 via-slate-900/70 to-teal-950/20 shadow-xl transition-all space-y-4 relative overflow-hidden"
+                    className="glass-panel border border-slate-200 dark:border-white/10 hover:border-teal-500/50 p-5 rounded-2xl bg-white/80 dark:bg-slate-900/80 shadow-md transition-all space-y-4 relative overflow-hidden"
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/5 pb-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-white/5 pb-3">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 border border-teal-500/30">
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-teal-50 text-teal-800 border border-teal-200 dark:bg-teal-500/20 dark:text-teal-300 dark:border-teal-500/30">
                           Order #{job.id.slice(0, 8)}
                         </span>
-                        <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded uppercase tracking-wider">
+                        <span className="text-[10px] font-bold text-amber-900 bg-amber-50 border border-amber-200 dark:text-amber-400 dark:bg-amber-500/10 dark:border-amber-500/20 px-2 py-0.5 rounded uppercase tracking-wider">
                           Ready for Pickup
                         </span>
                       </div>
-                      <span className="text-xs text-slate-400 font-medium">
-                        Recipient: <strong className="text-slate-200">{job.recipientName}</strong>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                        Recipient: <strong className="text-slate-900 dark:text-slate-200">{job.recipientName}</strong>
                       </span>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                       {/* Pickup */}
-                      <div className="bg-slate-950/60 p-3 rounded-xl border border-white/5 space-y-1">
-                        <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                      <div className="bg-slate-50 dark:bg-slate-950/60 p-3 rounded-xl border border-slate-200 dark:border-white/5 space-y-1">
+                        <span className="text-[10px] text-cyan-700 dark:text-cyan-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-cyan-500" />
                           Pickup Hub
                         </span>
-                        <p className="font-semibold text-slate-200 truncate">{job.pickupAddress}</p>
+                        <p className="font-semibold text-slate-900 dark:text-slate-200 truncate">{job.pickupAddress}</p>
                         {job.senderPhone && (
-                          <p className="text-[11px] text-slate-400">Sender Contact: {job.senderPhone}</p>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">Sender Contact: {job.senderPhone}</p>
                         )}
                       </div>
 
                       {/* Dropoff */}
-                      <div className="bg-slate-950/60 p-3 rounded-xl border border-white/5 space-y-1">
-                        <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                      <div className="bg-slate-50 dark:bg-slate-950/60 p-3 rounded-xl border border-slate-200 dark:border-white/5 space-y-1">
+                        <span className="text-[10px] text-emerald-800 dark:text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500" />
                           Dropoff Destination
                         </span>
-                        <p className="font-semibold text-slate-200 truncate">{job.dropoffAddress}</p>
-                        <p className="text-[11px] text-slate-400">Recipient Phone: {job.recipientPhone}</p>
+                        <p className="font-semibold text-slate-900 dark:text-slate-200 truncate">{job.dropoffAddress}</p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">Recipient Phone: {job.recipientPhone}</p>
                       </div>
                     </div>
 
                     {/* Actions */}
                     <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                      <div className="text-xs text-slate-400 flex items-center gap-1.5">
-                        <Icon icon="solar:box-minimalistic-bold" className="text-teal-400 text-sm" />
+                      <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                        <Icon icon="solar:box-minimalistic-bold" className="text-teal-600 dark:text-teal-400 text-sm" />
                         <span>Instant Dispatch Task</span>
                       </div>
 
@@ -1684,7 +1678,7 @@ export function DriverDashboardPage() {
                         type="button"
                         disabled={claimingId === job.id}
                         onClick={() => handleClaimDelivery(job.id)}
-                        className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-teal-500/25 flex items-center gap-2 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                        className="px-6 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow-md border border-teal-700 flex items-center gap-2 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
                       >
                         {claimingId === job.id ? (
                           <>
@@ -1705,16 +1699,16 @@ export function DriverDashboardPage() {
             </div>
           ) : (
             /* NO AVAILABLE DELIVERIES IN QUEUE - RADAR SCANNING */
-            <div className="glass-panel border-white/5 p-10 text-center rounded-2xl space-y-4 bg-slate-900/40">
+            <div className="glass-panel border-slate-200 dark:border-white/5 p-10 text-center rounded-2xl space-y-4 bg-white/80 dark:bg-slate-900/40 shadow-sm">
               <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
                 <div className="absolute inset-0 rounded-full border border-teal-500/30 animate-ping" />
-                <div className="w-12 h-12 rounded-full bg-teal-500/10 border border-teal-500/40 flex items-center justify-center text-teal-400 text-2xl shadow-inner">
+                <div className="w-12 h-12 rounded-full bg-teal-50 dark:bg-teal-500/10 border border-teal-200 dark:border-teal-500/40 flex items-center justify-center text-teal-600 dark:text-teal-400 text-2xl shadow-inner">
                   <Icon icon="solar:radar-2-bold" className="animate-spin" style={{ animationDuration: "4s" }} />
                 </div>
               </div>
               <div className="space-y-1">
-                <h2 className="font-headline-md text-headline-md text-on-surface">Radar Active: Scanning for Orders</h2>
-                <p className="text-xs text-on-surface-variant max-w-[360px] mx-auto">
+                <h2 className="font-headline-md text-headline-md text-slate-900 dark:text-white">Radar Active: Scanning for Orders</h2>
+                <p className="text-xs text-slate-600 dark:text-slate-400 max-w-[360px] mx-auto">
                   You are live in the dispatch queue. When customers place new delivery orders, they will appear here instantly for you to accept.
                 </p>
               </div>
@@ -1722,7 +1716,7 @@ export function DriverDashboardPage() {
                 type="button"
                 onClick={fetchAvailableJobs}
                 disabled={loadingAvailable}
-                className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-slate-300 border border-white/10 inline-flex items-center gap-1.5 transition-all cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 dark:bg-white/5 dark:hover:bg-white/10 dark:text-slate-300 dark:border-white/10 text-xs font-semibold inline-flex items-center gap-1.5 transition-all cursor-pointer"
               >
                 <Icon icon="solar:restart-bold" className={`text-sm ${loadingAvailable ? "animate-spin" : ""}`} />
                 <span>Refresh Dispatch Radar</span>
@@ -1731,11 +1725,11 @@ export function DriverDashboardPage() {
           )
         ) : (
           /* OFFLINE VIEW */
-          <div className="glass-panel border-white/5 p-12 text-center rounded-2xl space-y-4">
-            <Icon icon="solar:shield-warning-bold-duotone" className="text-[48px] text-amber-400/60 mx-auto" />
+          <div className="glass-panel border-slate-200 dark:border-white/5 p-12 text-center rounded-2xl space-y-4 bg-white/80 dark:bg-slate-900/40 shadow-sm">
+            <Icon icon="solar:shield-warning-bold-duotone" className="text-[48px] text-amber-500 mx-auto" />
             <div className="space-y-1">
-              <h2 className="font-headline-md text-headline-md text-on-surface">You are Currently Offline</h2>
-              <p className="text-xs text-on-surface-variant max-w-[340px] mx-auto">
+              <h2 className="font-headline-md text-headline-md text-slate-900 dark:text-white">You are Currently Offline</h2>
+              <p className="text-xs text-slate-600 dark:text-slate-400 max-w-[340px] mx-auto">
                 Toggle the switch above to <strong>"Go Online"</strong> to connect to the fleet radar and start receiving cargo deliveries.
               </p>
             </div>
@@ -1743,7 +1737,7 @@ export function DriverDashboardPage() {
               type="button"
               onClick={handleToggleOnline}
               disabled={togglingOnline}
-              className="px-6 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs shadow-lg transition-all inline-flex items-center gap-2 cursor-pointer"
+              className="px-6 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow-md border border-teal-700 transition-all inline-flex items-center gap-2 cursor-pointer"
             >
               <Icon icon="solar:power-bold" className="text-sm" />
               <span>Go Online Now</span>
@@ -1752,27 +1746,27 @@ export function DriverDashboardPage() {
         )}
 
         {/* Past Job history */}
-        <div className="glass-panel border-white/5 p-5 rounded-2xl space-y-4">
-          <h3 className="font-headline-md text-[15px] text-on-surface border-b border-white/5 pb-2">
+        <div className="glass-panel border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-900/50 p-5 rounded-2xl space-y-4 shadow-sm">
+          <h3 className="font-headline-md text-[15px] text-slate-900 dark:text-white border-b border-slate-200 dark:border-white/5 pb-2">
             Recent Activity History
           </h3>
           <div className="space-y-3">
             {jobHistory.length === 0 ? (
-              <p className="text-xs text-on-surface-variant opacity-60 text-center py-4">
+              <p className="text-xs text-slate-500 dark:text-slate-400 opacity-60 text-center py-4">
                 No deliveries completed on this shift yet.
               </p>
             ) : (
               jobHistory.map((job: Delivery) => (
 
-                <div key={job.id} className="flex justify-between items-center bg-white/5 p-3 rounded-lg border border-white/5 text-xs">
+                <div key={job.id} className="flex justify-between items-center bg-slate-50 dark:bg-white/5 p-3 rounded-lg border border-slate-200 dark:border-white/5 text-xs">
                   <div>
-                    <p className="font-semibold text-on-surface">To: {job.recipientName}</p>
-                    <p className="text-[10px] text-on-surface-variant mt-0.5">{job.dropoffAddress}</p>
+                    <p className="font-semibold text-slate-900 dark:text-white">To: {job.recipientName}</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{job.dropoffAddress}</p>
                   </div>
                   <span
                     className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${job.status === "DELIVERED"
-                      ? "bg-green-500/10 border border-green-500/20 text-green-500"
-                      : "bg-error/10 border border-error/20 text-error"
+                      ? "bg-emerald-50 border border-emerald-200 text-emerald-800 dark:bg-green-500/10 dark:border-green-500/20 dark:text-green-500"
+                      : "bg-rose-50 border border-rose-200 text-rose-800 dark:bg-error/10 dark:border-error/20 dark:text-error"
                       }`}
                   >
                     {job.status}
@@ -1784,22 +1778,22 @@ export function DriverDashboardPage() {
         </div>
         {/* PROOF OF DELIVERY (POD) & DIGITAL SIGNATURE MODAL */}
         {showPodModal && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <div className="glass-panel border border-white/10 bg-[#0B1326] p-6 rounded-2xl w-full max-w-lg space-y-5 shadow-2xl overflow-y-auto max-h-[90vh]">
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+          <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div className="glass-panel border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0B1326] p-6 rounded-2xl w-full max-w-lg space-y-5 shadow-2xl overflow-y-auto max-h-[90vh] text-slate-900 dark:text-white">
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
                 <div>
-                  <h3 className="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
-                    <Icon icon="solar:pen-bold" className="text-primary text-[20px]" />
+                  <h3 className="font-headline-md text-headline-md text-slate-900 dark:text-white flex items-center gap-2">
+                    <Icon icon="solar:pen-bold" className="text-teal-600 dark:text-primary text-[20px]" />
                     Proof of Delivery (POD)
                   </h3>
-                  <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">
+                  <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider">
                     Cloudinary CDN Cloud Storage Enabled
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowPodModal(false)}
-                  className="text-on-surface-variant hover:text-on-surface"
+                  className="text-slate-400 hover:text-slate-700 dark:hover:text-white"
                 >
                   <Icon icon="solar:close-circle-bold" className="text-[20px]" />
                 </button>
@@ -1811,22 +1805,22 @@ export function DriverDashboardPage() {
 
                 {/* 2. Delivery Cargo Photo Upload */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-on-surface-variant block uppercase tracking-wider">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block uppercase tracking-wider">
                     CARGO DELIVERY PHOTO (OPTIONAL)
                   </label>
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handlePhotoSelect}
-                    className="w-full text-xs text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary/20 file:text-primary hover:file:bg-primary/30 cursor-pointer"
+                    className="w-full text-xs text-slate-600 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-teal-50 file:text-teal-800 dark:file:bg-teal-500/20 dark:file:text-teal-300 hover:file:bg-teal-100 cursor-pointer"
                   />
                   {photoBase64 && (
-                    <div className="mt-2 relative w-24 h-24 rounded-lg overflow-hidden border border-white/20">
+                    <div className="mt-2 relative w-24 h-24 rounded-lg overflow-hidden border border-slate-300 dark:border-white/20">
                       <img src={photoBase64} alt="Cargo Preview" className="w-full h-full object-cover" />
                       <button
                         type="button"
                         onClick={() => setPhotoBase64(null)}
-                        className="absolute top-1 right-1 bg-error text-white p-0.5 rounded-full text-[10px]"
+                        className="absolute top-1 right-1 bg-rose-600 text-white p-0.5 rounded-full text-[10px]"
                       >
                         <Icon icon="solar:close-circle-bold" className="text-[12px]" />
                       </button>
@@ -1835,8 +1829,8 @@ export function DriverDashboardPage() {
                 </div>
 
                 {/* 3. Recipient OTP Entry */}
-                <div className="space-y-1.5 pt-2 border-t border-white/5">
-                  <label className="text-xs font-bold text-on-surface-variant block uppercase tracking-wider">
+                <div className="space-y-1.5 pt-2 border-t border-slate-200 dark:border-white/5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block uppercase tracking-wider">
                     RECIPIENT CONFIRMATION OTP (6 DIGITS) *
                   </label>
                   <input
@@ -1846,22 +1840,22 @@ export function DriverDashboardPage() {
                     value={otpInput}
                     onChange={(e) => setOtpInput(e.target.value.replace(/[^0-9]/g, ""))}
                     required
-                    className="w-full bg-surface-container-lowest border border-primary/40 rounded-xl px-4 py-3 text-center text-lg font-mono font-bold tracking-[0.5em] text-primary focus:border-primary outline-none"
+                    className="w-full bg-slate-50 dark:bg-surface-container-lowest border border-teal-500/40 rounded-xl px-4 py-3 text-center text-lg font-mono font-bold tracking-[0.5em] text-teal-800 dark:text-teal-400 focus:border-teal-600 outline-none"
                   />
                 </div>
 
-                <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-white/10">
                   <button
                     type="button"
                     onClick={() => setShowPodModal(false)}
-                    className="px-4 py-2 text-xs font-semibold text-on-surface-variant hover:text-on-surface"
+                    className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={uploadingPod}
-                    className="bg-primary text-on-primary font-bold px-6 py-2.5 rounded-xl text-xs hover:brightness-110 disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-primary/20"
+                    className="bg-teal-600 hover:bg-teal-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs transition-all flex items-center gap-2 shadow-md border border-teal-700 cursor-pointer disabled:opacity-50"
                   >
                     {uploadingPod ? (
                       <>

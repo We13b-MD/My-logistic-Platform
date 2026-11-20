@@ -6,6 +6,7 @@ import { tenantApi } from "@/api/tenant.api";
 import { toast } from "sonner";
 import { Icon } from "@iconify/react";
 import { LogistelLogo } from "@/components/LogistelLogo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -177,7 +178,19 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center p-6 relative bg-[#080d1a] text-slate-100 py-12">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center p-6 relative bg-slate-50 text-slate-900 dark:bg-[#080d1a] dark:text-slate-100 py-12 transition-colors duration-200">
+      {/* Top Bar with Theme Toggle & Return to Home */}
+      <div className="absolute top-6 right-6 z-20 flex items-center gap-3">
+        <ThemeToggle variant="compact" />
+        <button
+          onClick={() => navigate("/")}
+          className="text-xs font-semibold text-slate-600 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 transition-colors flex items-center gap-1 cursor-pointer"
+        >
+          <Icon icon="lucide:arrow-left" className="text-sm" />
+          <span>Home</span>
+        </button>
+      </div>
+
       {/* Main Container */}
       <main className="relative z-10 w-full max-w-[480px]">
         
@@ -185,7 +198,7 @@ export function RegisterPage() {
         <LogistelLogo size="xl" layout="stacked" subtext="Create your Driver or Customer Profile" className="mb-8" />
 
         {/* Form Card */}
-        <div className="glass-panel rounded-2xl p-6 md:p-8 border border-slate-800">
+        <div className="glass-panel rounded-2xl p-6 md:p-8 border border-slate-200 dark:border-slate-800 shadow-xl">
           
           {/* General alert */}
           {generalError && (
@@ -205,15 +218,15 @@ export function RegisterPage() {
             
             {/* 1. Subdomain Input with Dynamic lookup feedback */}
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block ml-1" htmlFor="subdomain">
+              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block ml-1" htmlFor="subdomain">
                 COMPANY SUBDOMAIN
               </label>
               <div className="relative">
                 <input
-                  className={`w-full bg-slate-900 border text-slate-100 rounded-xl pl-4 pr-10 py-3 text-sm focus:border-teal-400 transition-colors outline-none placeholder:text-slate-500 ${
+                  className={`w-full bg-white dark:bg-slate-900 border text-slate-900 dark:text-slate-100 rounded-xl pl-4 pr-10 py-3 text-sm focus:border-teal-500 transition-colors outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 ${
                     fieldErrors.subdomain
                       ? "border-rose-500/80"
-                      : "border-slate-700/80"
+                      : "border-slate-300 dark:border-slate-700/80"
                   }`}
                   id="subdomain"
                   placeholder="e.g. swift"
@@ -231,28 +244,28 @@ export function RegisterPage() {
                 
                 {/* Searching Loader inside input */}
                 {checkingSubdomain && (
-                  <Icon icon="lucide:loader-2" className="absolute right-3 top-1/2 -translate-y-1/2 text-teal-400 animate-spin text-lg" />
+                  <Icon icon="lucide:loader-2" className="absolute right-3 top-1/2 -translate-y-1/2 text-teal-500 animate-spin text-lg" />
                 )}
 
                 {/* Subdomain validation badge checks */}
                 {!checkingSubdomain && resolvedTenant && (
-                  <Icon icon="solar:check-circle-bold" className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-400 text-lg" />
+                  <Icon icon="solar:check-circle-bold" className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500 text-lg" />
                 )}
               </div>
 
               {/* Subdomain Verification Badges */}
               {!checkingSubdomain && resolvedTenant && (
-                <p className="text-[11px] text-emerald-400 font-semibold mt-1 ml-1 flex items-center gap-1">
+                <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1 ml-1 flex items-center gap-1">
                   <span>Connected to {resolvedTenant.companyName}</span>
                 </p>
               )}
               {!checkingSubdomain && subdomainError && (
-                <p className="text-xs text-rose-400 font-semibold mt-1 ml-1">
+                <p className="text-xs text-rose-500 dark:text-rose-400 font-semibold mt-1 ml-1">
                   {subdomainError}
                 </p>
               )}
               {fieldErrors.subdomain && (
-                <p className="text-xs text-rose-400 block mt-1 ml-1" id="subdomain-error" role="alert">
+                <p className="text-xs text-rose-500 dark:text-rose-400 block mt-1 ml-1" id="subdomain-error" role="alert">
                   {fieldErrors.subdomain}
                 </p>
               )}
@@ -260,7 +273,7 @@ export function RegisterPage() {
 
             {/* 2. Role Selector Cards */}
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block ml-1">
+              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block ml-1">
                 SELECT PROFILE TYPE
               </label>
               <div className="grid grid-cols-2 gap-3">
@@ -269,13 +282,13 @@ export function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => setRole("DRIVER")}
-                  className={`p-3.5 rounded-xl border flex flex-col items-center justify-center text-center gap-2 transition-all cursor-pointer ${
+                  className={`p-3.5 rounded-xl border flex flex-col items-center justify-center text-center gap-2 transition-all cursor-pointer shadow-xs ${
                     role === "DRIVER"
-                      ? "bg-teal-500/10 border-teal-500/50 text-teal-300 font-bold"
-                      : "bg-slate-900 border-slate-700/80 hover:border-slate-600 text-slate-400"
+                      ? "bg-teal-500/10 border-teal-500/60 text-teal-700 dark:text-teal-300 font-bold"
+                      : "bg-white hover:bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700/80 hover:border-slate-400 dark:hover:border-slate-600 text-slate-700 dark:text-slate-400"
                   }`}
                 >
-                  <Icon icon="solar:delivery-bold-duotone" className="text-2xl text-teal-400" />
+                  <Icon icon="solar:delivery-bold-duotone" className="text-2xl text-teal-600 dark:text-teal-400" />
                   <div>
                     <span className="block font-semibold text-xs tracking-tight">Driver</span>
                     <span className="block text-[10px] opacity-75 leading-tight mt-0.5">Fulfill cargo routes</span>
@@ -286,13 +299,13 @@ export function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => setRole("CUSTOMER")}
-                  className={`p-3.5 rounded-xl border flex flex-col items-center justify-center text-center gap-2 transition-all cursor-pointer ${
+                  className={`p-3.5 rounded-xl border flex flex-col items-center justify-center text-center gap-2 transition-all cursor-pointer shadow-xs ${
                     role === "CUSTOMER"
-                      ? "bg-teal-500/10 border-teal-500/50 text-teal-300 font-bold"
-                      : "bg-slate-900 border-slate-700/80 hover:border-slate-600 text-slate-400"
+                      ? "bg-teal-500/10 border-teal-500/60 text-teal-700 dark:text-teal-300 font-bold"
+                      : "bg-white hover:bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700/80 hover:border-slate-400 dark:hover:border-slate-600 text-slate-700 dark:text-slate-400"
                   }`}
                 >
-                  <Icon icon="solar:box-bold-duotone" className="text-2xl text-teal-400" />
+                  <Icon icon="solar:box-bold-duotone" className="text-2xl text-teal-600 dark:text-teal-400" />
                   <div>
                     <span className="block font-semibold text-xs tracking-tight">Customer</span>
                     <span className="block text-[10px] opacity-75 leading-tight mt-0.5">Order deliveries</span>

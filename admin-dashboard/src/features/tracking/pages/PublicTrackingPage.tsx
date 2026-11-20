@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { DeliveryStatus } from "@/types";
 import { Icon } from "@iconify/react";
 import { LogistelLogo } from "@/components/LogistelLogo";
+import { useTheme } from "@/context/ThemeContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useOsrmRoute } from "@/utils/useOsrmRoute";
 
 // Leaflet map imports
@@ -72,6 +74,7 @@ function MapFollower({ center, enabled }: { center: [number, number] | null; ena
 export function PublicTrackingPage() {
   const { code: urlCode } = useParams<{ code?: string }>();
   const navigate = useNavigate();
+  const { actualTheme } = useTheme();
 
   const [searchInput, setSearchInput] = useState(urlCode || "");
   const [loading, setLoading] = useState(false);
@@ -256,32 +259,36 @@ export function PublicTrackingPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#080D1A] text-slate-100 flex flex-col font-body-md relative overflow-x-hidden">
+    <div className="min-h-screen w-full bg-slate-50 text-slate-900 dark:bg-[#080D1A] dark:text-slate-100 flex flex-col font-body-md relative overflow-x-hidden transition-colors duration-200">
       {/* Top Enterprise Header */}
-      <header className="glass-panel border-b border-slate-800 px-6 py-4 flex items-center justify-between z-20 sticky top-0">
+      <header className="glass-panel border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-[#080D1A]/80 backdrop-blur-md px-6 py-4 flex items-center justify-between z-20 sticky top-0">
         <LogistelLogo
           size="md"
           subtext="Live Package Tracking Portal"
           onClick={() => navigate("/")}
         />
 
-        <button
-          onClick={() => navigate("/login")}
-          className="text-xs font-semibold text-teal-400 hover:text-teal-300 border border-teal-500/20 bg-teal-500/10 px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
-        >
-          <span>Partner Login</span>
-          <Icon icon="lucide:arrow-right" className="text-xs" />
-        </button>
+        <div className="flex items-center gap-3">
+          <ThemeToggle variant="compact" />
+
+          <button
+            onClick={() => navigate("/login")}
+            className="text-xs font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 border border-teal-500/20 bg-teal-500/10 px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>Partner Login</span>
+            <Icon icon="lucide:arrow-right" className="text-xs" />
+          </button>
+        </div>
       </header>
 
       {/* Main Container */}
       <main className="flex-grow max-w-[1200px] w-full mx-auto px-4 py-8 space-y-6 z-10">
         {/* Search Bar Section */}
-        <div className="glass-panel border-slate-800 p-6 rounded-2xl space-y-4 max-w-2xl mx-auto text-center shadow-xl">
-          <h2 className="font-display text-xl text-slate-100 font-bold">
+        <div className="glass-panel border border-slate-200 dark:border-slate-800 p-6 rounded-2xl space-y-4 max-w-2xl mx-auto text-center shadow-sm dark:shadow-xl">
+          <h2 className="font-display text-xl text-slate-900 dark:text-slate-100 font-bold">
             Track Your Package Live
           </h2>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Enter your 6-digit confirmation PIN / OTP or Tracking Number below.
           </p>
 
@@ -291,7 +298,7 @@ export function PublicTrackingPage() {
               placeholder="e.g. 542381 or Order ID..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="flex-grow bg-slate-900 border border-slate-700/80 rounded-xl px-4 py-3 text-sm text-slate-100 focus:border-teal-400 outline-none font-mono placeholder:text-slate-500"
+              className="flex-grow bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700/80 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-slate-100 focus:border-teal-400 outline-none font-mono placeholder:text-slate-400 dark:placeholder:text-slate-500"
             />
             <button
               type="submit"
@@ -345,13 +352,13 @@ export function PublicTrackingPage() {
         {trackingData && (
           <div className="space-y-6">
             {/* Shipment Status Stepper / Progress Bar */}
-            <div className="glass-panel border-slate-800 p-6 rounded-2xl space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div className="glass-panel border border-slate-200 dark:border-slate-800 p-6 rounded-2xl space-y-6 shadow-sm dark:shadow-xl">
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
                 <div>
-                  <span className="text-[10px] text-teal-400 uppercase font-bold tracking-widest block">
+                  <span className="text-[10px] text-teal-600 dark:text-teal-400 uppercase font-bold tracking-widest block">
                     {trackingData.companyName}
                   </span>
-                  <h3 className="font-display text-lg text-slate-100 font-bold mt-0.5">
+                  <h3 className="font-display text-lg text-slate-900 dark:text-slate-100 font-bold mt-0.5">
                     Package for {trackingData.recipientName}
                   </h3>
                 </div>
@@ -402,10 +409,10 @@ export function PublicTrackingPage() {
             {/* Live Leaflet Map & Info Panel */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Map Canvas (2 columns) */}
-              <div className="lg:col-span-2 glass-panel border-slate-800 p-4 rounded-2xl h-[460px] relative overflow-hidden flex flex-col">
+              <div className="lg:col-span-2 glass-panel border border-slate-200 dark:border-slate-800 p-4 rounded-2xl h-[460px] relative overflow-hidden flex flex-col shadow-sm dark:shadow-xl">
                 
                 {/* Interactive Live Simulation Control Header */}
-                <div className="mb-3 flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-900/90 border border-slate-700/60 shadow-lg">
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700/60 shadow-sm dark:shadow-lg">
                   <div className="flex items-center gap-2">
                     <button
                       onClick={toggleSimulation}
@@ -483,8 +490,12 @@ export function PublicTrackingPage() {
                     className="w-full h-full rounded-xl z-0"
                   >
                     <TileLayer
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                      url={
+                        actualTheme === "dark"
+                          ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                          : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                      }
                     />
 
                     {/* Smooth Camera Recenter Follower */}

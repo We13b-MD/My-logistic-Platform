@@ -7,6 +7,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { Icon } from "@iconify/react";
 
 import { LogistelLogo } from "@/components/LogistelLogo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function LoginPage() {
 
@@ -172,7 +173,19 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center p-6 relative bg-[#080d1a] text-slate-100 py-12">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center p-6 relative bg-slate-50 text-slate-900 dark:bg-[#080d1a] dark:text-slate-100 py-12 transition-colors duration-200">
+      {/* Top Bar with Theme Toggle & Return to Home */}
+      <div className="absolute top-6 right-6 z-20 flex items-center gap-3">
+        <ThemeToggle variant="compact" />
+        <button
+          onClick={() => navigate("/")}
+          className="text-xs font-semibold text-slate-600 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 transition-colors flex items-center gap-1 cursor-pointer"
+        >
+          <Icon icon="lucide:arrow-left" className="text-sm" />
+          <span>Home</span>
+        </button>
+      </div>
+
       {/* Background Decorative Element */}
       <div className="fixed inset-0 z-0 pointer-events-none opacity-40"></div>
 
@@ -183,7 +196,7 @@ export function LoginPage() {
         <LogistelLogo size="xl" layout="stacked" subtext="Global Freight Intelligence Engine" className="mb-8" />
 
         {/* Login Card */}
-        <div className="glass-panel rounded-2xl p-6 md:p-8 border border-slate-800">
+        <div className="glass-panel rounded-2xl p-6 md:p-8 border border-slate-200 dark:border-slate-800 shadow-xl">
 
           {/* General Error alert (role="alert" for dynamic voice announcements) */}
           {generalError && (
@@ -200,10 +213,9 @@ export function LoginPage() {
           )}
 
           {/* Quick Demo Login Preset Badges */}
+          <div className="mb-5 p-3.5 rounded-xl bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2">
 
-          <div className="mb-5 p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
-
-            <span className="text-[11px] font-semibold tracking-wider text-slate-400 uppercase block">
+            <span className="text-[11px] font-semibold tracking-wider text-slate-600 dark:text-slate-400 uppercase block">
               ⚡ Demo Quick Fill Credentials:
             </span>
             <div className="flex flex-wrap gap-2">
@@ -215,7 +227,7 @@ export function LoginPage() {
                   setGeneralError("");
                   setEmailError("");
                 }}
-                className="px-2.5 py-1 rounded-md bg-indigo-950/80 hover:bg-indigo-900 text-indigo-300 border border-indigo-700/60 text-xs font-semibold transition-colors"
+                className="px-2.5 py-1 rounded-md bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-950/80 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700/60 text-xs font-semibold transition-colors cursor-pointer"
               >
                 👑 Platform Super Admin
               </button>
@@ -227,7 +239,7 @@ export function LoginPage() {
                   setGeneralError("");
                   setEmailError("");
                 }}
-                className="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-medium transition-colors"
+                className="px-2.5 py-1 rounded-md bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 text-xs font-medium transition-colors cursor-pointer shadow-xs"
               >
                 🏢 Tenant Owner
               </button>
@@ -239,7 +251,7 @@ export function LoginPage() {
                   setGeneralError("");
                   setEmailError("");
                 }}
-                className="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-medium transition-colors"
+                className="px-2.5 py-1 rounded-md bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 text-xs font-medium transition-colors cursor-pointer shadow-xs"
               >
                 🏍️ Driver
               </button>
@@ -251,7 +263,7 @@ export function LoginPage() {
                   setGeneralError("");
                   setEmailError("");
                 }}
-                className="px-2.5 py-1 rounded-md bg-teal-950/80 hover:bg-teal-900 text-teal-300 border border-teal-700/60 text-xs font-semibold transition-colors"
+                className="px-2.5 py-1 rounded-md bg-teal-100 hover:bg-teal-200 dark:bg-teal-950/80 dark:hover:bg-teal-900 text-teal-800 dark:text-teal-300 border border-teal-300 dark:border-teal-700/60 text-xs font-semibold transition-colors cursor-pointer"
               >
                 🛍️ Customer
               </button>
@@ -263,7 +275,7 @@ export function LoginPage() {
                   setGeneralError("");
                   setEmailError("");
                 }}
-                className="px-2.5 py-1 rounded-md bg-amber-950/80 hover:bg-amber-900 text-amber-300 border border-amber-700/60 text-xs font-semibold transition-colors"
+                className="px-2.5 py-1 rounded-md bg-amber-100 hover:bg-amber-200 dark:bg-amber-950/80 dark:hover:bg-amber-900 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 text-xs font-semibold transition-colors cursor-pointer"
               >
                 🎧 Dispatcher
               </button>
@@ -371,16 +383,16 @@ export function LoginPage() {
 
           {/* Divider */}
           <div className="relative my-6 flex items-center" aria-hidden="true">
-            <div className="flex-grow border-t border-white/10"></div>
-            <span className="mx-4 font-label-md text-label-md text-outline">or</span>
-            <div className="flex-grow border-t border-white/10"></div>
+            <div className="flex-grow border-t border-slate-200 dark:border-white/10"></div>
+            <span className="mx-4 font-label-md text-label-md text-slate-500 dark:text-outline">or</span>
+            <div className="flex-grow border-t border-slate-200 dark:border-white/10"></div>
           </div>
 
           {/* Reserved Space for Google Auth */}
           <button
             type="button"
             onClick={handleGoogleLogin}
-            className="w-full h-[54px] border border-outline-variant/50 rounded-lg flex items-center justify-center group hover:border-primary/60 transition-colors bg-white/5 hover:bg-white/10 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-midnight cursor-pointer"
+            className="w-full h-[54px] border border-slate-300 dark:border-outline-variant/50 rounded-lg flex items-center justify-center group hover:border-teal-500/60 dark:hover:border-primary/60 transition-colors bg-white hover:bg-slate-50 dark:bg-white/5 dark:hover:bg-white/10 focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 dark:focus:ring-offset-midnight cursor-pointer shadow-xs"
           >
             <div className="flex items-center gap-3 opacity-90 group-hover:opacity-100 transition-opacity">
               <div className="w-5 h-5 flex items-center justify-center">
@@ -391,7 +403,7 @@ export function LoginPage() {
                   <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
                 </svg>
               </div>
-              <span className="font-body-md text-on-surface font-semibold">Continue with Google</span>
+              <span className="font-body-md text-slate-800 dark:text-on-surface font-semibold">Continue with Google</span>
             </div>
           </button>
 

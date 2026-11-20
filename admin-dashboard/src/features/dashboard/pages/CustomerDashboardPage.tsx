@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { Delivery, DeliveryStatus } from "@/types";
 import { Icon } from "@iconify/react";
 import { LogistelLogo } from "@/components/LogistelLogo";
+import { useTheme } from "@/context/ThemeContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useOsrmRoute } from "@/utils/useOsrmRoute";
 
 // Leaflet map imports
@@ -65,6 +67,7 @@ const LAGOS_LOCATIONS = [
 export function CustomerDashboardPage() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { actualTheme } = useTheme();
 
   const [activeTab, setActiveTab] = useState<"track" | "book" | "history">("track");
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
@@ -263,18 +266,18 @@ export function CustomerDashboardPage() {
   const getStatusBadgeClass = (status: DeliveryStatus) => {
     switch (status) {
       case "DELIVERED":
-        return "bg-emerald-950/80 text-emerald-400 border-emerald-800/60";
+        return "bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-400 dark:border-emerald-800/60";
       case "IN_TRANSIT":
       case "PICKED_UP":
-        return "bg-cyan-950/80 text-cyan-400 border-cyan-800/60";
+        return "bg-cyan-50 text-cyan-800 border-cyan-300 dark:bg-cyan-950/80 dark:text-cyan-400 dark:border-cyan-800/60";
       case "ASSIGNED":
-        return "bg-indigo-950/80 text-indigo-400 border-indigo-800/60";
+        return "bg-indigo-50 text-indigo-800 border-indigo-300 dark:bg-indigo-950/80 dark:text-indigo-400 dark:border-indigo-800/60";
       case "PENDING":
-        return "bg-amber-950/80 text-amber-400 border-amber-800/60";
+        return "bg-amber-50 text-amber-900 border-amber-300 dark:bg-amber-950/80 dark:text-amber-400 dark:border-amber-800/60";
       case "CANCELLED":
-        return "bg-rose-950/80 text-rose-400 border-rose-800/60";
+        return "bg-rose-50 text-rose-800 border-rose-300 dark:bg-rose-950/80 dark:text-rose-400 dark:border-rose-800/60";
       default:
-        return "bg-slate-800 text-slate-300 border-slate-700";
+        return "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
     }
   };
 
@@ -301,9 +304,9 @@ export function CustomerDashboardPage() {
     return (
       <div className="w-full py-4">
         <div className="flex items-center justify-between relative">
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-800 -z-0"></div>
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-200 dark:bg-slate-800 -z-0"></div>
           <div
-            className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-gradient-to-r from-indigo-500 to-emerald-400 transition-all duration-500 -z-0"
+            className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-gradient-to-r from-teal-500 to-emerald-500 transition-all duration-500 -z-0"
             style={{ width: `${(currentIdx / (steps.length - 1)) * 100}%` }}
           ></div>
 
@@ -316,10 +319,10 @@ export function CustomerDashboardPage() {
                 <div
                   className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                     isCurrent
-                      ? "bg-emerald-400 text-slate-950 ring-4 ring-emerald-400/30 scale-110"
+                      ? "bg-emerald-600 dark:bg-emerald-400 text-white dark:text-slate-950 ring-4 ring-emerald-500/20 dark:ring-emerald-400/30 scale-110"
                       : isPassed
-                      ? "bg-indigo-500 text-white"
-                      : "bg-slate-800 text-slate-500 border border-slate-700"
+                      ? "bg-teal-600 text-white"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-700"
                   }`}
                 >
                   {isPassed ? "✓" : idx + 1}
@@ -327,10 +330,10 @@ export function CustomerDashboardPage() {
                 <span
                   className={`text-[10px] mt-1.5 font-medium whitespace-nowrap ${
                     isCurrent
-                      ? "text-emerald-400 font-bold"
+                      ? "text-emerald-700 dark:text-emerald-400 font-bold"
                       : isPassed
-                      ? "text-slate-200"
-                      : "text-slate-500"
+                      ? "text-slate-800 dark:text-slate-200 font-semibold"
+                      : "text-slate-500 dark:text-slate-400"
                   }`}
                 >
                   {step.label}
@@ -344,9 +347,9 @@ export function CustomerDashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans transition-colors duration-200">
       {/* ─── Top Header Navbar ─── */}
-      <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-900/90 backdrop-blur-md px-6 py-4 flex items-center justify-between shadow-xl">
+      <header className="sticky top-0 z-30 border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-6 py-4 flex items-center justify-between shadow-sm dark:shadow-xl">
         <LogistelLogo
           size="md"
           subtext="Customer Portal & Tracking"
@@ -355,31 +358,33 @@ export function CustomerDashboardPage() {
         <div className="flex items-center space-x-4">
           <button
             onClick={() => setActiveTab("book")}
-            className="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-xl bg-transparent border border-slate-700 hover:border-teal-400 hover:bg-white/5 text-white font-semibold text-xs transition-all cursor-pointer active:scale-[0.98]"
+            className="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 dark:bg-teal-500/10 dark:hover:bg-teal-500/20 dark:text-teal-300 dark:border-teal-500/30 font-semibold text-xs transition-all cursor-pointer active:scale-[0.98]"
           >
-            <Icon icon="solar:add-circle-bold" className="text-base text-teal-400" />
+            <Icon icon="solar:add-circle-bold" className="text-base text-teal-700 dark:text-teal-400" />
             <span>Book New Delivery</span>
           </button>
 
           {/* User info badge */}
-          <div className="flex items-center space-x-3 bg-slate-800/80 px-3.5 py-1.5 rounded-lg border border-slate-700">
-            <div className="w-8 h-8 rounded-full bg-teal-500/20 text-teal-300 font-semibold flex items-center justify-center text-sm border border-teal-500/30">
+          <div className="flex items-center space-x-3 bg-slate-100 dark:bg-slate-800/80 px-3.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
+            <div className="w-8 h-8 rounded-full bg-teal-500/20 text-teal-700 dark:text-teal-300 font-semibold flex items-center justify-center text-sm border border-teal-500/30">
               {user?.email?.[0]?.toUpperCase() || "C"}
             </div>
             <div className="text-left hidden sm:block">
-              <div className="text-xs font-semibold text-slate-200 truncate max-w-[140px]">
+              <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[140px]">
                 {user?.email}
               </div>
-              <div className="text-[10px] text-teal-400 font-mono tracking-wider">
+              <div className="text-[10px] text-teal-700 dark:text-teal-400 font-mono tracking-wider font-bold">
                 {user?.role}
               </div>
             </div>
           </div>
 
+          <ThemeToggle variant="compact" />
+
           {/* Delete Account Button (NDPR/GDPR & App Store Compliance) */}
           <button
             onClick={() => setShowDeleteModal(true)}
-            className="px-3 py-2 rounded-lg bg-slate-900 hover:bg-rose-950/40 text-slate-400 hover:text-rose-300 border border-slate-800 hover:border-rose-800/50 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
+            className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-rose-100 dark:hover:bg-rose-950/40 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-300 border border-slate-200 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-800/50 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
             title="Request Account & Data Deletion"
           >
             <Icon icon="solar:trash-bin-trash-bold" className="text-xs" />
@@ -392,7 +397,7 @@ export function CustomerDashboardPage() {
               logout();
               navigate("/login");
             }}
-            className="px-3 py-2 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/50 text-xs font-semibold transition-all cursor-pointer"
+            className="px-3 py-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-300 dark:border-rose-800/50 text-xs font-semibold transition-all cursor-pointer"
           >
             Logout
           </button>
@@ -401,24 +406,24 @@ export function CustomerDashboardPage() {
 
       {/* Account Deletion Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-[9999] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-rose-500/30 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-[9999] bg-slate-950/70 dark:bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-500/30 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-xl shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center text-xl shrink-0">
                 <Icon icon="solar:danger-triangle-bold" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-100">Delete Account & Erasure Request</h3>
-                <p className="text-[11px] text-slate-400">NDPR / GDPR Privacy Right to Erasure</p>
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">Delete Account & Erasure Request</h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">NDPR / GDPR Privacy Right to Erasure</p>
               </div>
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
               Are you sure you want to delete your account? Your email, saved credentials, and push notification tokens will be permanently scrubbed.
             </p>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+              <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
                 Reason for leaving (Optional):
               </label>
               <input
@@ -426,14 +431,14 @@ export function CustomerDashboardPage() {
                 value={deleteReason}
                 onChange={(e) => setDeleteReason(e.target.value)}
                 placeholder="e.g. No longer using logistics service"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 outline-none focus:border-rose-500"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-slate-200 outline-none focus:border-rose-500"
               />
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-semibold cursor-pointer"
               >
                 Cancel
               </button>
@@ -452,13 +457,13 @@ export function CustomerDashboardPage() {
       {/* ─── Main Content ─── */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Navigation Tabs */}
-        <div className="flex border-b border-slate-800 space-x-6 text-sm font-medium">
+        <div className="flex border-b border-slate-200 dark:border-slate-800 space-x-6 text-sm font-medium">
           <button
             onClick={() => setActiveTab("track")}
             className={`pb-3 transition-colors border-b-2 flex items-center space-x-2 cursor-pointer ${
               activeTab === "track"
-                ? "border-teal-400 text-teal-400 font-bold"
-                : "border-transparent text-slate-400 hover:text-slate-200"
+                ? "border-teal-600 dark:border-teal-400 text-teal-700 dark:text-teal-400 font-bold"
+                : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
             }`}
           >
             <Icon icon="solar:map-point-wave-bold-duotone" className="text-base" />
@@ -469,8 +474,8 @@ export function CustomerDashboardPage() {
             onClick={() => setActiveTab("book")}
             className={`pb-3 transition-colors border-b-2 flex items-center space-x-2 cursor-pointer ${
               activeTab === "book"
-                ? "border-teal-400 text-teal-400 font-bold"
-                : "border-transparent text-slate-400 hover:text-slate-200"
+                ? "border-teal-600 dark:border-teal-400 text-teal-700 dark:text-teal-400 font-bold"
+                : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
             }`}
           >
             <Icon icon="solar:box-minimalistic-bold-duotone" className="text-base" />
@@ -481,8 +486,8 @@ export function CustomerDashboardPage() {
             onClick={() => setActiveTab("history")}
             className={`pb-3 transition-colors border-b-2 flex items-center space-x-2 cursor-pointer ${
               activeTab === "history"
-                ? "border-teal-400 text-teal-400 font-bold"
-                : "border-transparent text-slate-400 hover:text-slate-200"
+                ? "border-teal-600 dark:border-teal-400 text-teal-700 dark:text-teal-400 font-bold"
+                : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
             }`}
           >
             <Icon icon="solar:history-bold-duotone" className="text-base" />
@@ -494,19 +499,19 @@ export function CustomerDashboardPage() {
         {activeTab === "track" && (
           <div className="space-y-6">
             {deliveries.length === 0 ? (
-              <div className="bg-slate-900 p-12 rounded-2xl border border-slate-800 text-center space-y-4">
-                <div className="w-16 h-16 bg-teal-500/10 border border-teal-500/20 rounded-2xl flex items-center justify-center mx-auto text-teal-400 shadow-inner">
+              <div className="bg-white dark:bg-slate-900 p-12 rounded-2xl border border-slate-200 dark:border-slate-800 text-center space-y-4 shadow-sm dark:shadow-xl">
+                <div className="w-16 h-16 bg-teal-500/10 border border-teal-500/20 rounded-2xl flex items-center justify-center mx-auto text-teal-600 dark:text-teal-400 shadow-inner">
                   <Icon icon="solar:box-minimalistic-bold-duotone" className="text-3xl" />
                 </div>
-                <h3 className="text-lg font-bold text-white">No Active Shipments Found</h3>
-                <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">No Active Shipments Found</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
                   You haven't placed any delivery orders yet. Click below to schedule your first package pickup!
                 </p>
                 <button
                   onClick={() => setActiveTab("book")}
-                  className="px-5 py-2.5 rounded-xl bg-transparent border border-slate-700 hover:border-teal-400 hover:bg-white/5 text-white font-semibold text-xs transition-all cursor-pointer inline-flex items-center gap-2 active:scale-[0.98]"
+                  className="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs transition-all cursor-pointer inline-flex items-center gap-2 shadow-sm active:scale-[0.98]"
                 >
-                  <Icon icon="solar:add-circle-bold" className="text-base text-teal-400" />
+                  <Icon icon="solar:add-circle-bold" className="text-base text-white" />
                   <span>Book Your First Delivery</span>
                 </button>
               </div>
@@ -515,8 +520,8 @@ export function CustomerDashboardPage() {
                 {/* Left Panel: Package Selector & Security OTP */}
                 <div className="lg:col-span-5 space-y-5">
                   {/* Select Package Dropdown */}
-                  <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 block">
+                  <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                       Select Package to Track
                     </label>
                     <select
@@ -525,7 +530,7 @@ export function CustomerDashboardPage() {
                         const found = deliveries.find((d) => d.id === e.target.value);
                         if (found) setSelectedDelivery(found);
                       }}
-                      className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-sm focus:outline-none focus:border-teal-400"
+                      className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:border-teal-400"
                     >
                       {deliveries.map((del) => (
                         <option key={del.id} value={del.id}>
@@ -538,26 +543,26 @@ export function CustomerDashboardPage() {
                   {selectedDelivery && (
                     <>
                       {/* Security Delivery OTP Card */}
-                      <div className="bg-gradient-to-br from-indigo-950 to-slate-900 p-5 rounded-2xl border border-indigo-800/60 shadow-xl space-y-3 relative overflow-hidden">
-                        <div className="absolute -right-4 -bottom-4 w-28 h-28 bg-indigo-500/10 rounded-full blur-xl"></div>
+                      <div className="bg-gradient-to-br from-indigo-50 to-white dark:from-indigo-950 dark:to-slate-900 p-5 rounded-2xl border border-indigo-200 dark:border-indigo-800/60 shadow-sm dark:shadow-xl space-y-3 relative overflow-hidden">
+                        <div className="absolute -right-4 -bottom-4 w-28 h-28 bg-indigo-500/10 rounded-full blur-xl pointer-events-none"></div>
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold uppercase tracking-wider text-indigo-300">
+                          <span className="text-xs font-bold uppercase tracking-wider text-indigo-900 dark:text-indigo-300">
                             🔒 Delivery Verification OTP
                           </span>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-indigo-900 text-indigo-200 border border-indigo-700">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-indigo-100 text-indigo-800 border border-indigo-200 dark:bg-indigo-900 dark:text-indigo-200 dark:border-indigo-700 font-semibold">
                             Secret Code
                           </span>
                         </div>
-                        <div className="flex items-center justify-between bg-slate-950 p-4 rounded-xl border border-indigo-900/50">
+                        <div className="flex items-center justify-between bg-white dark:bg-slate-950 p-4 rounded-xl border border-indigo-100 dark:border-indigo-900/50 shadow-xs">
                           <div>
-                            <span className="text-[11px] text-slate-400 block">
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">
                               Give code to driver upon arrival:
                             </span>
-                            <span className="text-3xl font-mono font-black tracking-widest text-emerald-400">
+                            <span className="text-3xl font-mono font-black tracking-widest text-emerald-700 dark:text-emerald-400">
                               {selectedDelivery.deliveryOtp}
                             </span>
                           </div>
-                          <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-400 text-2xl border border-emerald-500/20">
+                          <div className="p-3 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 text-2xl border border-emerald-200 dark:border-emerald-500/20 rounded-xl">
                             🔑
                           </div>
                         </div>
@@ -567,17 +572,17 @@ export function CustomerDashboardPage() {
                           href={`/track/${selectedDelivery.deliveryOtp}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-full py-2.5 px-4 bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-98"
+                          className="w-full py-2.5 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-98"
                         >
-                          <Icon icon="solar:map-arrow-up-bold-duotone" className="text-base text-teal-400" />
+                          <Icon icon="solar:map-arrow-up-bold-duotone" className="text-base text-white" />
                           <span>Track Shipment on Live Map (Code: {selectedDelivery.deliveryOtp}) ↗</span>
                         </a>
                       </div>
 
                       {/* Package Details Summary Card */}
-                      <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
+                      <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                             Shipment Overview
                           </span>
                           <span
@@ -593,12 +598,12 @@ export function CustomerDashboardPage() {
                         {renderStatusStepper(selectedDelivery.status)}
 
                         {/* Pickup & Dropoff details */}
-                        <div className="space-y-3 pt-2 text-xs border-t border-slate-800">
+                        <div className="space-y-3 pt-2 text-xs border-t border-slate-200 dark:border-slate-800">
                           <div className="flex items-start space-x-3">
                             <span className="w-2.5 h-2.5 rounded-full bg-blue-500 mt-1 flex-shrink-0"></span>
                             <div>
-                              <span className="text-slate-400 block">Pickup Location</span>
-                              <span className="font-medium text-slate-200">
+                              <span className="text-slate-500 dark:text-slate-400 block">Pickup Location</span>
+                              <span className="font-semibold text-slate-800 dark:text-slate-200">
                                 {selectedDelivery.pickupAddress}
                               </span>
                             </div>
@@ -607,39 +612,39 @@ export function CustomerDashboardPage() {
                           <div className="flex items-start space-x-3">
                             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 mt-1 flex-shrink-0"></span>
                             <div>
-                              <span className="text-slate-400 block">Dropoff Location</span>
-                              <span className="font-medium text-slate-200">
+                              <span className="text-slate-500 dark:text-slate-400 block">Dropoff Location</span>
+                              <span className="font-semibold text-slate-800 dark:text-slate-200">
                                 {selectedDelivery.dropoffAddress}
                               </span>
                             </div>
                           </div>
 
-                          <div className="pt-2 flex justify-between text-slate-400 text-[11px] border-t border-slate-800">
-                            <span>Recipient: {selectedDelivery.recipientName}</span>
-                            <span>Phone: {selectedDelivery.recipientPhone}</span>
+                          <div className="pt-2 flex justify-between text-slate-500 dark:text-slate-400 text-[11px] border-t border-slate-200 dark:border-slate-800">
+                            <span>Recipient: <strong className="text-slate-700 dark:text-slate-300">{selectedDelivery.recipientName}</strong></span>
+                            <span>Phone: <strong className="text-slate-700 dark:text-slate-300">{selectedDelivery.recipientPhone}</strong></span>
                           </div>
 
                           {/* OSRM Road Distance & ETA */}
                           {(osrmDistanceKm !== null || osrmRouteLoading) && (
-                            <div className="bg-teal-500/10 border border-teal-500/20 rounded-xl p-3 space-y-1 mt-2">
-                              <span className="text-[10px] text-teal-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                            <div className="bg-teal-50 dark:bg-teal-500/10 border border-teal-200 dark:border-teal-500/20 rounded-xl p-3 space-y-1 mt-2">
+                              <span className="text-[10px] text-teal-800 dark:text-teal-400 font-bold uppercase tracking-wider flex items-center gap-1">
                                 <Icon icon="solar:routing-bold-duotone" className="text-sm" />
                                 Road Route Info
                               </span>
                               {osrmRouteLoading ? (
-                                <p className="text-slate-400 text-xs flex items-center gap-1.5">
+                                <p className="text-slate-500 dark:text-slate-400 text-xs flex items-center gap-1.5">
                                   <Icon icon="lucide:loader-2" className="animate-spin text-sm" />
                                   Calculating road route...
                                 </p>
                               ) : (
                                 <div className="flex gap-4 text-xs">
                                   <div>
-                                    <span className="text-[9px] text-slate-400 uppercase block">Road Distance</span>
-                                    <span className="font-mono font-bold text-slate-200">{osrmDistanceKm} km</span>
+                                    <span className="text-[9px] text-slate-500 dark:text-slate-400 uppercase block">Road Distance</span>
+                                    <span className="font-mono font-bold text-slate-900 dark:text-slate-200">{osrmDistanceKm} km</span>
                                   </div>
                                   <div>
-                                    <span className="text-[9px] text-slate-400 uppercase block">Drive Time</span>
-                                    <span className="font-mono font-bold text-teal-300">{osrmDurationMins} mins</span>
+                                    <span className="text-[9px] text-slate-500 dark:text-slate-400 uppercase block">Drive Time</span>
+                                    <span className="font-mono font-bold text-teal-700 dark:text-teal-300">{osrmDurationMins} mins</span>
                                   </div>
                                 </div>
                               )}
@@ -653,7 +658,7 @@ export function CustomerDashboardPage() {
 
                 {/* Right Panel: Interactive Live Tracking Map */}
                 <div className="lg:col-span-7">
-                  <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-xl h-[550px] relative">
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm dark:shadow-xl h-[550px] relative">
                     {selectedDelivery ? (
                       <MapContainer
                         center={[
@@ -664,8 +669,12 @@ export function CustomerDashboardPage() {
                         style={{ height: "100%", width: "100%" }}
                       >
                         <TileLayer
-                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                          attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                          url={
+                            actualTheme === "dark"
+                              ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                              : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                          }
                         />
 
                         {/* Pickup Marker */}
@@ -766,16 +775,16 @@ export function CustomerDashboardPage() {
 
         {/* ─── TAB 2: BOOK NEW DELIVERY ─── */}
         {activeTab === "book" && (
-          <div className="max-w-3xl mx-auto bg-slate-900 p-8 rounded-2xl border border-slate-800 shadow-xl space-y-6">
-            <div className="flex items-center space-x-3 border-b border-slate-800/80 pb-4">
-              <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 shrink-0">
+          <div className="max-w-3xl mx-auto bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl space-y-6">
+            <div className="flex items-center space-x-3 border-b border-slate-200 dark:border-slate-800/80 pb-4">
+              <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0">
                 <Icon icon="solar:box-minimalistic-bold-duotone" className="text-2xl" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-white">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">
                   Book Express Cargo Delivery
                 </h2>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Enter pickup/dropoff addresses and recipient details for instant courier dispatch.
                 </p>
               </div>
@@ -785,7 +794,7 @@ export function CustomerDashboardPage() {
               {/* Recipient Info */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                     Recipient Full Name
                   </label>
                   <input
@@ -796,12 +805,12 @@ export function CustomerDashboardPage() {
                     onChange={(e) =>
                       setBookingForm({ ...bookingForm, recipientName: e.target.value })
                     }
-                    className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-sm focus:outline-none focus:border-teal-400"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:border-teal-400"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                     Recipient Phone Number
                   </label>
                   <input
@@ -812,14 +821,14 @@ export function CustomerDashboardPage() {
                     onChange={(e) =>
                       setBookingForm({ ...bookingForm, recipientPhone: e.target.value })
                     }
-                    className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-sm focus:outline-none focus:border-teal-400"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:border-teal-400"
                   />
                 </div>
               </div>
 
               {/* Recipient Email for OTP delivery */}
               <div>
-                <label className="text-xs font-semibold text-slate-300 block mb-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                   Recipient Email Address (for Delivery OTP Email)
                 </label>
                 <input
@@ -830,13 +839,13 @@ export function CustomerDashboardPage() {
                   onChange={(e) =>
                     setBookingForm({ ...bookingForm, recipientEmail: e.target.value })
                   }
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-sm focus:outline-none focus:border-teal-400"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:border-teal-400"
                 />
               </div>
 
               {/* Sender Phone */}
               <div>
-                <label className="text-xs font-semibold text-slate-300 block mb-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                   Your Sender Phone Number
                 </label>
                 <input
@@ -847,13 +856,13 @@ export function CustomerDashboardPage() {
                   onChange={(e) =>
                     setBookingForm({ ...bookingForm, senderPhone: e.target.value })
                   }
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-sm focus:outline-none focus:border-teal-400"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:border-teal-400"
                 />
               </div>
 
               {/* Pickup Location Preset Selector */}
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-slate-300 block">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
                   Pickup Location (Lagos Center Preset)
                 </label>
                 <select
@@ -869,7 +878,7 @@ export function CustomerDashboardPage() {
                       pickupLng: loc.lng.toString(),
                     });
                   }}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-sm focus:outline-none focus:border-teal-400"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:border-teal-400"
                 >
                   {LAGOS_LOCATIONS.map((loc, idx) => (
                     <option key={idx} value={idx}>
@@ -881,7 +890,7 @@ export function CustomerDashboardPage() {
 
               {/* Dropoff Location Preset Selector */}
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-slate-300 block">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
                   Dropoff Location (Lagos Center Preset)
                 </label>
                 <select
@@ -897,7 +906,7 @@ export function CustomerDashboardPage() {
                       dropoffLng: loc.lng.toString(),
                     });
                   }}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-sm focus:outline-none focus:border-teal-400"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:border-teal-400"
                 >
                   {LAGOS_LOCATIONS.map((loc, idx) => (
                     <option key={idx} value={idx}>
@@ -908,17 +917,17 @@ export function CustomerDashboardPage() {
               </div>
 
               {/* Estimated Delivery Fare Box */}
-              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
+              <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
                 <div>
-                  <span className="text-xs text-slate-400 block">Estimated Distance</span>
-                  <span className="text-sm font-bold text-slate-200">
+                  <span className="text-xs text-slate-500 dark:text-slate-400 block">Estimated Distance</span>
+                  <span className="text-sm font-bold text-slate-900 dark:text-slate-200">
                     ~{estimatedDistanceKm} km
                   </span>
                 </div>
 
                 <div className="text-right">
-                  <span className="text-xs text-slate-400 block">Estimated Delivery Fee</span>
-                  <span className="text-xl font-extrabold text-teal-400 font-mono">
+                  <span className="text-xs text-slate-500 dark:text-slate-400 block">Estimated Delivery Fee</span>
+                  <span className="text-xl font-extrabold text-teal-700 dark:text-teal-400 font-mono">
                     ₦{estimatedFare.toLocaleString()}
                   </span>
                 </div>
@@ -928,18 +937,18 @@ export function CustomerDashboardPage() {
               <button
                 type="submit"
                 disabled={bookingSubmitting}
-                className="w-full bg-transparent border border-teal-500/50 hover:bg-teal-500/10 hover:border-teal-400 text-white font-semibold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 transition-all cursor-pointer text-sm active:scale-[0.99] disabled:opacity-50"
+                className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 transition-all cursor-pointer text-sm shadow-md active:scale-[0.99] disabled:opacity-50"
               >
                 {bookingSubmitting ? (
                   <>
-                    <Icon icon="lucide:loader-2" className="animate-spin text-lg text-teal-400" />
+                    <Icon icon="lucide:loader-2" className="animate-spin text-lg text-white" />
                     <span>Processing Shipment Order...</span>
                   </>
                 ) : (
                   <>
-                    <Icon icon="solar:send-square-bold" className="text-lg text-teal-400" />
+                    <Icon icon="solar:send-square-bold" className="text-lg text-white" />
                     <span>Dispatch Delivery Order Now</span>
-                    <Icon icon="lucide:arrow-right" className="text-base text-slate-400" />
+                    <Icon icon="lucide:arrow-right" className="text-base text-white/80" />
                   </>
                 )}
               </button>
@@ -951,26 +960,26 @@ export function CustomerDashboardPage() {
         {activeTab === "history" && (
           <div className="space-y-6">
             {/* Search filter */}
-            <div className="bg-slate-900 p-4 rounded-xl border border-slate-800">
+            <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
               <input
                 type="text"
                 placeholder="Search history by recipient name, order ID, or address..."
                 value={historySearch}
                 onChange={(e) => setHistorySearch(e.target.value)}
-                className="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-lg text-slate-100 text-sm focus:outline-none focus:border-teal-400"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:border-teal-400"
               />
             </div>
 
             {/* History Table */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm dark:shadow-xl">
               {loading ? (
                 <div className="p-8 text-center text-slate-400">Loading order history...</div>
               ) : deliveries.length === 0 ? (
                 <div className="p-8 text-center text-slate-500">No order history available</div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm text-slate-300">
-                    <thead className="bg-slate-950/80 text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-800">
+                  <table className="w-full text-left text-sm text-slate-700 dark:text-slate-300">
+                    <thead className="bg-slate-100 dark:bg-slate-950/80 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                       <tr>
                         <th className="px-6 py-4">Order ID</th>
                         <th className="px-6 py-4">Recipient</th>
@@ -980,7 +989,7 @@ export function CustomerDashboardPage() {
                         <th className="px-6 py-4 text-right">Date</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60">
+                    <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
                       {deliveries
                         .filter(
                           (d) =>
@@ -993,27 +1002,27 @@ export function CustomerDashboardPage() {
                               .includes(historySearch.toLowerCase())
                         )
                         .map((del) => (
-                          <tr key={del.id} className="hover:bg-slate-800/40 transition-colors">
-                            <td className="px-6 py-4 font-mono text-teal-300">
+                          <tr key={del.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                            <td className="px-6 py-4 font-mono text-teal-600 dark:text-teal-300">
                               #{del.id.slice(0, 8)}
                             </td>
                             <td className="px-6 py-4">
-                              <div className="font-semibold text-white">
+                              <div className="font-semibold text-slate-900 dark:text-white">
                                 {del.recipientName}
                               </div>
                               <div className="text-xs text-slate-400">{del.recipientPhone}</div>
                             </td>
                             <td className="px-6 py-4 text-xs space-y-1">
-                              <div className="text-slate-300 truncate max-w-xs flex items-center gap-1.5">
-                                <Icon icon="solar:map-point-wave-bold-duotone" className="text-teal-400 text-sm shrink-0" />
+                              <div className="text-slate-700 dark:text-slate-300 truncate max-w-xs flex items-center gap-1.5 font-medium">
+                                <Icon icon="solar:map-point-wave-bold-duotone" className="text-teal-600 dark:text-teal-400 text-sm shrink-0" />
                                 <span>{del.pickupAddress}</span>
                               </div>
-                              <div className="text-slate-400 truncate max-w-xs flex items-center gap-1.5">
-                                <Icon icon="solar:flag-bold-duotone" className="text-emerald-400 text-sm shrink-0" />
+                              <div className="text-slate-600 dark:text-slate-400 truncate max-w-xs flex items-center gap-1.5">
+                                <Icon icon="solar:flag-bold-duotone" className="text-emerald-600 dark:text-emerald-400 text-sm shrink-0" />
                                 <span>{del.dropoffAddress}</span>
                               </div>
                             </td>
-                            <td className="px-6 py-4 text-center font-mono font-bold text-emerald-400">
+                            <td className="px-6 py-4 text-center font-mono font-bold text-emerald-700 dark:text-emerald-400">
                               {del.deliveryOtp}
                             </td>
                             <td className="px-6 py-4 text-center">
@@ -1025,7 +1034,7 @@ export function CustomerDashboardPage() {
                                 {del.status}
                               </span>
                             </td>
-                            <td className="px-6 py-4 text-right text-xs text-slate-400">
+                            <td className="px-6 py-4 text-right text-xs text-slate-500 dark:text-slate-400">
                               {new Date(del.createdAt).toLocaleDateString()}
                             </td>
                           </tr>

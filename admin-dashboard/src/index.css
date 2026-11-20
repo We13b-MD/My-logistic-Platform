@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
 
 /* Custom theme tokens from the Stitch design */
 @theme {
@@ -60,21 +61,80 @@
   --border-radius-xl: 0.75rem;
 }
 
+/* Dynamic Dual-Theme System */
+:root {
+  --color-bg-app: #f8fafc;
+  --color-bg-card: #ffffff;
+  --color-bg-card-subtle: #f1f5f9;
+  --color-text-main: #0f172a;
+  --color-text-muted: #64748b;
+  --color-border-main: #e2e8f0;
+  --glass-bg: rgba(255, 255, 255, 0.90);
+  --glass-border: rgba(226, 232, 240, 0.95);
+  --glass-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+
+  /* Stitch Semantic Tokens for Light Mode */
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f8fafc;
+  --color-surface-container: #ffffff;
+  --color-surface-container-high: #f1f5f9;
+  --color-surface-container-highest: #e2e8f0;
+  --color-surface: #f8fafc;
+  --color-surface-dim: #f1f5f9;
+  --color-background: #f8fafc;
+  --color-on-surface: #0f172a;
+  --color-on-surface-variant: #475569;
+  --color-on-background: #0f172a;
+  --color-outline-variant: #cbd5e1;
+  --color-outline: #94a3b8;
+  --color-midnight: #ffffff;
+}
+
+.dark {
+  --color-bg-app: #080d1a;
+  --color-bg-card: #0f172a;
+  --color-bg-card-subtle: #1e293b;
+  --color-text-main: #f8fafc;
+  --color-text-muted: #94a3b8;
+  --color-border-main: #1e293b;
+  --glass-bg: rgba(15, 23, 42, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25);
+
+  /* Stitch Semantic Tokens for Dark Mode */
+  --color-surface-container-lowest: #050914;
+  --color-surface-container-low: #0f172a;
+  --color-surface-container: #0f172a;
+  --color-surface-container-high: #1e293b;
+  --color-surface-container-highest: #1e293b;
+  --color-surface: #080d1a;
+  --color-surface-dim: #080d1a;
+  --color-background: #080d1a;
+  --color-on-surface: #f8fafc;
+  --color-on-surface-variant: #94a3b8;
+  --color-on-background: #e2e8f0;
+  --color-outline-variant: #334155;
+  --color-outline: #64748b;
+  --color-midnight: #0F172A;
+}
+
 /* Custom component classes from the Stitch design */
 .glass-panel {
-  background: rgba(15, 23, 42, 0.85);
+  background: var(--glass-bg);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .linear-light-border {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--glass-border);
+  border-left: 1px solid var(--glass-border);
 }
 
 .bg-midnight {
-  background-color: #0F172A;
+  background-color: var(--color-bg-card);
 }
 
 /* Realistic Enterprise Buttons */
@@ -119,8 +179,9 @@
 body {
   margin: 0;
   font-family: 'Inter', system-ui, sans-serif;
-  background-color: #080d1a;
-  color: #f8fafc;
+  background-color: var(--color-bg-app);
+  color: var(--color-text-main);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 

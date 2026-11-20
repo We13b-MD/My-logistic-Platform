@@ -273,24 +273,24 @@ app.post("/logistel-webhook", express.raw({ type: "application/json" }), (req, r
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Create key */}
-        <form onSubmit={handleCreate} className="glass-panel border-white/5 p-6 rounded-2xl space-y-4 xl:col-span-1">
-          <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
-            <Icon icon="solar:key-minimalistic-square-bold-duotone" className="text-xl text-violet-400" />
+        <form onSubmit={handleCreate} className="glass-panel border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/60 p-6 rounded-2xl space-y-4 xl:col-span-1 shadow-sm">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-on-surface flex items-center gap-2">
+            <Icon icon="solar:key-minimalistic-square-bold-duotone" className="text-xl text-violet-500 dark:text-violet-400" />
             Create API Key
           </h3>
           <div className="space-y-1">
-            <label htmlFor="dev-key-name" className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Key Name</label>
+            <label htmlFor="dev-key-name" className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Key Name</label>
             <input
               id="dev-key-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               maxLength={80}
               placeholder='e.g. "Mama Ngozi Pharmacy Website"'
-              className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/60"
+              className="w-full bg-slate-50 dark:bg-slate-950/70 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-violet-500/60"
             />
           </div>
           <div className="space-y-1">
-            <label htmlFor="dev-key-webhook" className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <label htmlFor="dev-key-webhook" className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
               Webhook URL <span className="normal-case font-normal text-slate-500">(optional)</span>
             </label>
             <input
@@ -299,7 +299,7 @@ app.post("/logistel-webhook", express.raw({ type: "application/json" }), (req, r
               onChange={(e) => setWebhookUrl(e.target.value)}
               maxLength={500}
               placeholder="https://merchant-store.com/logistel-webhook"
-              className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/60"
+              className="w-full bg-slate-50 dark:bg-slate-950/70 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-violet-500/60"
             />
             <p className="text-[10px] text-slate-500">Must be a public https:// address. We'll POST status updates here.</p>
           </div>
@@ -312,7 +312,7 @@ app.post("/logistel-webhook", express.raw({ type: "application/json" }), (req, r
             <Icon icon={creating ? "svg-spinners:180-ring" : "solar:add-circle-bold"} className="text-base" />
             {creating ? "Generating…" : "Generate Key"}
           </button>
-          <ul className="text-[10px] text-slate-500 space-y-1 pt-2 border-t border-white/5">
+          <ul className="text-[10px] text-slate-500 space-y-1 pt-2 border-t border-slate-200 dark:border-white/5">
             <li className="flex gap-1.5"><Icon icon="solar:shield-check-bold" className="text-emerald-500 shrink-0 mt-0.5" />Keys are hashed. Even we can't read them back.</li>
             <li className="flex gap-1.5"><Icon icon="solar:shield-check-bold" className="text-emerald-500 shrink-0 mt-0.5" />Each key only sees the shipments it created.</li>
             <li className="flex gap-1.5"><Icon icon="solar:shield-check-bold" className="text-emerald-500 shrink-0 mt-0.5" />Rate limited, and revocable instantly.</li>
@@ -320,17 +320,17 @@ app.post("/logistel-webhook", express.raw({ type: "application/json" }), (req, r
         </form>
 
         {/* Key list */}
-        <div className="glass-panel border-white/5 p-6 rounded-2xl space-y-4 xl:col-span-2">
+        <div className="glass-panel border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/60 p-6 rounded-2xl space-y-4 xl:col-span-2 shadow-sm">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
-              <Icon icon="solar:server-square-bold-duotone" className="text-xl text-teal-400" />
+            <h3 className="text-sm font-bold text-slate-900 dark:text-on-surface flex items-center gap-2">
+              <Icon icon="solar:server-square-bold-duotone" className="text-xl text-teal-600 dark:text-teal-400" />
               Your API Keys
             </h3>
             {revokedKeys.length > 0 && (
               <button
                 type="button"
                 onClick={() => setShowRevoked((v) => !v)}
-                className="text-[11px] text-slate-400 hover:text-slate-200 font-bold cursor-pointer"
+                className="text-[11px] text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 font-bold cursor-pointer"
               >
                 {showRevoked ? "Hide" : "Show"} revoked ({revokedKeys.length})
               </button>
@@ -343,8 +343,8 @@ app.post("/logistel-webhook", express.raw({ type: "application/json" }), (req, r
             </div>
           ) : activeKeys.length === 0 && !showRevoked ? (
             <div className="flex flex-col items-center justify-center py-12 text-center gap-2">
-              <Icon icon="solar:key-broken" className="text-4xl text-slate-600" />
-              <p className="text-xs text-slate-400">No API keys yet.</p>
+              <Icon icon="solar:key-broken" className="text-4xl text-slate-400 dark:text-slate-600" />
+              <p className="text-xs text-slate-600 dark:text-slate-400">No API keys yet.</p>
               <p className="text-[11px] text-slate-500 max-w-xs">Create one for each merchant or website that should book deliveries automatically.</p>
             </div>
           ) : (
@@ -356,26 +356,26 @@ app.post("/logistel-webhook", express.raw({ type: "application/json" }), (req, r
                   <div
                     key={k.id}
                     className={`rounded-xl border p-4 space-y-3 transition-all ${
-                      revoked ? "border-slate-800 bg-slate-950/30 opacity-60" : "border-slate-800 bg-slate-900/50 hover:border-slate-700"
+                      revoked ? "border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950/30 opacity-60" : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 hover:border-slate-300 dark:hover:border-slate-700"
                     }`}
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-slate-100 truncate">{k.name}</span>
+                          <span className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">{k.name}</span>
                           <span
                             className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border ${
                               revoked
-                                ? "border-red-500/30 text-red-300 bg-red-500/10"
-                                : "border-emerald-500/30 text-emerald-300 bg-emerald-500/10"
+                                ? "border-red-500/30 text-red-600 dark:text-red-300 bg-red-500/10"
+                                : "border-emerald-500/30 text-emerald-600 dark:text-emerald-300 bg-emerald-500/10"
                             }`}
                           >
                             {revoked ? "Revoked" : "Active"}
                           </span>
                         </div>
-                        <code className="text-[11px] font-mono text-slate-400">{k.keyPrefix}••••••••••••</code>
+                        <code className="text-[11px] font-mono text-slate-500 dark:text-slate-400">{k.keyPrefix}••••••••••••</code>
                       </div>
-                      <div className="flex gap-4 text-[10px] text-slate-400">
+                      <div className="flex gap-4 text-[10px] text-slate-500 dark:text-slate-400">
                         <div><span className="block uppercase font-bold text-slate-500">Shipments</span>{k._count?.deliveries ?? 0}</div>
                         <div><span className="block uppercase font-bold text-slate-500">Last used</span>{formatDate(k.lastUsedAt)}</div>
                         <div><span className="block uppercase font-bold text-slate-500">Created</span>{formatDate(k.createdAt)}</div>

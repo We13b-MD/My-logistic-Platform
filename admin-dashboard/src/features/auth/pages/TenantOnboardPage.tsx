@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Industry } from "@/types";
 import { Icon } from "@iconify/react";
 import { LogistelLogo } from "@/components/LogistelLogo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function TenantOnboardPage() {
   const navigate = useNavigate();
@@ -214,29 +215,41 @@ export function TenantOnboardPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center p-6 relative bg-[#080d1a] text-slate-100 py-12 selection:bg-teal-500 selection:text-slate-950">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center p-6 relative bg-slate-50 text-slate-900 dark:bg-[#080d1a] dark:text-slate-100 py-12 selection:bg-teal-500 selection:text-slate-950 transition-colors duration-200">
+      {/* Top Bar with Theme Toggle & Return to Home */}
+      <div className="absolute top-6 right-6 z-20 flex items-center gap-3">
+        <ThemeToggle variant="compact" />
+        <button
+          onClick={() => navigate("/")}
+          className="text-xs font-semibold text-slate-600 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 transition-colors flex items-center gap-1 cursor-pointer"
+        >
+          <Icon icon="lucide:arrow-left" className="text-sm" />
+          <span>Home</span>
+        </button>
+      </div>
+
       {/* Main Content Canvas */}
       <main className="w-full max-w-[1100px] grid lg:grid-cols-2 gap-12 px-4 py-8 items-center z-10">
         {/* Branding Section (Visible on Desktop) */}
         <div className="hidden lg:flex flex-col space-y-6 pr-8">
           <LogistelLogo size="lg" />
           <div className="space-y-4">
-            <h2 className="font-display text-3xl text-slate-100 font-bold leading-tight">Master your global supply chain.</h2>
-            <p className="text-sm text-slate-400 max-w-md leading-relaxed">
+            <h2 className="font-display text-3xl text-slate-900 dark:text-slate-100 font-bold leading-tight">Master your global supply chain.</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md leading-relaxed">
               Join the next generation of logistics owners. Scale your operations with precision tracking, automated dispatching, and real-time fleet analytics.
             </p>
           </div>
           {/* Feature Micro-Grid */}
           <div className="grid grid-cols-2 gap-4 pt-4">
-            <div className="glass-panel p-4 rounded-xl flex flex-col gap-2 border border-slate-800">
-              <Icon icon="solar:rocket-bold-duotone" className="text-teal-400 text-2xl" />
-              <span className="text-xs font-bold text-slate-200">Rapid Onboarding</span>
-              <span className="text-[11px] text-slate-400">Launch your hub in under 2 minutes</span>
+            <div className="glass-panel p-4 rounded-xl flex flex-col gap-2 border border-slate-200 dark:border-slate-800">
+              <Icon icon="solar:rocket-bold-duotone" className="text-teal-600 dark:text-teal-400 text-2xl" />
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Rapid Onboarding</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">Launch your hub in under 2 minutes</span>
             </div>
-            <div className="glass-panel p-4 rounded-xl flex flex-col gap-2 border border-slate-800">
-              <Icon icon="solar:shield-check-bold-duotone" className="text-cyan-400 text-2xl" />
-              <span className="text-xs font-bold text-slate-200">Enterprise Security</span>
-              <span className="text-[11px] text-slate-400">Multi-tenant data isolation</span>
+            <div className="glass-panel p-4 rounded-xl flex flex-col gap-2 border border-slate-200 dark:border-slate-800">
+              <Icon icon="solar:shield-check-bold-duotone" className="text-cyan-600 dark:text-cyan-400 text-2xl" />
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Enterprise Security</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">Multi-tenant data isolation</span>
             </div>
           </div>
         </div>
@@ -248,10 +261,10 @@ export function TenantOnboardPage() {
             <LogistelLogo size="md" />
           </div>
 
-          <div className="glass-panel p-6 md:p-8 rounded-2xl shadow-xl space-y-5 border border-slate-800">
+          <div className="glass-panel p-6 md:p-8 rounded-2xl shadow-xl space-y-5 border border-slate-200 dark:border-slate-800">
             <div className="space-y-1">
-              <h3 className="font-display text-xl text-slate-100 font-bold">Register Company</h3>
-              <p className="text-xs text-slate-400">Set up your logistics hub & activate your 30-day free trial.</p>
+              <h3 className="font-display text-xl text-slate-900 dark:text-slate-100 font-bold">Register Company</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Set up your logistics hub & activate your 30-day free trial.</p>
             </div>
 
             {isGooglePrefilled && (

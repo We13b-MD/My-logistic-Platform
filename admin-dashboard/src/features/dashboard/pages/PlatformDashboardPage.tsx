@@ -5,6 +5,7 @@ import { tenantApi } from "@/api/tenant.api";
 import { toast } from "sonner";
 import { PlatformTenantItem, PlatformMetrics, Industry } from "@/types";
 import { LogistelLogo } from "@/components/LogistelLogo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const INDUSTRY_OPTIONS: Industry[] = [
   "FOOD",
@@ -103,9 +104,9 @@ export function PlatformDashboardPage() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans transition-colors duration-200">
       {/* ─── Top Navigation Header ─── */}
-      <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-900/90 backdrop-blur-md px-6 py-4 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+      <header className="sticky top-0 z-30 border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-6 py-4 flex flex-wrap items-center justify-between gap-4 shadow-sm dark:shadow-xl">
         <LogistelLogo
           size="md"
           title="Platform Master Control"
@@ -114,31 +115,33 @@ export function PlatformDashboardPage() {
 
         {/* Global Live System Indicator */}
         <div className="flex items-center space-x-4">
-          <div className="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-full bg-emerald-950/60 border border-emerald-800/50 text-emerald-400 text-xs font-medium">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <div className="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/60 dark:border-emerald-800/50 dark:text-emerald-400 text-xs font-semibold shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-600 dark:bg-emerald-400 animate-pulse"></span>
             <span>Platform Core: Operational</span>
           </div>
 
           {/* User info badge */}
-          <div className="flex items-center space-x-3 bg-slate-800/80 px-3.5 py-1.5 rounded-lg border border-slate-700">
-            <div className="w-8 h-8 rounded-full bg-indigo-500/20 text-indigo-400 font-semibold flex items-center justify-center text-sm border border-indigo-500/30">
+          <div className="flex items-center space-x-3 bg-slate-100 dark:bg-slate-800/80 px-3.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
+            <div className="w-8 h-8 rounded-full bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 font-semibold flex items-center justify-center text-sm border border-indigo-500/30">
               {user?.email?.[0]?.toUpperCase() || "A"}
             </div>
             <div className="text-left hidden sm:block">
-              <div className="text-xs font-semibold text-slate-200 truncate max-w-[140px]">
+              <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[140px]">
                 {user?.email}
               </div>
-              <div className="text-[10px] text-indigo-400 font-mono tracking-wider">
+              <div className="text-[10px] text-indigo-700 dark:text-indigo-400 font-mono tracking-wider font-bold">
                 {user?.role}
               </div>
             </div>
           </div>
 
+          <ThemeToggle variant="compact" />
+
           {/* Refresh Button */}
           <button
             onClick={fetchData}
             disabled={loading}
-            className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors border border-slate-700"
+            className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors border border-slate-200 dark:border-slate-700"
             title="Refresh Data"
           >
             <svg
@@ -162,7 +165,7 @@ export function PlatformDashboardPage() {
               logout();
               navigate("/login");
             }}
-            className="px-3 py-2 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/50 text-xs font-semibold transition-all flex items-center space-x-1.5"
+            className="px-3 py-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-300 dark:border-rose-800/50 text-xs font-semibold transition-all cursor-pointer flex items-center space-x-1.5"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -182,10 +185,10 @@ export function PlatformDashboardPage() {
         {/* ─── KPI Metrics Overview Cards ─── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {/* Card 1: Total Tenants */}
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-lg relative overflow-hidden group hover:border-indigo-500/50 transition-all duration-300">
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-lg relative overflow-hidden group hover:border-indigo-500/50 transition-all duration-300">
             <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all"></div>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Logistics Tenants
               </span>
               <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
@@ -200,15 +203,15 @@ export function PlatformDashboardPage() {
               </div>
             </div>
             <div className="mt-4 flex items-baseline justify-between">
-              <span className="text-3xl font-extrabold text-white">
+              <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
                 {metrics ? metrics.totalTenants : "--"}
               </span>
               <div className="text-xs space-x-2">
-                <span className="text-emerald-400 font-semibold">
+                <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
                   {metrics ? metrics.activeTenants : 0} Active
                 </span>
                 {metrics && metrics.suspendedTenants > 0 && (
-                  <span className="text-rose-400 font-semibold">
+                  <span className="text-rose-700 dark:text-rose-400 font-semibold">
                     {metrics.suspendedTenants} Suspended
                   </span>
                 )}
@@ -217,10 +220,10 @@ export function PlatformDashboardPage() {
           </div>
 
           {/* Card 2: Total Deliveries */}
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-lg relative overflow-hidden group hover:border-violet-500/50 transition-all duration-300">
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-lg relative overflow-hidden group hover:border-violet-500/50 transition-all duration-300">
             <div className="absolute top-0 right-0 w-24 h-24 bg-violet-500/10 rounded-full blur-2xl group-hover:bg-violet-500/20 transition-all"></div>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Global Deliveries
               </span>
               <div className="p-2.5 rounded-xl bg-violet-500/10 text-violet-400 border border-violet-500/20">
@@ -235,10 +238,10 @@ export function PlatformDashboardPage() {
               </div>
             </div>
             <div className="mt-4 flex items-baseline justify-between">
-              <span className="text-3xl font-extrabold text-white">
+              <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
                 {metrics ? metrics.totalDeliveries : "--"}
               </span>
-              <span className="text-xs text-violet-300 font-medium">
+              <span className="text-xs text-violet-700 dark:text-violet-300 font-medium">
                 {metrics && metrics.totalDeliveries > 0
                   ? `${Math.round((metrics.completedDeliveries / metrics.totalDeliveries) * 100)}% Delivered`
                   : "0% Delivered"}
@@ -247,10 +250,10 @@ export function PlatformDashboardPage() {
           </div>
 
           {/* Card 3: Total Platform Users */}
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-lg relative overflow-hidden group hover:border-cyan-500/50 transition-all duration-300">
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-lg relative overflow-hidden group hover:border-cyan-500/50 transition-all duration-300">
             <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition-all"></div>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Total Registered Users
               </span>
               <div className="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
@@ -265,23 +268,23 @@ export function PlatformDashboardPage() {
               </div>
             </div>
             <div className="mt-4 flex items-baseline justify-between">
-              <span className="text-3xl font-extrabold text-white">
+              <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
                 {metrics ? metrics.totalUsers : "--"}
               </span>
-              <span className="text-xs text-cyan-300 font-medium">
+              <span className="text-xs text-cyan-700 dark:text-cyan-300 font-medium">
                 {metrics ? `${metrics.totalDrivers} Drivers` : "0 Drivers"}
               </span>
             </div>
           </div>
 
           {/* Card 4: System Status */}
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-lg relative overflow-hidden group hover:border-emerald-500/50 transition-all duration-300">
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-lg relative overflow-hidden group hover:border-emerald-500/50 transition-all duration-300">
             <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 System SLA Uptime
               </span>
-              <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
@@ -293,8 +296,8 @@ export function PlatformDashboardPage() {
               </div>
             </div>
             <div className="mt-4 flex items-baseline justify-between">
-              <span className="text-3xl font-extrabold text-emerald-400">99.98%</span>
-              <span className="text-xs text-emerald-300 font-medium">Healthy</span>
+              <span className="text-3xl font-extrabold text-emerald-700 dark:text-emerald-400">99.98%</span>
+              <span className="text-xs text-emerald-700 dark:text-emerald-300 font-semibold">Healthy</span>
             </div>
           </div>
         </div>
@@ -363,7 +366,7 @@ export function PlatformDashboardPage() {
         {activeTab === "tenants" && (
           <div className="space-y-6">
             {/* Search and Filters Bar */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
               {/* Search Bar */}
               <div className="md:col-span-6 relative">
                 <input
@@ -371,7 +374,7 @@ export function PlatformDashboardPage() {
                   placeholder="Search by company name, subdomain, or admin email..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm"
                 />
                 <svg
                   className="w-5 h-5 text-slate-500 absolute left-3 top-3"
@@ -393,7 +396,7 @@ export function PlatformDashboardPage() {
                 <select
                   value={selectedIndustry}
                   onChange={(e) => setSelectedIndustry(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:border-indigo-500 text-sm"
+                  className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-200 focus:outline-none focus:border-indigo-500 text-sm"
                 >
                   <option value="ALL">All Industries</option>
                   {INDUSTRY_OPTIONS.map((ind) => (
@@ -409,7 +412,7 @@ export function PlatformDashboardPage() {
                 <select
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:border-indigo-500 text-sm"
+                  className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-200 focus:outline-none focus:border-indigo-500 text-sm"
                 >
                   <option value="ALL">All Statuses</option>
                   <option value="ACTIVE">Active Only</option>
@@ -419,7 +422,7 @@ export function PlatformDashboardPage() {
             </div>
 
             {/* Tenant Directory Table */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm dark:shadow-xl">
               {loading ? (
                 <div className="p-12 text-center text-slate-400 flex flex-col items-center space-y-3">
                   <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
@@ -428,7 +431,7 @@ export function PlatformDashboardPage() {
               ) : filteredTenants.length === 0 ? (
                 <div className="p-12 text-center text-slate-400">
                   <svg
-                    className="w-12 h-12 mx-auto text-slate-600 mb-3"
+                    className="w-12 h-12 mx-auto text-slate-400 dark:text-slate-600 mb-3"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -440,15 +443,15 @@ export function PlatformDashboardPage() {
                       d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
                     />
                   </svg>
-                  <p className="text-base font-semibold text-slate-300">No Tenants Found</p>
+                  <p className="text-base font-semibold text-slate-700 dark:text-slate-300">No Tenants Found</p>
                   <p className="text-xs text-slate-500">
                     Try refining your search terms or filter selection.
                   </p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm text-slate-300">
-                    <thead className="bg-slate-950/80 text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-800">
+                  <table className="w-full text-left text-sm text-slate-700 dark:text-slate-300">
+                    <thead className="bg-slate-100 dark:bg-slate-950/80 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                       <tr>
                         <th className="px-6 py-4">Logistics Company</th>
                         <th className="px-6 py-4">Subdomain</th>
@@ -459,19 +462,19 @@ export function PlatformDashboardPage() {
                         <th className="px-6 py-4 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60">
+                    <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
                       {filteredTenants.map((tenant) => (
                         <tr
                           key={tenant.id}
-                          className="hover:bg-slate-800/40 transition-colors"
+                          className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
                         >
                           <td className="px-6 py-4">
                             <div className="flex items-center space-x-3">
-                              <div className="w-10 h-10 rounded-lg bg-indigo-900/40 border border-indigo-700/50 flex items-center justify-center text-indigo-300 font-bold">
+                              <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-200 dark:border-indigo-700/50 flex items-center justify-center text-indigo-600 dark:text-indigo-300 font-bold">
                                 {tenant.companyName[0]?.toUpperCase() || "T"}
                               </div>
                               <div>
-                                <div className="font-semibold text-white">
+                                <div className="font-semibold text-slate-900 dark:text-white">
                                   {tenant.companyName}
                                 </div>
                                 <div className="text-[11px] text-slate-500 font-mono">
@@ -480,43 +483,43 @@ export function PlatformDashboardPage() {
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 font-mono text-indigo-300">
+                          <td className="px-6 py-4 font-mono text-indigo-700 dark:text-indigo-300 font-medium">
                             {tenant.subdomain}.platform.com
                           </td>
                           <td className="px-6 py-4">
-                            <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+                            <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
                               {tenant.industry}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-slate-200">{tenant.adminEmail}</td>
+                          <td className="px-6 py-4 text-slate-900 dark:text-slate-200 font-medium">{tenant.adminEmail}</td>
                           <td className="px-6 py-4">
                             <div className="flex items-center justify-center space-x-3 text-xs">
-                              <span title="Total Users" className="text-slate-300 font-medium">
+                              <span title="Total Users" className="text-slate-700 dark:text-slate-300 font-medium">
                                 👤 {tenant.totalUsers}
                               </span>
-                              <span title="Total Deliveries" className="text-violet-300 font-medium">
+                              <span title="Total Deliveries" className="text-violet-700 dark:text-violet-300 font-medium">
                                 📦 {tenant.totalDeliveries}
                               </span>
                             </div>
                           </td>
                           <td className="px-6 py-4 text-center">
                             {tenant.isActive ? (
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/80 text-emerald-400 border border-emerald-800/60">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-400 dark:border-emerald-800/60">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 mr-1.5 animate-pulse"></span>
                                 Active
                               </span>
                             ) : (
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-950/80 text-rose-400 border border-rose-800/60">
-                                <span className="w-1.5 h-1.5 rounded-full bg-rose-400 mr-1.5"></span>
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-300 dark:bg-rose-950/80 dark:text-rose-400 dark:border-rose-800/60">
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-600 dark:bg-rose-400 mr-1.5"></span>
                                 Suspended
                               </span>
                             )}
                           </td>
-                          <td className="px-6 py-4 text-right space-x-2">
+                          <td className="px-6 py-4 text-right whitespace-nowrap space-x-2">
                             {/* View details */}
                             <button
                               onClick={() => setSelectedTenant(tenant)}
-                              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
+                              className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                             >
                               Details
                             </button>
@@ -525,10 +528,10 @@ export function PlatformDashboardPage() {
                             <button
                               onClick={() => handleToggleStatus(tenant.id, tenant.isActive)}
                               disabled={togglingId === tenant.id}
-                              className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                              className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
                                 tenant.isActive
-                                  ? "bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border-rose-800/50"
-                                  : "bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 border-emerald-800/50"
+                                  ? "bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-300 dark:border-rose-800/50"
+                                  : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 dark:text-emerald-300 dark:border-emerald-800/50"
                               }`}
                             >
                               {togglingId === tenant.id ? "Updating..." : tenant.isActive ? "Suspend" : "Activate"}
@@ -548,26 +551,26 @@ export function PlatformDashboardPage() {
         {activeTab === "analytics" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Delivery Rate Breakdown */}
-            <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
-              <h3 className="text-lg font-bold text-white flex items-center space-x-2">
-                <svg className="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm dark:shadow-xl">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
                 <span>Delivery Completion Throughput</span>
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 System-wide delivery status tracking across all onboarded logistics providers.
               </p>
 
               <div className="space-y-3 pt-2">
                 <div>
                   <div className="flex justify-between text-xs font-semibold mb-1">
-                    <span className="text-slate-300">Completed Orders</span>
-                    <span className="text-emerald-400">
+                    <span className="text-slate-700 dark:text-slate-300">Completed Orders</span>
+                    <span className="text-emerald-700 dark:text-emerald-400 font-bold">
                       {metrics ? metrics.completedDeliveries : 0} / {metrics ? metrics.totalDeliveries : 0}
                     </span>
                   </div>
-                  <div className="w-full bg-slate-950 h-3 rounded-full overflow-hidden border border-slate-800">
+                  <div className="w-full bg-slate-100 dark:bg-slate-950 h-3 rounded-full overflow-hidden border border-slate-200 dark:border-slate-800">
                     <div
                       className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full transition-all duration-500"
                       style={{
@@ -583,12 +586,12 @@ export function PlatformDashboardPage() {
 
                 <div>
                   <div className="flex justify-between text-xs font-semibold mb-1">
-                    <span className="text-slate-300">Active Tenant Ratio</span>
-                    <span className="text-indigo-400">
+                    <span className="text-slate-700 dark:text-slate-300">Active Tenant Ratio</span>
+                    <span className="text-indigo-700 dark:text-indigo-400 font-bold">
                       {metrics ? metrics.activeTenants : 0} / {metrics ? metrics.totalTenants : 0}
                     </span>
                   </div>
-                  <div className="w-full bg-slate-950 h-3 rounded-full overflow-hidden border border-slate-800">
+                  <div className="w-full bg-slate-100 dark:bg-slate-950 h-3 rounded-full overflow-hidden border border-slate-200 dark:border-slate-800">
                     <div
                       className="bg-gradient-to-r from-indigo-500 to-violet-500 h-full transition-all duration-500"
                       style={{
@@ -605,9 +608,9 @@ export function PlatformDashboardPage() {
             </div>
 
             {/* Industry Distribution */}
-            <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
-              <h3 className="text-lg font-bold text-white flex items-center space-x-2">
-                <svg className="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm dark:shadow-xl">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                <svg className="w-5 h-5 text-violet-600 dark:text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
                 </svg>
                 <span>Tenant Industry Sector Distribution</span>
@@ -618,10 +621,10 @@ export function PlatformDashboardPage() {
                   return (
                     <div
                       key={ind}
-                      className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between"
+                      className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between"
                     >
-                      <span className="text-xs font-semibold text-slate-300">{ind}</span>
-                      <span className="px-2 py-0.5 rounded bg-indigo-900/50 text-indigo-300 font-mono text-xs font-bold border border-indigo-700/50">
+                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{ind}</span>
+                      <span className="px-2 py-0.5 rounded bg-indigo-50 text-indigo-800 font-mono text-xs font-bold border border-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-300 dark:border-indigo-700/50">
                         {count}
                       </span>
                     </div>
@@ -634,26 +637,26 @@ export function PlatformDashboardPage() {
 
         {/* ─── TAB 3: PLATFORM ADMINISTRATORS ─── */}
         {activeTab === "admins" && (
-          <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-6">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-6 shadow-sm dark:shadow-xl">
             <div>
-              <h3 className="text-lg font-bold text-white">Platform System Administrators</h3>
-              <p className="text-xs text-slate-400">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Platform System Administrators</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Manage global super admin accounts with permission to activate, inspect, or manage logistics tenants.
               </p>
             </div>
 
-            <div className="divide-y divide-slate-800 border border-slate-800 rounded-xl overflow-hidden bg-slate-950">
+            <div className="divide-y divide-slate-200 dark:divide-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-950">
               <div className="p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-9 h-9 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-sm">
                     SA
                   </div>
                   <div>
-                    <div className="text-sm font-semibold text-white">{user?.email}</div>
-                    <div className="text-xs text-slate-400">Super Administrator (Current Session)</div>
+                    <div className="text-sm font-semibold text-slate-900 dark:text-white">{user?.email}</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">Super Administrator (Current Session)</div>
                   </div>
                 </div>
-                <span className="px-3 py-1 rounded-full bg-indigo-950 text-indigo-400 border border-indigo-800 text-xs font-semibold">
+                <span className="px-3 py-1 rounded-full bg-indigo-50 text-indigo-800 border border-indigo-200 dark:bg-indigo-950 dark:text-indigo-400 dark:border-indigo-800 text-xs font-semibold">
                   PLATFORM_SUPER_ADMIN
                 </span>
               </div>
@@ -665,14 +668,14 @@ export function PlatformDashboardPage() {
       {/* ─── TENANT DETAILS MODAL ─── */}
       {selectedTenant && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl space-y-6 p-6">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl space-y-6 p-6">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 rounded-lg bg-indigo-600 text-white font-bold flex items-center justify-center text-lg">
                   {selectedTenant.companyName[0]?.toUpperCase()}
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">{selectedTenant.companyName}</h3>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">{selectedTenant.companyName}</h3>
                   <p className="text-xs font-mono text-indigo-400">
                     {selectedTenant.subdomain}.platform.com
                   </p>
@@ -681,7 +684,7 @@ export function PlatformDashboardPage() {
 
               <button
                 onClick={() => setSelectedTenant(null)}
-                className="text-slate-400 hover:text-slate-200 p-1.5 rounded-lg bg-slate-800"
+                className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 transition-colors cursor-pointer"
               >
                 ✕
               </button>
@@ -689,15 +692,15 @@ export function PlatformDashboardPage() {
 
             <div className="space-y-4 text-sm">
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
-                  <span className="text-xs text-slate-400 block">Industry Sector</span>
-                  <span className="font-semibold text-slate-200">{selectedTenant.industry}</span>
+                <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <span className="text-xs text-slate-500 dark:text-slate-400 block">Industry Sector</span>
+                  <span className="font-semibold text-slate-900 dark:text-slate-200">{selectedTenant.industry}</span>
                 </div>
-                <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
-                  <span className="text-xs text-slate-400 block">Account Status</span>
+                <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <span className="text-xs text-slate-500 dark:text-slate-400 block">Account Status</span>
                   <span
                     className={`font-semibold ${
-                      selectedTenant.isActive ? "text-emerald-400" : "text-rose-400"
+                      selectedTenant.isActive ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"
                     }`}
                   >
                     {selectedTenant.isActive ? "Active" : "Suspended"}
@@ -705,27 +708,27 @@ export function PlatformDashboardPage() {
                 </div>
               </div>
 
-              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
-                <span className="text-xs text-slate-400 block">Tenant Super Admin Email</span>
-                <span className="font-mono text-indigo-300 font-medium">
+              <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
+                <span className="text-xs text-slate-500 dark:text-slate-400 block">Tenant Super Admin Email</span>
+                <span className="font-mono text-indigo-700 dark:text-indigo-300 font-medium">
                   {selectedTenant.adminEmail}
                 </span>
               </div>
 
               <div className="grid grid-cols-3 gap-3 text-center">
-                <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
-                  <span className="text-xs text-slate-400 block">Users</span>
-                  <span className="text-lg font-bold text-white">{selectedTenant.totalUsers}</span>
+                <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <span className="text-xs text-slate-500 dark:text-slate-400 block">Users</span>
+                  <span className="text-lg font-bold text-slate-900 dark:text-white">{selectedTenant.totalUsers}</span>
                 </div>
-                <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
-                  <span className="text-xs text-slate-400 block">Deliveries</span>
-                  <span className="text-lg font-bold text-violet-400">
+                <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <span className="text-xs text-slate-500 dark:text-slate-400 block">Deliveries</span>
+                  <span className="text-lg font-bold text-violet-700 dark:text-violet-400">
                     {selectedTenant.totalDeliveries}
                   </span>
                 </div>
-                <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
-                  <span className="text-xs text-slate-400 block">Vehicles</span>
-                  <span className="text-lg font-bold text-cyan-400">
+                <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <span className="text-xs text-slate-500 dark:text-slate-400 block">Vehicles</span>
+                  <span className="text-lg font-bold text-cyan-700 dark:text-cyan-400">
                     {selectedTenant.totalVehicles}
                   </span>
                 </div>
@@ -736,19 +739,19 @@ export function PlatformDashboardPage() {
               </div>
             </div>
 
-            <div className="flex justify-end space-x-3 pt-4 border-t border-slate-800">
+            <div className="flex justify-end space-x-3 pt-4 border-t border-slate-200 dark:border-slate-800">
               <button
                 onClick={() => setSelectedTenant(null)}
-                className="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700"
+                className="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 cursor-pointer transition-colors"
               >
                 Close
               </button>
               <button
                 onClick={() => handleToggleStatus(selectedTenant.id, selectedTenant.isActive)}
-                className={`px-4 py-2 text-xs font-semibold rounded-lg border ${
+                className={`px-4 py-2 text-xs font-semibold rounded-lg border cursor-pointer transition-all ${
                   selectedTenant.isActive
-                    ? "bg-rose-950/50 hover:bg-rose-900 text-rose-300 border-rose-800"
-                    : "bg-emerald-950/50 hover:bg-emerald-900 text-emerald-300 border-emerald-800"
+                    ? "bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/50 dark:hover:bg-rose-900 dark:text-rose-300 dark:border-rose-800"
+                    : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:hover:bg-emerald-900 dark:text-emerald-300 dark:border-emerald-800"
                 }`}
               >
                 {selectedTenant.isActive ? "Suspend Tenant" : "Activate Tenant"}
