@@ -2,11 +2,7 @@ import axios from 'axios';
 import { storage } from '@/utils/storage';
 
 // Axios instance pointing to backend API (dynamic production URL vs local dev proxy)
-const rawApiUrl = (import.meta.env.VITE_API_URL || (
-  typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')
-    ? 'https://logistel-backend.onrender.com'
-    : ''
-)).trim().replace(/\/$/, '');
+const rawApiUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/$/, '');
 
 const baseURL = rawApiUrl
   ? (rawApiUrl.endsWith('/api/v1') ? rawApiUrl : `${rawApiUrl}/api/v1`)

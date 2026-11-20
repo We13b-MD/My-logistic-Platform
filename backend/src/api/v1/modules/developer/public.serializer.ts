@@ -8,7 +8,7 @@ import { Delivery, DriverProfile } from "@prisma/client";
  * photo URLs are NEVER exposed to third-party integrations.
  */
 
-const PUBLIC_APP_URL = (process.env.PUBLIC_APP_URL || "https://logistel-frontend.onrender.com").replace(/\/$/, "");
+const PUBLIC_APP_URL = (process.env.PUBLIC_APP_URL || "").replace(/\/$/, "");
 
 const ACTIVE_STATUSES = ["ASSIGNED", "PICKED_UP", "IN_TRANSIT"];
 
